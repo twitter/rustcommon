@@ -74,5 +74,11 @@ macro_rules! native {
                     .compare_exchange_weak(current, new, success, failure)
             }
         }
+
+        impl std::fmt::Debug for $name where $type: std::fmt::Debug {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{:?}", self.inner)
+            }
+        }
     };
 }

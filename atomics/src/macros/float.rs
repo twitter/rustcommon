@@ -83,5 +83,11 @@ macro_rules! float {
                     .map_err(<$type>::from_bits)
             }
         }
+
+        impl std::fmt::Debug for $name where $type: std::fmt::Debug {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{:?}", self.inner)
+            }
+        }
     };
 }
