@@ -4,7 +4,7 @@
 
 use crate::Statistic;
 use crate::*;
-use chashmap::CHashMap;
+use dashmap::DashMap;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -16,7 +16,7 @@ where
     <T as Atomic>::Primitive: Default + PartialEq + Copy + From<u8>,
     u64: From<<T as Atomic>::Primitive>,
 {
-    data: CHashMap<String, Arc<Channel<T>>>,
+    data: DashMap<String, Arc<Channel<T>>>,
 }
 
 impl<T> Clone for Metrics<T>
@@ -40,7 +40,7 @@ where
 {
     pub fn new() -> Self {
         Self {
-            data: CHashMap::new(),
+            data: DashMap::new(),
         }
     }
 
