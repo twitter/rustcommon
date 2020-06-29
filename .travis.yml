@@ -1,0 +1,35 @@
+language: rust
+sudo: required
+cache: cargo
+rust: stable
+matrix:
+  fast_finish: true
+  include:
+    - name: "default: xenial"
+      os: linux
+      dist: xenial
+      env: RUST_BACKTRACE=1
+      script:
+        - cargo build --release
+        - cargo test --release
+    - name: "default: bionic"
+      os: linux
+      dist: bionic
+      env: RUST_BACKTRACE=1
+      script:
+        - cargo build --release
+        - cargo test --release
+    - name: "rustfmt"
+      os: linux
+      dist: bionic
+      env: RUST_BACKTRACE=1
+      script:
+        - rustup component add rustfmt --toolchain ${TRAVIS_RUST_VERSION}
+        - cargo +${TRAVIS_RUST_VERSION} fmt -- --check
+    - name: "clippy"
+      os: linux
+      dist: bionic
+      env: RUST_BACKTRACE=1
+      script:
+        - rustup component add clippy --toolchain ${TRAVIS_RUST_VERSION}
+        - cargo +${TRAVIS_RUST_VERSION} clippy
