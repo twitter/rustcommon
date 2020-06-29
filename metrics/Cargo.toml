@@ -9,7 +9,7 @@ homepage = "https://github.com/twitter/rustcommon/metrics"
 repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
-chashmap = "2.2.2"
+dashmap = "3.11.4"
 rustcommon-datastructures = { path = "../datastructures" }
 serde = "1.0.110"
 serde_derive = "1.0.110"
