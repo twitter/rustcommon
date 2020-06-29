@@ -1,0 +1,13 @@
+[package]
+name = "rustcommon-logger"
+version = "1.0.0"
+authors = ["Brian Martin <bmartin@twitter.com>"]
+edition = "2018"
+license = "Apache-2.0"
+description = "Logging library"
+homepage = "https://github.com/twitter/rustcommon/logger"
+repository = "https://github.com/twitter/rustcommon"
+
+[dependencies]
+log = { version = "0.4.8", features = ["std"] }
+time = "0.1.42"

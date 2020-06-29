@@ -1,0 +1,24 @@
+[package]
+name = "rustcommon-waterfall"
+version = "1.0.0"
+authors = ["Brian Martin <bmartin@twitter.com>"]
+edition = "2018"
+license = "Apache-2.0"
+description = "Generates waterfalls from heatmaps"
+homepage = "https://github.com/twitter/rustcommon/waterfall"
+repository = "https://github.com/twitter/rustcommon"
+
+[dependencies]
+dejavu = "2.37.0"
+hsl = "0.1.1"
+log = "0.4.8"
+png = "0.16.3"
+rustcommon-atomics = { path = "../atomics" }
+rustcommon-datastructures = { path = "../datastructures" }
+rusttype = "0.8.3"
+time = "0.1.42"
+
+[dev-dependencies]
+rand = "0.7.3"
+rand_distr = "0.2.2"
+rustcommon-logger = { path = "../logger" }
