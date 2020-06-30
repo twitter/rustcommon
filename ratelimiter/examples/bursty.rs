@@ -8,7 +8,7 @@ fn main() {
     for strategy in &[Refill::Normal, Refill::Uniform] {
         println!("strategy: {:?}", strategy);
         let limiter = Ratelimiter::new(1, 1, 1);
-        limiter.strategy(*strategy);
+        limiter.set_strategy(*strategy);
         for i in 0..10 {
             limiter.wait();
             println!("{}: T -{}", time::precise_time_ns(), 10 - i);

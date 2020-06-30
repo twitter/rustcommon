@@ -90,15 +90,20 @@ impl Ratelimiter {
 
     /// Changes the rate of the `Ratelimiter`. The new rate will be in effect on
     /// the next tick.
-    pub fn rate(&self, rate: u64) {
+    pub fn set_rate(&self, rate: u64) {
         self.tick.store(
             SECOND / (rate / self.quantum.load(Ordering::Relaxed)),
             Ordering::Relaxed,
         );
     }
 
+    /// Returns the current rate
+    pub fn rate(&self) -> u64 {
+        SECOND * self.quantum.load(Ordering::Relaxed) / self.tick.load(Ordering::Relaxed)
+    }
+
     /// Changes the refill strategy
-    pub fn strategy(&self, strategy: Refill) {
+    pub fn set_strategy(&self, strategy: Refill) {
         self.strategy.store(strategy as usize, Ordering::Relaxed)
     }
 
