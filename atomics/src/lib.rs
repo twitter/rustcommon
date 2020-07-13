@@ -10,18 +10,12 @@
 
 #[macro_use]
 mod macros;
-
 mod traits;
 mod types;
-
-// mod atomic_counter;
-// mod atomic_primitive;
 
 pub use crate::traits::*;
 pub use crate::types::*;
 
-// pub use crate::atomic_counter::*;
-// pub use crate::atomic_primitive::*;
 pub use core::sync::atomic::Ordering;
 
 #[cfg(test)]
