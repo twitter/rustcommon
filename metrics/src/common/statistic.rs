@@ -4,9 +4,26 @@
 
 use crate::common::source::Source;
 
+/// Statistics define what a given channel is tracking. The statistic must have
+/// a name and a source. There are additional methods which may return a value
+/// and have default implementations returning `None`. These additional fields
+/// may be used to specify the scope for a given statistic or other metadata.
 pub trait Statistic {
-    /// the reported name of the series
+    /// The name, which is used in the standard exposition format, eg:
+    /// `collection/scope/name/reading: value`
     fn name(&self) -> &str;
+
+    /// An optional collection, which is used in the standard exposition format,
+    /// eg: `collection/scope/name/reading: value`
+    fn collection(&self) -> Option<&str> {
+        None
+    }
+
+    /// An optional scope, which is used in the standard exposition format, eg:
+    /// `collection/scope/name/reading: value`
+    fn scope(&self) -> Option<&str> {
+        None
+    }
 
     /// the unit of measurement
     fn unit(&self) -> Option<&str> {
@@ -18,6 +35,6 @@ pub trait Statistic {
         None
     }
 
-    /// the source of the measurement
+    /// the source of the measurement, such as a counter or gauge
     fn source(&self) -> Source;
 }
