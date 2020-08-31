@@ -281,11 +281,11 @@ where
 
     /// Calculate a percentile from the histogram, returns `None` if there is no
     /// histogram for the `Channel`
-    pub fn percentile(&self, percentile: f64) -> Option<u64> {
+    pub fn percentile(&self, percentile: f64) -> Result<u64, MetricsError> {
         if let Some(ref histogram) = self.histogram {
-            histogram.percentile(percentile)
+            histogram.percentile(percentile).map_err(|_| MetricsError::EmptyChannel)
         } else {
-            None
+            Err(MetricsError::NoSummary)
         }
     }
 
@@ -360,7 +360,7 @@ where
                     }
                 }
                 Output::Percentile(percentile) => {
-                    if let Some(value) = self.percentile(percentile.as_f64()) {
+                    if let Ok(value) = self.percentile(percentile.as_f64()) {
                         result.push(Reading::new(
                             self.statistic.name().to_string(),
                             output.clone(),
@@ -393,7 +393,7 @@ where
                     }
                 }
                 Output::Percentile(percentile) => {
-                    if let Some(value) = self.percentile(percentile.as_f64()) {
+                    if let Ok(value) = self.percentile(percentile.as_f64()) {
                         result.insert(output.clone(), value);
                     }
                 }

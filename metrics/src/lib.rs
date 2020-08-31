@@ -45,7 +45,19 @@ use crate::channel::Channel;
 pub use crate::common::*;
 pub use crate::metrics::Metrics;
 
+use thiserror::Error;
+
 pub use rustcommon_datastructures::*;
+
+#[derive(Error, Debug, PartialEq)]
+pub enum MetricsError {
+    #[error("channel contains no samples")]
+    EmptyChannel,
+    #[error("channel is not registered")]
+    NoChannel,
+    #[error("summary is not configured for channel")]
+    NoSummary,
+}
 
 #[cfg(test)]
 mod tests {
