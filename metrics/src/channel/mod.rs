@@ -283,7 +283,9 @@ where
     /// histogram for the `Channel`
     pub fn percentile(&self, percentile: f64) -> Result<u64, MetricsError> {
         if let Some(ref histogram) = self.histogram {
-            histogram.percentile(percentile).map_err(|_| MetricsError::EmptyChannel)
+            histogram
+                .percentile(percentile)
+                .map_err(|_| MetricsError::EmptyChannel)
         } else {
             Err(MetricsError::NoSummary)
         }

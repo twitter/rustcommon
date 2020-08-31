@@ -99,7 +99,11 @@ where
         }
     }
 
-    pub fn percentile(&self, statistic: &dyn Statistic, percentile: f64) -> Result<u64, MetricsError> {
+    pub fn percentile(
+        &self,
+        statistic: &dyn Statistic,
+        percentile: f64,
+    ) -> Result<u64, MetricsError> {
         if let Some(channel) = self.data.get(statistic.name()) {
             channel.percentile(percentile)
         } else {
