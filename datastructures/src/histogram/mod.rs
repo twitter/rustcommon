@@ -4,6 +4,8 @@
 
 use crate::*;
 
+use thiserror::Error;
+
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -34,6 +36,12 @@ where
     samples: Option<SharedVecDeque<Sample<<T as Atomic>::Primitive>>>,
     window: Option<Arc<Mutex<Duration>>>,
     capacity: Option<AtomicUsize>,
+}
+
+#[derive(Error, Debug, PartialEq)]
+pub enum HistogramError {
+    #[error("empty histogram")]
+    Empty,
 }
 
 /// Indicates whether the sample was an `Increment` or a `Decrement` operation
@@ -284,7 +292,6 @@ where
     /// assert_eq!(x.total_count(), 1);
     /// ```
     pub fn increment(&self, value: u64, count: <T as Atomic>::Primitive) {
-        // let count = count as <T as SaturatingArithmetic>::Primitive;
         match self.get_index(value) {
             Ok(index) => {
                 self.buckets[index].fetch_saturating_add(count, Ordering::Relaxed);
@@ -499,21 +506,21 @@ where
     ///
     /// let x = Histogram::<AtomicU64>::new(100, 2, None, None);
     /// x.increment(42, 1);
-    /// assert_eq!(x.percentile(0.0), Some(42));
-    /// assert_eq!(x.percentile(1.0), Some(42));
+    /// assert_eq!(x.percentile(0.0), Ok(42));
+    /// assert_eq!(x.percentile(1.0), Ok(42));
     ///
     /// let y = Histogram::<AtomicU64>::new(100, 2, None, None);
     /// for v in 0..100 {
     ///    y.increment(v, 1);
     /// }
-    /// assert_eq!(y.percentile(0.0), Some(0));
-    /// assert_eq!(y.percentile(0.5), Some(49));
-    /// assert_eq!(y.percentile(1.0), Some(99));
+    /// assert_eq!(y.percentile(0.0), Ok(0));
+    /// assert_eq!(y.percentile(0.5), Ok(49));
+    /// assert_eq!(y.percentile(1.0), Ok(99));
     /// ```
-    pub fn percentile(&self, percentile: f64) -> Option<u64> {
+    pub fn percentile(&self, percentile: f64) -> Result<u64, HistogramError> {
         let total = self.total_count();
         if total == 0 {
-            None
+            Err(HistogramError::Empty)
         } else {
             let mut need = (percentile * total as f64).ceil() as u64;
             if need == 0 {
@@ -527,13 +534,13 @@ where
                     for j in index..(index + 100) {
                         have += u64::from(self.buckets[j].load(Ordering::Relaxed));
                         if have >= need {
-                            return Some(self.get_value(j).unwrap());
+                            return Ok(self.get_value(j).unwrap());
                         }
                     }
                 }
                 have += count;
             }
-            Some(self.max.load(Ordering::Relaxed))
+            Ok(self.max.load(Ordering::Relaxed))
         }
     }
 
@@ -563,18 +570,18 @@ where
     /// for v in 0..100 {
     ///    x.increment(v, 1);
     /// }
-    /// assert_eq!(x.mean(), Some(49));
+    /// assert_eq!(x.mean(), Ok(49));
     /// ```
-    pub fn mean(&self) -> Option<u64> {
+    pub fn mean(&self) -> Result<u64, HistogramError> {
         let total_count = self.total_count();
         if total_count > 0 {
             let mut result = 0;
             for bucket in self.into_iter() {
                 result += u64::from(bucket.count) * bucket.value;
             }
-            Some(result / total_count)
+            Ok(result / total_count)
         } else {
-            None
+            Err(HistogramError::Empty)
         }
     }
 
@@ -589,9 +596,9 @@ where
     /// for v in 0..100 {
     ///    x.increment(v, v);
     /// }
-    /// assert_eq!(x.mode(), Some(99));
+    /// assert_eq!(x.mode(), Ok(99));
     /// ```
-    pub fn mode(&self) -> Option<u64> {
+    pub fn mode(&self) -> Result<u64, HistogramError> {
         let total_count = self.total_count();
         if total_count > 0 {
             let mut count = 0;
@@ -602,9 +609,9 @@ where
                     value = bucket.value();
                 }
             }
-            Some(value)
+            Ok(value)
         } else {
-            None
+            Err(HistogramError::Empty)
         }
     }
 }
@@ -669,19 +676,19 @@ mod tests {
             let _ = h.increment(i, 1);
             assert_eq!(h.total_count(), i);
         }
-        assert_eq!(h.percentile(0.0), Some(1));
-        assert_eq!(h.percentile(0.05), Some(5));
-        assert_eq!(h.percentile(0.1), Some(10));
-        assert_eq!(h.percentile(0.25), Some(25));
-        assert_eq!(h.percentile(0.50), Some(50));
-        assert_eq!(h.percentile(0.75), Some(75));
-        assert_eq!(h.percentile(0.90), Some(90));
-        assert_eq!(h.percentile(0.95), Some(95));
-        assert_eq!(h.percentile(0.99), Some(99));
-        assert_eq!(h.percentile(0.999), Some(100));
-        assert_eq!(h.percentile(1.0), Some(100));
+        assert_eq!(h.percentile(0.0), Ok(1));
+        assert_eq!(h.percentile(0.05), Ok(5));
+        assert_eq!(h.percentile(0.1), Ok(10));
+        assert_eq!(h.percentile(0.25), Ok(25));
+        assert_eq!(h.percentile(0.50), Ok(50));
+        assert_eq!(h.percentile(0.75), Ok(75));
+        assert_eq!(h.percentile(0.90), Ok(90));
+        assert_eq!(h.percentile(0.95), Ok(95));
+        assert_eq!(h.percentile(0.99), Ok(99));
+        assert_eq!(h.percentile(0.999), Ok(100));
+        assert_eq!(h.percentile(1.0), Ok(100));
         h.clear();
-        assert_eq!(h.percentile(0.0), None);
+        assert_eq!(h.percentile(0.0), Err(HistogramError::Empty));
         assert_eq!(h.total_count(), 0);
         assert_eq!(h.size(), 936);
     }
@@ -724,8 +731,8 @@ mod tests {
         for i in 1..100 {
             let _ = h.increment(i, 1);
             assert_eq!(h.total_count(), 1);
-            assert_eq!(h.percentile(0.0), Some(i));
-            assert_eq!(h.percentile(1.0), Some(i));
+            assert_eq!(h.percentile(0.0), Ok(i));
+            assert_eq!(h.percentile(1.0), Ok(i));
             std::thread::sleep(Duration::from_millis(1));
         }
         assert_eq!(h.total_count(), 0);
@@ -738,8 +745,8 @@ mod tests {
         for i in 1..100 {
             let _ = h.increment(i, 1);
             assert_eq!(h.total_count(), 1);
-            assert_eq!(h.percentile(0.0), Some(i));
-            assert_eq!(h.percentile(1.0), Some(i));
+            assert_eq!(h.percentile(0.0), Ok(i));
+            assert_eq!(h.percentile(1.0), Ok(i));
             std::thread::sleep(Duration::from_millis(1));
         }
         assert_eq!(h.total_count(), 1);
@@ -752,8 +759,8 @@ mod tests {
         for i in 1..100 {
             let _ = h.increment(i, 1);
             assert_eq!(h.total_count(), 1);
-            assert_eq!(h.percentile(0.0), Some(i));
-            assert_eq!(h.percentile(1.0), Some(i));
+            assert_eq!(h.percentile(0.0), Ok(i));
+            assert_eq!(h.percentile(1.0), Ok(i));
         }
         assert_eq!(h.total_count(), 1);
         std::thread::sleep(Duration::from_millis(1));
@@ -798,12 +805,12 @@ mod tests {
         for _ in 1..100 {
             let _ = h.increment(1_000_000, 1);
             assert_eq!(h.total_count(), 1);
-            assert_eq!(h.percentile(0.0), Some(100));
-            assert_eq!(h.percentile(1.0), Some(100));
+            assert_eq!(h.percentile(0.0), Ok(100));
+            assert_eq!(h.percentile(1.0), Ok(100));
             std::thread::sleep(Duration::from_millis(2));
         }
-        assert_eq!(h.percentile(0.0), None);
-        assert_eq!(h.percentile(1.0), None);
+        assert_eq!(h.percentile(0.0), Err(HistogramError::Empty));
+        assert_eq!(h.percentile(1.0), Err(HistogramError::Empty));
         assert_eq!(h.total_count(), 0);
     }
 
@@ -814,12 +821,12 @@ mod tests {
         for _ in 1..100 {
             let _ = h.increment(1_000_000, 1);
             assert_eq!(h.total_count(), 1);
-            assert_eq!(h.percentile(0.0), Some(100));
-            assert_eq!(h.percentile(1.0), Some(100));
+            assert_eq!(h.percentile(0.0), Ok(100));
+            assert_eq!(h.percentile(1.0), Ok(100));
         }
         std::thread::sleep(Duration::from_millis(2));
-        assert_eq!(h.percentile(0.0), None);
-        assert_eq!(h.percentile(1.0), None);
+        assert_eq!(h.percentile(0.0), Err(HistogramError::Empty));
+        assert_eq!(h.percentile(1.0), Err(HistogramError::Empty));
         assert_eq!(h.total_count(), 0);
     }
 }

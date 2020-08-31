@@ -13,4 +13,5 @@ dashmap = "3.11.4"
 rustcommon-datastructures = { path = "../datastructures" }
 serde = "1.0.110"
 serde_derive = "1.0.110"
+thiserror = "1.0.20"
 time = "0.1.42"

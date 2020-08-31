@@ -1,0 +1,65 @@
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux:
+    name: ubuntu
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      run: bash .github/workflows/ci.sh
+  linux-tls:
+    name: ubuntu w/ tls
+    runs-on: ubuntu-18.04
+    env:
+      FEATURES: tls
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      run: bash .github/workflows/ci.sh
+  macos:
+    name: macos
+    runs-on: macos-10.15
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      run: bash .github/workflows/ci.sh
+  macos-tls:
+    name: macos w/ tls
+    runs-on: macos-10.15
+    env:
+      FEATURES: tls
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      run: bash .github/workflows/ci.sh
+  rustfmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: rustfmt
+      run: cargo fmt -- --check
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: clippy
+      run: cargo clippy
+  audit:
+    name: audit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: install
+      run: cargo install cargo-audit
+    - name: audit
+      run: cargo audit
