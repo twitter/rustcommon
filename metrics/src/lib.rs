@@ -111,7 +111,10 @@ mod tests {
             Some(Summary::histogram(2_000_000_000, 3, None)),
         );
         assert_eq!(metrics.reading(&TestStat::Counter).unwrap(), 0);
-        assert_eq!(metrics.percentile(&TestStat::Counter, 0.0), Err(MetricsError::EmptyChannel));
+        assert_eq!(
+            metrics.percentile(&TestStat::Counter, 0.0),
+            Err(MetricsError::EmptyChannel)
+        );
         metrics.record_counter(&TestStat::Counter, 1_000_000_000, 1);
         assert_eq!(metrics.reading(&TestStat::Counter).unwrap(), 1);
         metrics.record_counter(&TestStat::Counter, 2_000_000_000, 1);
@@ -183,10 +186,7 @@ mod tests {
         assert_eq!(metrics.percentile(&TestStat::Distribution, 0.90), Ok(90));
         assert_eq!(metrics.percentile(&TestStat::Distribution, 0.95), Ok(95));
         assert_eq!(metrics.percentile(&TestStat::Distribution, 0.99), Ok(99));
-        assert_eq!(
-            metrics.percentile(&TestStat::Distribution, 0.999),
-            Ok(100)
-        );
+        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.999), Ok(100));
         assert_eq!(metrics.percentile(&TestStat::Distribution, 1.00), Ok(100));
     }
 
