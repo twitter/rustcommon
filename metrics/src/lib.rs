@@ -111,7 +111,7 @@ mod tests {
             Some(Summary::histogram(2_000_000_000, 3, None)),
         );
         assert_eq!(metrics.reading(&TestStat::Counter).unwrap(), 0);
-        assert_eq!(metrics.percentile(&TestStat::Counter, 0.0), None);
+        assert_eq!(metrics.percentile(&TestStat::Counter, 0.0), Err(MetricsError::EmptyChannel));
         metrics.record_counter(&TestStat::Counter, 1_000_000_000, 1);
         assert_eq!(metrics.reading(&TestStat::Counter).unwrap(), 1);
         metrics.record_counter(&TestStat::Counter, 2_000_000_000, 1);
@@ -178,16 +178,16 @@ mod tests {
             metrics.record_distribution(&TestStat::Distribution, 0, i, 1);
         }
         assert_eq!(metrics.reading(&TestStat::Distribution).unwrap(), 100);
-        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.0), Some(1));
-        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.50), Some(50));
-        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.90), Some(90));
-        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.95), Some(95));
-        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.99), Some(99));
+        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.0), Ok(1));
+        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.50), Ok(50));
+        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.90), Ok(90));
+        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.95), Ok(95));
+        assert_eq!(metrics.percentile(&TestStat::Distribution, 0.99), Ok(99));
         assert_eq!(
             metrics.percentile(&TestStat::Distribution, 0.999),
-            Some(100)
+            Ok(100)
         );
-        assert_eq!(metrics.percentile(&TestStat::Distribution, 1.00), Some(100));
+        assert_eq!(metrics.percentile(&TestStat::Distribution, 1.00), Ok(100));
     }
 
     #[test]
@@ -222,12 +222,12 @@ mod tests {
             metrics.record_time_interval(&TestStat::TimeInterval, i, i + 1);
         }
         assert_eq!(metrics.reading(&TestStat::TimeInterval).unwrap(), 100);
-        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.0), Some(1));
-        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.50), Some(1));
-        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.90), Some(1));
-        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.95), Some(1));
-        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.99), Some(1));
-        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.999), Some(1));
-        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 1.00), Some(1));
+        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.0), Ok(1));
+        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.50), Ok(1));
+        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.90), Ok(1));
+        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.95), Ok(1));
+        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.99), Ok(1));
+        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 0.999), Ok(1));
+        assert_eq!(metrics.percentile(&TestStat::TimeInterval, 1.00), Ok(1));
     }
 }
