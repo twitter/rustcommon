@@ -1,0 +1,13 @@
+[package]
+name = "rustcommon-histogram"
+version = "1.0.0"
+authors = ["Brian Martin <bmartin@twitter.com>"]
+edition = "2018"
+license = "Apache-2.0"
+description = "Histograms with summary metrics and precision guarantees"
+homepage = "https://github.com/twitter/rustcommon/datastructures"
+repository = "https://github.com/twitter/rustcommon"
+
+[dependencies]
+rustcommon-atomics = { path = "../atomics" }
+thiserror = "1.0.20"

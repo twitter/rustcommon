@@ -2,6 +2,7 @@
 members = [
     "atomics",
     "datastructures",
+    "histogram",
     "logger",
     "metrics",
     "ratelimiter",
