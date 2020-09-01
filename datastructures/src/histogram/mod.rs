@@ -800,15 +800,16 @@ mod tests {
 
     #[test]
     fn bounds_moving() {
-        let h = Histogram::<AtomicU64>::new(100, 3, Some(<Duration>::from_millis(1)), None);
+        let h = Histogram::<AtomicU64>::new(100, 3, Some(<Duration>::from_millis(20)), None);
         assert_eq!(h.total_count(), 0);
         for _ in 1..100 {
             let _ = h.increment(1_000_000, 1);
             assert_eq!(h.total_count(), 1);
             assert_eq!(h.percentile(0.0), Ok(100));
             assert_eq!(h.percentile(1.0), Ok(100));
-            std::thread::sleep(Duration::from_millis(2));
+            std::thread::sleep(Duration::from_millis(20));
         }
+        std::thread::sleep(Duration::from_millis(20));
         assert_eq!(h.percentile(0.0), Err(HistogramError::Empty));
         assert_eq!(h.percentile(1.0), Err(HistogramError::Empty));
         assert_eq!(h.total_count(), 0);
