@@ -87,6 +87,7 @@ where
 
     pub fn clear(&mut self) {
         self.oldest = self.current;
+        self.sorted.clear();
     }
 }
 
