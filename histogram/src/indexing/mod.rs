@@ -22,6 +22,15 @@ where
         exact: Self,
         precision: u8,
     ) -> Result<Self, ()>;
+
+    fn get_max_value(
+        index: usize,
+        buckets: usize,
+        max: Self,
+        exact: Self,
+        precision: u8,
+    ) -> Result<Self, ()>;
+    
     fn constrain_precision(precision: u8) -> u8;
     fn constrain_exact(max: Self, precision: u8) -> Self;
 }
