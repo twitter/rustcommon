@@ -85,5 +85,4 @@ impl crate::Indexing for u16 {
     ) -> Result<Self, ()> {
         Self::get_value(index, buckets, max, exact, precision).map(|v| v + 1)
     }
-
 }

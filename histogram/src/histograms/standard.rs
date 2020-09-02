@@ -106,9 +106,29 @@ where
     }
 
     fn get_bucket(&self, index: usize) -> Option<Bucket<Value, Count>> {
-        if let Ok(min) = Value::get_min_value(index, self.buckets.len(), self.max, self.exact, self.precision) {
-            let value = Value::get_value(index, self.buckets.len(), self.max, self.exact, self.precision).unwrap();
-            let max = Value::get_max_value(index, self.buckets.len(), self.max, self.exact, self.precision).unwrap();
+        if let Ok(min) = Value::get_min_value(
+            index,
+            self.buckets.len(),
+            self.max,
+            self.exact,
+            self.precision,
+        ) {
+            let value = Value::get_value(
+                index,
+                self.buckets.len(),
+                self.max,
+                self.exact,
+                self.precision,
+            )
+            .unwrap();
+            let max = Value::get_max_value(
+                index,
+                self.buckets.len(),
+                self.max,
+                self.exact,
+                self.precision,
+            )
+            .unwrap();
             let count = self.buckets[index];
             Some(Bucket {
                 min,
