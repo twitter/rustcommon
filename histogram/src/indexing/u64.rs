@@ -75,4 +75,14 @@ impl crate::Indexing for u64 {
             Ok(Self::get_min_value(index + 1, buckets, max, exact, precision)? - 1)
         }
     }
+
+    fn get_max_value(
+        index: usize,
+        buckets: usize,
+        max: Self,
+        exact: Self,
+        precision: u8,
+    ) -> Result<Self, ()> {
+        Self::get_value(index, buckets, max, exact, precision).map(|v| v + 1)
+    }
 }

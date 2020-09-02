@@ -710,6 +710,9 @@ mod tests {
         let h = Histogram::<AtomicU64>::new(1_000_000_000, 3, None, None);
         assert_eq!(h.size() / 1024, 50); // ~50KB
 
+        let h = Histogram::<AtomicU64>::new(1_000_000_000, 2, None, None);
+        assert_eq!(h.size() / 1024, 5); // ~5KB
+
         let h =
             Histogram::<AtomicU64>::new(1_000_000_000, 3, Some(<Duration>::from_millis(1)), None);
         assert_eq!(h.size() / 1024, 50); // ~50KB

@@ -1,0 +1,12 @@
+[package]
+name = "rustcommon-heatmap"
+version = "0.1.0"
+authors = ["Brian Martin <bmartin@twitter.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rustcommon-atomics = { path = "../atomics" }
+rustcommon-histogram = { path = "../histogram" }
+thiserror = "1.0.20"
