@@ -102,6 +102,8 @@ mod tests {
         streamstats.insert(1);
         assert_eq!(streamstats.percentile(0.0), Some(1));
         streamstats.clear();
+        assert_eq!(streamstats.percentile(0.0), None);
+
         for i in 0..=10_000 {
             streamstats.insert(i);
             assert_eq!(streamstats.percentile(1.0), Some(i));
