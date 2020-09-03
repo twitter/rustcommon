@@ -21,7 +21,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Run
-      run: bash build/ci.sh
+      run: bash .github/workflows/ci.sh
   rustfmt:
     name: rustfmt
     runs-on: ubuntu-latest
