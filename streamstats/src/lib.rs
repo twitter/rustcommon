@@ -130,7 +130,7 @@ mod tests {
 
         for i in 0..=10_000 {
             streamstats.insert(i);
-            assert_eq!(streamstats.percentile(1.0), Ok(i));
+            assert_eq!(streamstats.percentile(100.0), Ok(i));
         }
     }
 }
