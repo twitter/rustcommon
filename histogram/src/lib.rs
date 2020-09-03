@@ -27,9 +27,9 @@ mod tests {
         assert_eq!(h.percentile(0.0), Err(HistogramError::Empty));
         h.increment(1, 1);
         assert_eq!(h.percentile(0.0), Ok(1));
-        assert_eq!(h.percentile(1.0), Ok(1));
+        assert_eq!(h.percentile(100.0), Ok(1));
         h.increment(65535, 1);
         assert_eq!(h.percentile(0.0), Ok(1));
-        assert_eq!(h.percentile(1.0), Err(HistogramError::OutOfRange));
+        assert_eq!(h.percentile(100.0), Err(HistogramError::OutOfRange));
     }
 }
