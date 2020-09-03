@@ -48,12 +48,10 @@ where
 
     fn tick(&mut self, time: Instant) {
         while time >= self.next_tick {
-            println!("ticking");
             self.current += 1;
             if self.current >= self.slices.len() {
                 self.current = 0;
             }
-            println!("clearing slice: {}", self.current);
             self.next_tick += self.resolution;
             self.summary.sub_assign(&self.slices[self.current]);
             self.slices[self.current].clear();
@@ -106,7 +104,6 @@ where
             if time < *self.next_tick.read().unwrap() {
                 return;
             } else {
-                println!("ticking");
                 let mut next_tick = self.next_tick.write().unwrap();
                 *next_tick += self.resolution;
                 self.current.fetch_add(1, Ordering::Relaxed);
