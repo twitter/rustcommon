@@ -80,7 +80,7 @@ where
     /// if the value is outside of the histogram range or if the histogram is
     /// empty.
     pub fn percentile(&self, percentile: f64) -> Result<Value, HistogramError> {
-        if percentile < 0.0 || percentile >= 1.0 {
+        if percentile < 0.0 || percentile >= 100.0 {
             return Err(HistogramError::InvalidPercentile);
         }
         let mut total = 0_u64;
@@ -92,7 +92,7 @@ where
             return Err(HistogramError::Empty);
         }
         let need = if percentile > 0.0 {
-            (percentile * total as f64).ceil() as u64
+            (percentile / 100.0 * total as f64).ceil() as u64
         } else {
             1
         };
