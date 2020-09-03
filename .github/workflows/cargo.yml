@@ -15,6 +15,13 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run
       run: bash .github/workflows/ci.sh
+  macos:
+    name: macos
+    runs-on: macos-10.15
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      run: bash build/ci.sh
   rustfmt:
     name: rustfmt
     runs-on: ubuntu-latest
