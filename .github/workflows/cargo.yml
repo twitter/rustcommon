@@ -10,7 +10,14 @@ env:
 jobs:
   linux:
     name: ubuntu
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      run: bash .github/workflows/ci.sh
+  macos:
+    name: macos
+    runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v2
     - name: Run

@@ -73,8 +73,11 @@ where
 
     /// Return the value closest to the specified percentile. Returns an error
     /// if the value is outside of the histogram range or if the histogram is
-    /// empty.
+    /// empty. Percentile must be within the range 0.0 to 100.0
     pub fn percentile(&self, percentile: f64) -> Result<Value, HistogramError> {
+        if percentile < 0.0 || percentile > 100.0 {
+            return Err(HistogramError::InvalidPercentile);
+        }
         let mut total = 0_u64;
         for value in self.buckets.iter() {
             total += u64::from(*value);
@@ -84,7 +87,7 @@ where
             return Err(HistogramError::Empty);
         }
         let need = if percentile > 0.0 {
-            (percentile * total as f64).ceil() as u64
+            (percentile / 100.0 * total as f64).ceil() as u64
         } else {
             1
         };
