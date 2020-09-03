@@ -75,6 +75,9 @@ where
     /// if the value is outside of the histogram range or if the histogram is
     /// empty.
     pub fn percentile(&self, percentile: f64) -> Result<Value, HistogramError> {
+        if percentile < 0.0 || percentile >= 1.0 {
+            return Err(HistogramError::InvalidPercentile);
+        }
         let mut total = 0_u64;
         for value in self.buckets.iter() {
             total += u64::from(*value);

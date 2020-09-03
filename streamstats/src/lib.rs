@@ -1,3 +1,7 @@
+// Copyright 2020 Twitter, Inc.
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 pub trait Value: Default + Copy + Ord {}
 
 impl Value for u64 {}
@@ -5,6 +9,17 @@ impl Value for u32 {}
 impl Value for u16 {}
 impl Value for u8 {}
 impl Value for usize {}
+
+use thiserror::Error;
+
+#[derive(Error, Debug, PartialEq)]
+pub enum StreamstatsError {
+    #[error("histogram contains no samples")]
+    /// The histogram contains no samples.
+    Empty,
+    #[error("invalid percentile")]
+    InvalidPercentile,
+}
 
 pub struct Streamstats<T> {
     buffer: Vec<T>,
@@ -56,11 +71,14 @@ where
         }
     }
 
-    pub fn percentile(&mut self, percentile: f64) -> Option<T> {
+    pub fn percentile(&mut self, percentile: f64) -> Result<T, StreamstatsError> {
+        if percentile < 0.0 || percentile > 1.0 {
+            return Err(StreamstatsError::InvalidPercentile);
+        }
         if self.sorted.len() == 0 {
             let values = self.values();
             if values == 0 {
-                return None;
+                return Err(StreamstatsError::Empty);
             } else {
                 if self.current > self.oldest {
                     for i in self.oldest..self.current {
@@ -78,10 +96,10 @@ where
             }
         }
         if percentile == 0.0 {
-            Some(self.sorted[0])
+            Ok(self.sorted[0])
         } else {
             let need = (percentile * self.sorted.len() as f64).ceil() as usize;
-            Some(self.sorted[need - 1])
+            Ok(self.sorted[need - 1])
         }
     }
 
