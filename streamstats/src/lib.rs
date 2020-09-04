@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use std::sync::RwLock;
 use rustcommon_atomics::*;
+use std::sync::RwLock;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -56,7 +56,9 @@ where
             } else {
                 0
             };
-            let previous = self.current.compare_and_swap(current, next, Ordering::Relaxed);
+            let previous = self
+                .current
+                .compare_and_swap(current, next, Ordering::Relaxed);
             if previous == current {
                 break;
             } else {
@@ -82,13 +84,14 @@ where
     /// Return the value closest to the specified percentile. Returns an error
     /// if the value is outside of the histogram range or if the histogram is
     /// empty. Percentile must be within the range 0.0 to 100.0
-    pub fn percentile(&self, percentile: f64) -> Result<<T as Atomic>::Primitive, StreamstatsError> {
+    pub fn percentile(
+        &self,
+        percentile: f64,
+    ) -> Result<<T as Atomic>::Primitive, StreamstatsError> {
         if percentile < 0.0 || percentile > 100.0 {
             return Err(StreamstatsError::InvalidPercentile);
         }
-        let sorted_len = {
-            self.sorted.read().unwrap().len()
-        };
+        let sorted_len = { self.sorted.read().unwrap().len() };
         if sorted_len == 0 {
             let values = self.values();
             if values == 0 {

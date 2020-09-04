@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub use rustcommon_atomics::*;
-pub use rustcommon_histogram::{Indexing, Counter, AtomicCounter, HistogramError};
+pub use rustcommon_histogram::{AtomicCounter, Counter, HistogramError, Indexing};
 use rustcommon_histogram::{AtomicHistogram, Histogram};
 use std::sync::RwLock;
 use std::time::{Duration, Instant};
