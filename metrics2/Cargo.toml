@@ -1,0 +1,10 @@
+[package]
+name = "metrics2"
+version = "0.0.0"
+authors = ["Brian Martin <bmartin@twitter.com>"]
+edition = "2018"
+
+[dependencies]
+dashmap = "3.11.4"
+rustcommon-heatmap = { path = "../heatmap" }
+rustcommon-streamstats = { path = "../streamstats" }
