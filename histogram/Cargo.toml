@@ -5,7 +5,7 @@ authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
 license = "Apache-2.0"
 description = "Histograms with summary metrics and precision guarantees"
-homepage = "https://github.com/twitter/rustcommon/datastructures"
+homepage = "https://github.com/twitter/rustcommon/histogram"
 repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
