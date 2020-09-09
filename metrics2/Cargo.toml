@@ -1,5 +1,5 @@
 [package]
-name = "metrics2"
+name = "rustcommon-metrics2"
 version = "0.0.0"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
@@ -10,5 +10,6 @@ repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
 dashmap = "3.11.4"
+rustcommon-atomics = { path = "../atomics" }
 rustcommon-heatmap = { path = "../heatmap" }
 rustcommon-streamstats = { path = "../streamstats" }
