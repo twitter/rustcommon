@@ -8,6 +8,8 @@ use rustcommon_heatmap::Indexing;
 
 use core::ops::Sub;
 
+/// A trait that is used to track primitive types that correspond to supported
+/// atomic types.
 pub trait Primitive:
     Ord + Indexing + Copy + From<u8> + Sub<Self, Output = Self> + FloatConvert
 {

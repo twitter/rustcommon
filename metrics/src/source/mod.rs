@@ -2,7 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-#[derive(PartialEq, Copy, Clone)]
+/// Defines the source for a given statistic
+#[derive(PartialEq, Eq, Debug, Hash, Copy, Clone)]
 pub enum Source {
     /// Indicates that the source is a monotonically incrementing count.
     Counter,
