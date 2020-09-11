@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::Summary;
 use crate::summary::SummaryStruct;
 use crate::traits::*;
+use crate::Summary;
 
 use rustcommon_atomics::{Atomic, AtomicBool, Ordering};
 

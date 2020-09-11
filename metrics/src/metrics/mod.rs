@@ -85,7 +85,11 @@ where
     /// when the parameters are not known at compile time. For example, if a
     /// sampling rate is user configurable at runtime, the number of samples
     /// may need to be higher for stream summaries.
-    pub fn set_summary(&self, statistic: &dyn Statistic<Value, Count>, summary: Summary<Value, Count>) {
+    pub fn set_summary(
+        &self,
+        statistic: &dyn Statistic<Value, Count>,
+        summary: Summary<Value, Count>,
+    ) {
         let entry = Entry::from(statistic);
         if let Some(mut channel) = self.channels.get_mut(&entry) {
             channel.set_summary(summary);
