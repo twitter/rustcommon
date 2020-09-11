@@ -69,4 +69,14 @@ mod tests {
         assert_eq!(metrics.reading(&TestStat::Alpha), Ok(1));
         assert_eq!(metrics.percentile(&TestStat::Alpha, 100.0), Ok(1));
     }
+
+    #[test]
+    fn outputs() {
+        let metrics = Metrics::<AtomicU64, AtomicU64>::new();
+        metrics.register(&TestStat::Alpha);
+        assert!(metrics.snapshot().is_empty());
+        metrics.add_output(&TestStat::Alpha, Output::Reading);
+        let _ = metrics.record_counter(&TestStat::Alpha, Instant::now(), 1);
+        assert_eq!(metrics.snapshot().len(), 1);
+    }
 }
