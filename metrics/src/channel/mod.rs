@@ -4,6 +4,7 @@
 
 use crate::summary::SummaryStruct;
 use crate::traits::*;
+use crate::Summary;
 
 use rustcommon_atomics::{Atomic, AtomicBool, Ordering};
 
@@ -111,5 +112,11 @@ where
         } else {
             Err(())
         }
+    }
+
+    /// Set a summary to be used for an existing channel
+    pub fn set_summary(&mut self, summary: Summary<Value, Count>) {
+        let summary = summary.build();
+        self.summary = Some(summary);
     }
 }

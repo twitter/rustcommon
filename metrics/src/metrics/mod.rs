@@ -68,7 +68,7 @@ where
     /// Adds a new output to the registry which will be included in future
     /// snapshots. If the statistic is not already tracked, it will be
     /// registered.
-    pub fn register_output(&self, statistic: &dyn Statistic<Value, Count>, output: Output) {
+    pub fn add_output(&self, statistic: &dyn Statistic<Value, Count>, output: Output) {
         self.register(statistic);
         self.outputs.register(statistic, output);
     }
@@ -77,8 +77,23 @@ where
     /// future snapshots. This will not remove the related datastructures for
     /// the statistic even if no outputs remain. Use `deregister` method to stop
     /// tracking a statistic entirely.
-    pub fn deregister_output(&self, statistic: &dyn Statistic<Value, Count>, output: Output) {
+    pub fn remove_output(&self, statistic: &dyn Statistic<Value, Count>, output: Output) {
         self.outputs.deregister(statistic, output);
+    }
+
+    /// Add a `Summary` for an already registered `Statistic`. This can be used
+    /// when the parameters are not known at compile time. For example, if a
+    /// sampling rate is user configurable at runtime, the number of samples
+    /// may need to be higher for stream summaries.
+    pub fn set_summary(
+        &self,
+        statistic: &dyn Statistic<Value, Count>,
+        summary: Summary<Value, Count>,
+    ) {
+        let entry = Entry::from(statistic);
+        if let Some(mut channel) = self.channels.get_mut(&entry) {
+            channel.set_summary(summary);
+        }
     }
 
     /// Remove all statistics and outputs.
