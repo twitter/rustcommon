@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::Summary;
 use crate::summary::SummaryStruct;
 use crate::traits::*;
 
@@ -111,5 +112,11 @@ where
         } else {
             Err(())
         }
+    }
+
+    /// Set a summary to be used for an existing channel
+    pub fn set_summary(&mut self, summary: Summary<Value, Count>) {
+        let summary = summary.build();
+        self.summary = Some(summary);
     }
 }
