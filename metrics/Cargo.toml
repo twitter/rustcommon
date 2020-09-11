@@ -1,17 +1,12 @@
 [package]
 name = "rustcommon-metrics"
-version = "1.0.0"
+version = "2.0.0-alpha.0"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
-license = "Apache-2.0"
-description = "Metrics library"
-homepage = "https://github.com/twitter/rustcommon/metrics"
-repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
-dashmap = "3.11.4"
-rustcommon-datastructures = { path = "../datastructures" }
-serde = "1.0.110"
-serde_derive = "1.0.110"
-thiserror = "1.0.20"
-time = "0.1.42"
+dashmap = "3.11.10"
+rustcommon-atomics = { path = "../atomics" }
+rustcommon-heatmap = { path = "../heatmap" }
+rustcommon-streamstats = { path = "../streamstats" }
+
