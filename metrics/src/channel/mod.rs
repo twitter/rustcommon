@@ -65,7 +65,7 @@ where
     pub fn record_counter(&self, time: Instant, value: <Value as Atomic>::Primitive) {
         if !self.empty.load(Ordering::Relaxed) {
             if let Some(summary) = &self.summary {
-                let t0 = self.refreshed.write().unwrap();
+                let mut t0 = self.refreshed.write().unwrap();
                 let v0 = self.reading.load(Ordering::Relaxed);
                 let dt = time - *t0;
                 let dv = (value - v0).to_float();
@@ -77,11 +77,14 @@ where
                     <Value as Atomic>::Primitive::from_float(rate),
                     1_u8.into(),
                 );
+                *t0 = time;
             }
             self.reading.store(value, Ordering::Relaxed);
         } else {
             self.reading.store(value, Ordering::Relaxed);
             self.empty.store(false, Ordering::Relaxed);
+            let mut t0 = self.refreshed.write().unwrap();
+            *t0 = time;
         }
     }
 
