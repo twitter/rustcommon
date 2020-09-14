@@ -78,5 +78,25 @@ mod tests {
         metrics.add_output(&TestStat::Alpha, Output::Reading);
         let _ = metrics.record_counter(&TestStat::Alpha, Instant::now(), 1);
         assert_eq!(metrics.snapshot().len(), 1);
+        assert_eq!(metrics.reading(&TestStat::Alpha), Ok(1));
+    }
+
+    #[test]
+    fn counter() {
+        let metrics = Metrics::<AtomicU64, AtomicU64>::new();
+        let start = Instant::now();
+        metrics.register(&TestStat::Alpha);
+        assert!(metrics.reading(&TestStat::Alpha).is_err());
+        metrics
+            .record_counter(&TestStat::Alpha, start, 0).unwrap();
+        assert_eq!(metrics.reading(&TestStat::Alpha), Ok(0));
+        metrics
+            .record_counter(&TestStat::Alpha, start + Duration::from_millis(1000), 1000000).unwrap();
+        assert_eq!(metrics.reading(&TestStat::Alpha), Ok(1000000));
+        assert_eq!(metrics.percentile(&TestStat::Alpha, 99.9), Ok(1000000));
+        metrics
+            .record_counter(&TestStat::Alpha, start + Duration::from_millis(2000), 3000000).unwrap();
+        assert_eq!(metrics.reading(&TestStat::Alpha), Ok(3000000));
+        assert_eq!(metrics.percentile(&TestStat::Alpha, 99.9), Ok(2000000));
     }
 }
