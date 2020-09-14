@@ -122,4 +122,11 @@ where
         let summary = summary.build();
         self.summary = Some(summary);
     }
+
+    /// Set a summary to be used for an existing channel
+    pub fn add_summary(&mut self, summary: Summary<Value, Count>) {
+        if self.summary.is_none() {
+            self.set_summary(summary);
+        }
+    }
 }
