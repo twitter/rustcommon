@@ -81,9 +81,9 @@ where
         self.outputs.deregister(statistic, output);
     }
 
-    /// Add a `Summary` for an already registered `Statistic`. This can be used
-    /// when the parameters are not known at compile time. For example, if a
-    /// sampling rate is user configurable at runtime, the number of samples
+    /// Set the `Summary` for an already registered `Statistic`. This can be
+    /// used when the parameters are not known at compile time. For example, if
+    /// a sampling rate is user configurable at runtime, the number of samples
     /// may need to be higher for stream summaries.
     pub fn set_summary(
         &self,
@@ -93,6 +93,20 @@ where
         let entry = Entry::from(statistic);
         if let Some(mut channel) = self.channels.get_mut(&entry) {
             channel.set_summary(summary);
+        }
+    }
+
+    /// Conditionally add a `Summary` for a `Statistic` if one is not currently
+    /// set. This may be used for dynamically registered statistic types to
+    /// prevent clearing an existing summary.
+    pub fn add_summary(
+        &self,
+        statistic: &dyn Statistic<Value, Count>,
+        summary: Summary<Value, Count>,
+    ) {
+        let entry = Entry::from(statistic);
+        if let Some(mut channel) = self.channels.get_mut(&entry) {
+            channel.add_summary(summary);
         }
     }
 

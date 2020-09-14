@@ -50,6 +50,7 @@ where
     /// Insert a new value into the buffer.
     pub fn insert(&self, value: <T as Atomic>::Primitive) {
         let mut current = self.current.load(Ordering::Relaxed);
+        self.buffer[current].store(value, Ordering::Relaxed);
         loop {
             let next = if current < (self.buffer.len() - 1) {
                 current + 1
@@ -65,7 +66,6 @@ where
                 current = previous;
             }
         }
-        self.buffer[current].store(value, Ordering::Relaxed);
         if self.len.load(Ordering::Relaxed) < self.buffer.len() {
             self.len.fetch_add(1, Ordering::Relaxed);
         }
@@ -226,6 +226,33 @@ mod tests {
     #[test]
     fn basic() {
         let mut streamstats = Streamstats::<u64>::new(1000);
+        assert_eq!(streamstats.percentile(0.0), Err(StreamstatsError::Empty));
+        streamstats.insert(1);
+        assert_eq!(streamstats.percentile(0.0), Ok(1));
+        streamstats.clear();
+        assert_eq!(streamstats.percentile(0.0), Err(StreamstatsError::Empty));
+
+        for i in 0..=10_000 {
+            streamstats.insert(i);
+            assert_eq!(streamstats.percentile(100.0), Ok(i));
+        }
+
+        let mut streamstats = AtomicStreamstats::<AtomicU64>::new(1000);
+        assert_eq!(streamstats.percentile(0.0), Err(StreamstatsError::Empty));
+        streamstats.insert(1);
+        assert_eq!(streamstats.percentile(0.0), Ok(1));
+        streamstats.clear();
+        assert_eq!(streamstats.percentile(0.0), Err(StreamstatsError::Empty));
+
+        for i in 0..=10_000 {
+            streamstats.insert(i);
+            assert_eq!(streamstats.percentile(100.0), Ok(i));
+        }
+    }
+
+    #[test]
+    fn basic_atomic() {
+        let mut streamstats = AtomicStreamstats::<AtomicU64>::new(1000);
         assert_eq!(streamstats.percentile(0.0), Err(StreamstatsError::Empty));
         streamstats.insert(1);
         assert_eq!(streamstats.percentile(0.0), Ok(1));
