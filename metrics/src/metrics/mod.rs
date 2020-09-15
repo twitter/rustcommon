@@ -141,7 +141,8 @@ where
     }
 
     /// Record a counter observation for counter based statistics. May be used
-    /// with any summary type.
+    /// with any summary type. Summaries will track secondly rates for counter
+    /// changes.
     pub fn record_counter(
         &self,
         statistic: &dyn Statistic<Value, Count>,
@@ -163,8 +164,31 @@ where
         }
     }
 
+    /// Increment a counter by some amount. Wraps around on overflow. Currently,
+    /// no summary statistics are calculated for increments to avoid complexity
+    /// with out-of-order increments.
+    pub fn increment_counter(
+        &self,
+        statistic: &dyn Statistic<Value, Count>,
+        value: <Value as Atomic>::Primitive,
+    ) -> Result<(), ()> {
+        let entry = Entry::from(statistic);
+        if statistic.source() == Source::Counter {
+            if let Some(channel) = self.channels.get(&entry) {
+                channel.increment_counter(value);
+                Ok(())
+            } else {
+                // statistic not registered
+                Err(())
+            }
+        } else {
+            // source mismatch
+            Err(())
+        }
+    }
+
     /// Record a gauge observation for gauge based statistics. May be used with
-    /// any summary type.
+    /// any summary type. Summary tracks instantaneous gauge readings.
     pub fn record_gauge(
         &self,
         statistic: &dyn Statistic<Value, Count>,

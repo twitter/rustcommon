@@ -9,7 +9,7 @@ use rustcommon_atomics::*;
 /// distributions. Lower precision atomics help reduce in-memory representation
 /// for stored values and streaming summaries, but are unable to represent large
 /// counter and gauge values.
-pub trait Value: Atomic + Default {}
+pub trait Value: Atomic + Arithmetic + Default {}
 
 impl Value for AtomicU8 {}
 impl Value for AtomicU16 {}
