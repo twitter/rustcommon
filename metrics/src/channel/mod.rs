@@ -61,8 +61,15 @@ where
         }
     }
 
-    /// Records a counter reading
+    /// Updates a counter to a new value if the reading is newer than the stored
+    /// reading.
     pub fn record_counter(&self, time: Instant, value: <Value as Atomic>::Primitive) {
+        {
+            let t0 = self.refreshed.read().unwrap();
+            if time <= *t0 {
+                return;
+            }
+        }
         if !self.empty.load(Ordering::Relaxed) {
             if let Some(summary) = &self.summary {
                 let mut t0 = self.refreshed.write().unwrap();
@@ -88,15 +95,27 @@ where
         }
     }
 
-    /// Records a gauge reading
+    /// Increment a counter by an amount
+    pub fn increment_counter(&self, value: <Value as Atomic>::Primitive) {
+        self.empty.store(false, Ordering::Relaxed);
+        self.reading.fetch_add(value, Ordering::Relaxed);
+    }
+
+    /// Updates a gauge reading if the new value is newer than the stored value.
     pub fn record_gauge(&self, time: Instant, value: <Value as Atomic>::Primitive) {
+        {
+            let t0 = self.refreshed.read().unwrap();
+            if time <= *t0 {
+                return;
+            }
+        }
         if let Some(summary) = &self.summary {
             summary.increment(time, value, 1_u8.into());
         }
         self.reading.store(value, Ordering::Relaxed);
-        if self.empty.load(Ordering::Relaxed) {
-            self.empty.store(false, Ordering::Relaxed);
-        }
+        self.empty.store(false, Ordering::Relaxed);
+        let mut t0 = self.refreshed.write().unwrap();
+        *t0 = time;
     }
 
     /// Returns a percentile across stored readings/rates/...

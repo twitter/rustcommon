@@ -82,10 +82,10 @@ mod tests {
     }
 
     #[test]
-    fn counter() {
+    fn absolute_counter() {
         let metrics = Metrics::<AtomicU64, AtomicU64>::new();
-        let start = Instant::now();
         metrics.register(&TestStat::Alpha);
+        let start = Instant::now();
         assert!(metrics.reading(&TestStat::Alpha).is_err());
         metrics.record_counter(&TestStat::Alpha, start, 0).unwrap();
         assert_eq!(metrics.reading(&TestStat::Alpha), Ok(0));
@@ -107,5 +107,20 @@ mod tests {
             .unwrap();
         assert_eq!(metrics.reading(&TestStat::Alpha), Ok(3000000));
         assert_eq!(metrics.percentile(&TestStat::Alpha, 99.9), Ok(2000000));
+        metrics.record_counter(&TestStat::Alpha, start, 42).unwrap();
+        assert_ne!(metrics.reading(&TestStat::Alpha), Ok(42));
+    }
+
+    #[test]
+    fn increment_counter() {
+        let metrics = Metrics::<AtomicU64, AtomicU64>::new();
+        metrics.register(&TestStat::Alpha);
+        assert!(metrics.reading(&TestStat::Alpha).is_err());
+        metrics.increment_counter(&TestStat::Alpha, 1).unwrap();
+        assert_eq!(metrics.reading(&TestStat::Alpha), Ok(1));
+        metrics.increment_counter(&TestStat::Alpha, 0).unwrap();
+        assert_eq!(metrics.reading(&TestStat::Alpha), Ok(1));
+        metrics.increment_counter(&TestStat::Alpha, 10).unwrap();
+        assert_eq!(metrics.reading(&TestStat::Alpha), Ok(11));
     }
 }
