@@ -4,103 +4,117 @@
 
 //! This crate is used to render a waterfall style plot of a heatmap
 
-#[macro_use]
-extern crate log;
-
+use chrono::Utc;
+use core::hash::Hash;
+use core::ops::Sub;
 use hsl::HSL;
-use rustcommon_datastructures::*;
+use rustcommon_heatmap::*;
 use rusttype::{point, FontCollection, PositionedGlyph, Scale};
-
 use std::collections::HashMap;
+use std::convert::From;
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
+use std::time::{Duration, Instant};
 
-const MULTIPLIER: u64 = 1_000;
+pub struct WaterfallBuilder<Value> {
+    output: String,
+    labels: HashMap<Value, String>,
+    interval: Duration,
+}
 
-/// Render and save a waterfall from a `Heatmap` to a file. You can specify
-/// `labels` for the value axis. And spacing of labels on the time axis is
-/// specified by the `interval` in nanoseconds.
-///
-/// # Examples
-///
-/// ```
-/// use rustcommon_datastructures::*;
-/// use rustcommon_waterfall::*;
-///
-/// use std::collections::HashMap;
-///
-/// // create a heatmap with appropriate configuration for your dataset
-/// let heatmap = Heatmap::<AtomicU64>::new(1_000_000, 2, 1_000_000, 5_000_000_000);
-///
-/// // add data into the heatmap
-///
-/// // decide on labels and generate waterfall
-/// let mut labels = HashMap::new();
-/// labels.insert(0, "0".to_string());
-/// labels.insert(100, "100".to_string());
-/// labels.insert(1000, "1000".to_string());
-/// labels.insert(10000, "10000".to_string());
-/// labels.insert(100000, "100000".to_string());
-/// save_waterfall(&heatmap, "waterfall.png", labels, 1_000_000_000);
-/// ```
-pub fn save_waterfall<S: ::std::hash::BuildHasher, T: 'static>(
-    heatmap: &Heatmap<T>,
-    file: &str,
-    labels: HashMap<u64, String, S>,
-    interval: u64,
-) where
-    T: Atomic + SaturatingArithmetic + Unsigned + Default,
-    <T as Atomic>::Primitive: Default + PartialEq + Copy,
-    u64: From<<T as Atomic>::Primitive>,
+impl<Value> WaterfallBuilder<Value>
+where
+    Value: Eq + Hash,
+    u64: From<Value>,
 {
-    debug!("saving waterfall");
-    let height = heatmap.slices();
-    let width = heatmap.buckets();
-
-    // create image buffer
-    let mut buffer = ImageBuffer::<ColorRgb>::new(width, height);
-
-    let histogram =
-        Histogram::<AtomicU64>::new(heatmap.highest_count() * MULTIPLIER, 6, None, None);
-    for slice in heatmap {
-        for b in slice.histogram().into_iter() {
-            let weight = MULTIPLIER * u64::from(b.count()) / b.width();
-            if (weight) > 0 {
-                histogram.increment(weight, 1);
-            }
+    pub fn new(target: &str) -> Self {
+        Self {
+            output: target.to_string(),
+            labels: HashMap::new(),
+            interval: Duration::new(60, 0),
         }
     }
 
-    if let Ok(min) = histogram.percentile(0.0) {
-        let mid = histogram.percentile(0.50).unwrap();
-        let high = histogram.percentile(0.99).unwrap();
-        let max = histogram.percentile(1.0).unwrap();
-        let low = 0;
+    pub fn label(mut self, value: Value, label: &str) -> Self {
+        self.labels.insert(value, label.to_string());
+        self
+    }
 
-        debug!(
-            "min: {} low: {} mid: {} high: {} max: {}",
-            min, low, mid, high, max
-        );
+    pub fn build<Count>(self, heatmap: &rustcommon_heatmap::Heatmap<Value, Count>)
+    where
+        Count: rustcommon_heatmap::Counter + PartialOrd + Indexing,
+        Value: rustcommon_heatmap::Indexing + Sub<Output = Value> + Default + PartialOrd,
+        u64: From<Count>,
+        Count: From<u8>,
+    {
+        let now_datetime = Utc::now();
+        let now_instant = Instant::now();
 
-        let mut values: Vec<u64> = labels.keys().cloned().collect();
-        values.sort();
+        let height = heatmap.slices();
+        let width = heatmap.buckets();
+
+        let mut begin_instant = Instant::now();
+
+        let mut buffer = ImageBuffer::<ColorRgb>::new(width, height);
+
+        let mut max_count = 0_u64;
+        let mut max_width = 0_u64;
+        for slice in heatmap {
+            if slice.start() < begin_instant {
+                begin_instant = slice.start();
+            }
+            for bucket in slice.histogram() {
+                let c = u64::from(bucket.count());
+                let w = u64::from(bucket.width());
+                if c > max_count {
+                    max_count = c;
+                }
+                if w > max_width {
+                    max_width = w;
+                }
+            }
+        }
+
+        let mut counts =
+            rustcommon_histogram::Histogram::<u64, u64>::new(max_count * max_width, 255);
+        for slice in heatmap {
+            for bucket in slice.histogram() {
+                let count = u64::from(bucket.count());
+                if count > 0 {
+                    let multiplier = max_width / u64::from(bucket.width());
+                    counts.increment(count * multiplier, 1);
+                }
+            }
+        }
+
+        let low = counts.percentile(1.0).unwrap();
+        let mid = counts.percentile(50.0).unwrap();
+        let high = counts.percentile(99.0).unwrap();
+        let mut labels = HashMap::new();
+        for (k, v) in &self.labels {
+            labels.insert(u64::from(*k), v);
+        }
+
+        let mut label_keys: Vec<u64> = labels.keys().cloned().collect();
+        label_keys.sort();
+
         let mut l = 0;
         for (y, slice) in heatmap.into_iter().enumerate() {
             for (x, b) in slice.histogram().into_iter().enumerate() {
-                let weight = MULTIPLIER * u64::from(b.count()) / b.width();
+                let weight = (max_width / u64::from(b.width())) * u64::from(b.count());
                 let value = color_from_value(weight, low, mid, high);
                 buffer.set_pixel(x, y, value);
             }
         }
 
-        if !values.is_empty() {
+        if !label_keys.is_empty() {
             let y = 0;
             let slice = heatmap.into_iter().next().unwrap();
             for (x, bucket) in slice.histogram().into_iter().enumerate() {
-                let value = bucket.max();
-                if value >= values[l] {
-                    if let Some(label) = labels.get(&values[l]) {
+                let value = u64::from(bucket.value());
+                if value >= label_keys[l] {
+                    if let Some(label) = labels.get(&label_keys[l]) {
                         let overlay = string_buffer(label, 25.0);
                         buffer.overlay(&overlay, x, y);
                         buffer.vertical_line(
@@ -113,34 +127,44 @@ pub fn save_waterfall<S: ::std::hash::BuildHasher, T: 'static>(
                         );
                     }
                     l += 1;
-                    if l >= values.len() {
+                    if l >= label_keys.len() {
                         break;
                     }
                 }
             }
         }
-    }
 
-    let mut begin = heatmap.begin_utc();
-    for (y, slice) in heatmap.into_iter().enumerate() {
-        let slice_begin = slice.begin_utc();
-        if slice_begin - begin >= time::Duration::nanoseconds(interval as i64) {
-            let label = format!("{}", slice_begin.rfc3339());
-            let overlay = string_buffer(&label, 25.0);
-            buffer.overlay(&overlay, 0, y + 2);
-            buffer.horizontal_line(
-                y,
-                ColorRgb {
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                },
-            );
-            begin = slice_begin;
+        let offset = now_instant - begin_instant;
+        let offset = chrono::Duration::from_std(offset).unwrap();
+
+        let begin_utc = now_datetime.checked_sub_signed(offset).unwrap();
+        let mut begin = begin_instant;
+
+        for (y, slice) in heatmap.into_iter().enumerate() {
+            let slice_start_utc = begin_utc
+                .checked_add_signed(
+                    chrono::Duration::from_std(slice.start() - begin_instant).unwrap(),
+                )
+                .unwrap();
+
+            if slice.start() - begin >= self.interval {
+                let label = format!("{}", slice_start_utc.to_rfc3339());
+                let overlay = string_buffer(&label, 25.0);
+                buffer.overlay(&overlay, 0, y + 2);
+                buffer.horizontal_line(
+                    y,
+                    ColorRgb {
+                        r: 255,
+                        g: 255,
+                        b: 255,
+                    },
+                );
+                begin += self.interval;
+            }
         }
-    }
 
-    let _ = buffer.write_png(file);
+        let _ = buffer.write_png(&self.output);
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

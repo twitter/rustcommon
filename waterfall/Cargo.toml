@@ -9,14 +9,14 @@ homepage = "https://github.com/twitter/rustcommon/waterfall"
 repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
+chrono = "0.4.15"
 dejavu = "2.37.0"
 hsl = "0.1.1"
 log = "0.4.8"
 png = "0.16.3"
-rustcommon-atomics = { path = "../atomics" }
-rustcommon-datastructures = { path = "../datastructures" }
+rustcommon-heatmap = { path = "../heatmap" }
+rustcommon-histogram = { path = "../histogram" }
 rusttype = "0.8.3"
-time = "0.1.42"
 
 [dev-dependencies]
 rand = "0.7.3"

@@ -4,6 +4,7 @@
 
 use crate::{Bucket, Counter, HistogramError, Indexing};
 
+#[derive(Clone)]
 /// A histogram type which follows normal ownership rules.
 pub struct Histogram<Value, Count> {
     buckets: Vec<Count>,
@@ -39,6 +40,7 @@ where
         for _ in 0..=max_index {
             buckets.push(Count::default());
         }
+        buckets.shrink_to_fit();
         histogram.buckets = buckets;
 
         histogram
@@ -69,6 +71,10 @@ where
             self.buckets[i] = Count::default();
         }
         self.too_high = Count::default();
+    }
+
+    pub fn buckets(&self) -> usize {
+        self.buckets.len()
     }
 
     /// Return the value closest to the specified percentile. Returns an error
