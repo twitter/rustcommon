@@ -4,18 +4,18 @@
 
 //! This crate is used to render a waterfall style plot of a heatmap
 
-use rustcommon_heatmap::*;
-use core::ops::Sub;
-use std::convert::From;
 use chrono::Utc;
 use core::hash::Hash;
+use core::ops::Sub;
 use hsl::HSL;
+use rustcommon_heatmap::*;
 use rusttype::{point, FontCollection, PositionedGlyph, Scale};
-use std::time::{Duration, Instant};
 use std::collections::HashMap;
+use std::convert::From;
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
+use std::time::{Duration, Instant};
 
 pub struct WaterfallBuilder<Value> {
     output: String,
@@ -76,7 +76,8 @@ where
             }
         }
 
-        let mut counts = rustcommon_histogram::Histogram::<u64, u64>::new(max_count * max_width, 255);
+        let mut counts =
+            rustcommon_histogram::Histogram::<u64, u64>::new(max_count * max_width, 255);
         for slice in heatmap {
             for bucket in slice.histogram() {
                 let count = u64::from(bucket.count());
@@ -140,7 +141,11 @@ where
         let mut begin = begin_instant;
 
         for (y, slice) in heatmap.into_iter().enumerate() {
-            let slice_start_utc = begin_utc.checked_add_signed(chrono::Duration::from_std(slice.start() - begin_instant).unwrap()).unwrap();
+            let slice_start_utc = begin_utc
+                .checked_add_signed(
+                    chrono::Duration::from_std(slice.start() - begin_instant).unwrap(),
+                )
+                .unwrap();
 
             if slice.start() - begin >= self.interval {
                 let label = format!("{}", slice_start_utc.to_rfc3339());

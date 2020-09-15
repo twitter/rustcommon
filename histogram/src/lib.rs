@@ -14,7 +14,7 @@ pub use error::*;
 pub use histograms::*;
 pub use indexing::*;
 
-pub use rustcommon_atomics::{Atomic, AtomicU8, AtomicU16, AtomicU32, AtomicU64};
+pub use rustcommon_atomics::{Atomic, AtomicU16, AtomicU32, AtomicU64, AtomicU8};
 
 #[cfg(test)]
 mod tests {

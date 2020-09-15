@@ -7,11 +7,11 @@ mod slice;
 mod standard;
 
 pub use atomic::AtomicHeatmap;
-pub use standard::Heatmap;
 pub use slice::Slice;
+pub use standard::Heatmap;
 
 pub use rustcommon_atomics::{Atomic, AtomicU16, AtomicU32, AtomicU64, AtomicU8};
-pub use rustcommon_histogram::{AtomicCounter, Counter, Indexing, HistogramError};
+pub use rustcommon_histogram::{AtomicCounter, Counter, HistogramError, Indexing};
 
 #[cfg(test)]
 mod tests {

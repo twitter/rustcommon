@@ -69,7 +69,8 @@ where
     fn get_slice(&self, index: usize) -> Option<Slice<Value, Count>> {
         if let Some(histogram) = self.slices.get(index).map(|v| (*v).clone()) {
             let shift = if index > self.current {
-                self.resolution.mul_f64((self.slices.len() + self.current - index) as f64)
+                self.resolution
+                    .mul_f64((self.slices.len() + self.current - index) as f64)
             } else {
                 self.resolution.mul_f64((self.current - index) as f64)
             };
@@ -107,7 +108,11 @@ where
         } else {
             0
         };
-        Iter { inner, index, visited: 0 }
+        Iter {
+            inner,
+            index,
+            visited: 0,
+        }
     }
 }
 
@@ -131,7 +136,6 @@ where
             self.visited += 1;
             bucket
         }
-        
     }
 }
 

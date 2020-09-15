@@ -2,12 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use rustcommon_waterfall::WaterfallBuilder;
-use std::time::Instant;
-use std::time::Duration;
 use rand::thread_rng;
 use rand_distr::*;
 use rustcommon_logger::*;
+use rustcommon_waterfall::WaterfallBuilder;
+use std::time::Duration;
+use std::time::Instant;
 
 fn main() {
     Logger::new()
@@ -42,7 +42,8 @@ pub fn simulate(shape: Shape) {
     println!("simulating for {:?}", shape);
     let duration = 120;
 
-    let mut heatmap = rustcommon_heatmap::Heatmap::<u64, u64>::new(1_000_000, 3, 120, Duration::new(1,0));
+    let mut heatmap =
+        rustcommon_heatmap::Heatmap::<u64, u64>::new(1_000_000, 3, 120, Duration::new(1, 0));
 
     let cauchy = Cauchy::new(500_000.0, 2_000.00).unwrap();
     let normal = Normal::new(200_000.0, 100_000.0).unwrap();
