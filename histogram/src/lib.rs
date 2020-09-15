@@ -14,9 +14,11 @@ pub use error::*;
 pub use histograms::*;
 pub use indexing::*;
 
+pub use rustcommon_atomics::{Atomic, AtomicU8, AtomicU16, AtomicU32, AtomicU64};
+
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::*;
 
     #[test]
     fn build() {

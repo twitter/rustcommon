@@ -2,6 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::Counter;
+use crate::Histogram;
 use crate::{AtomicCounter, Bucket, HistogramError, Indexing};
 use rustcommon_atomics::{Atomic, Ordering};
 
@@ -43,6 +45,7 @@ where
         for _ in 0..=max_index {
             buckets.push(Count::default());
         }
+        buckets.shrink_to_fit();
         histogram.buckets = buckets;
 
         histogram
@@ -153,6 +156,18 @@ where
         for bucket in other {
             self.decrement(bucket.value, bucket.count);
         }
+    }
+
+    pub fn load(&self) -> Histogram<Value, <Count as Atomic>::Primitive>
+    where
+        Value: Copy + std::ops::Sub<Output = Value>,
+        <Count as Atomic>::Primitive: Counter,
+    {
+        let mut result = Histogram::new(self.max, self.precision);
+        for bucket in self {
+            result.increment(bucket.value(), bucket.count());
+        }
+        result
     }
 }
 
