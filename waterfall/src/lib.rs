@@ -77,7 +77,7 @@ where
         }
 
         let mut counts =
-            rustcommon_histogram::Histogram::<u64, u64>::new(max_count * max_width, 255);
+            rustcommon_histogram::Histogram::<u64, u64>::new(max_count * max_width, 3);
         for slice in heatmap {
             for bucket in slice.histogram() {
                 let count = u64::from(bucket.count());
