@@ -51,7 +51,7 @@ where
         let now_datetime = Utc::now();
         let now_instant = Instant::now();
 
-        let height = heatmap.slices();
+        let height = heatmap.windows();
         let width = heatmap.buckets();
 
         let mut begin_instant = Instant::now();

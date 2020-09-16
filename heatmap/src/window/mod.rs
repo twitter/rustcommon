@@ -1,13 +1,13 @@
 use rustcommon_histogram::Histogram;
 use std::time::Instant;
 
-pub struct Slice<Value, Count> {
+pub struct Window<Value, Count> {
     pub(crate) start: Instant,
     pub(crate) stop: Instant,
     pub(crate) histogram: Histogram<Value, Count>,
 }
 
-impl<Value, Count> Slice<Value, Count> {
+impl<Value, Count> Window<Value, Count> {
     pub fn start(&self) -> Instant {
         self.start
     }

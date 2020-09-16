@@ -2,11 +2,18 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::slice::Slice;
-use rustcommon_histogram::{Counter, Histogram, HistogramError, Indexing};
+use crate::*;
+
+use rustcommon_histogram::{Counter, Histogram, Indexing};
 
 use std::time::{Duration, Instant};
 
+/// Heatmaps are datastructures which store counts for timestamped values over a
+/// configured time range with individual histograms arranged in a ring buffer.
+/// Increments occur in the most recent slice in the buffer, unless they are
+/// newer than that slice may hold. When this happens, old slices are cleared
+/// and reused. This configuration results in a fully pre-allocated
+/// datastructure.
 pub struct Heatmap<Value, Count> {
     pub(crate) slices: Vec<Histogram<Value, Count>>,
     pub(crate) current: usize,
@@ -21,6 +28,14 @@ where
     Count: Counter,
     u64: From<Value> + From<Count>,
 {
+    /// Create a new `Heatmap` which can store values up and including the `max`
+    /// while maintaining precision across a wide range of values. The
+    /// `precision` is expressed in the number of significant figures preserved.
+    /// The heatmap will store a histogram for each of the `windows` where each
+    /// window will consist of a duration specified as the `resolution`. The
+    /// combination of the number of windows and resolution places bounds on the
+    /// overall span of time maintained within the heatmap as well as how much
+    /// of the heatmap will be cleared when windows age-out.
     pub fn new(max: Value, precision: u8, windows: usize, resolution: Duration) -> Self {
         let mut slices = Vec::new();
         for _ in 0..windows {
@@ -35,25 +50,39 @@ where
         }
     }
 
-    pub fn slices(&self) -> usize {
+    /// Returns the number of windows stored in the `Heatmap` 
+    pub fn windows(&self) -> usize {
         self.slices.len()
     }
 
+    /// Returns the number of buckets stored within each `Histogram` in the
+    /// `Heatmap`
     pub fn buckets(&self) -> usize {
         self.summary.buckets()
     }
 
+    /// Increment a time-value pair by a specified count
     pub fn increment(&mut self, time: Instant, value: Value, count: Count) {
         self.tick(time);
         self.slices[self.current].increment(value, count);
         self.summary.increment(value, count);
     }
 
-    pub fn percentile(&mut self, percentile: f64) -> Result<Value, HistogramError> {
+    /// Return the nearest value for the requested percentile (0.0 - 100.0)
+    /// across the total range of samples retained in the `Heatmap`.
+    ///
+    /// Note: since the heatmap stores a distribution across a configured time
+    /// span, sequential calls to fetch the percentile might result in different
+    /// results. For instance, you may see a 90th percentile that is higher than
+    /// the 100th percentile depending on the timing of calls to this function
+    /// and the distribution of your data.
+    pub fn percentile(&mut self, percentile: f64) -> Result<Value, HeatmapError> {
         self.tick(Instant::now());
-        self.summary.percentile(percentile)
+        self.summary.percentile(percentile).map_err(|e| HeatmapError::from(e))
     }
 
+    /// Internal function which handles reuse of older windows to store newer
+    /// values.
     fn tick(&mut self, time: Instant) {
         while time >= self.next_tick {
             self.current += 1;
@@ -66,7 +95,8 @@ where
         }
     }
 
-    fn get_slice(&self, index: usize) -> Option<Slice<Value, Count>> {
+    /// Internal function to return a `Window` from the `Heatmap`.
+    fn get_slice(&self, index: usize) -> Option<Window<Value, Count>> {
         if let Some(histogram) = self.slices.get(index).map(|v| (*v).clone()) {
             let shift = if index > self.current {
                 self.resolution
@@ -74,7 +104,7 @@ where
             } else {
                 self.resolution.mul_f64((self.current - index) as f64)
             };
-            Some(Slice {
+            Some(Window {
                 start: self.next_tick - shift - self.resolution,
                 stop: self.next_tick - shift,
                 histogram,
@@ -122,9 +152,9 @@ where
     Count: Counter,
     u64: From<Value> + From<Count>,
 {
-    type Item = Slice<Value, Count>;
+    type Item = Window<Value, Count>;
 
-    fn next(&mut self) -> Option<Slice<Value, Count>> {
+    fn next(&mut self) -> Option<Window<Value, Count>> {
         if self.visited >= self.inner.slices.len() {
             None
         } else {
@@ -145,7 +175,7 @@ where
     Count: Counter,
     u64: From<Value> + From<Count>,
 {
-    type Item = Slice<Value, Count>;
+    type Item = Window<Value, Count>;
     type IntoIter = Iter<'a, Value, Count>;
 
     fn into_iter(self) -> Self::IntoIter {

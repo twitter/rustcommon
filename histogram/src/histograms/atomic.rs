@@ -8,7 +8,7 @@ use crate::{AtomicCounter, Bucket, HistogramError, Indexing};
 use rustcommon_atomics::{Atomic, Ordering};
 
 /// A histogram type which may be concurrently modified across threads because
-/// it uses atomic counters. All operations are performed using a `Relaxed`
+/// it uses atomic counters. All operations are performed using a relaxed
 /// ordering.
 pub struct AtomicHistogram<Value, Count> {
     buckets: Vec<Count>,
@@ -51,6 +51,11 @@ where
         histogram
     }
 
+    /// Return the number of buckets stored within this histogram.
+    pub fn buckets(&self) -> usize {
+        self.buckets.len()
+    }
+
     /// Increment the value by the provided count, may saturate the bucket's
     /// counter.
     pub fn increment(&self, value: Value, count: <Count as Atomic>::Primitive) {
@@ -70,7 +75,7 @@ where
         }
     }
 
-    /// Clear all counts
+    /// Clear all counts.
     pub fn clear(&self) {
         let default = Count::default().load(Ordering::Relaxed);
         for i in 0..self.buckets.len() {
@@ -116,6 +121,7 @@ where
         Err(HistogramError::OutOfRange)
     }
 
+    /// Internal function to get the bucket at a given index
     fn get_bucket(&self, index: usize) -> Option<Bucket<Value, <Count as Atomic>::Primitive>> {
         if let Ok(min) = Value::get_min_value(
             index,
@@ -152,12 +158,19 @@ where
         }
     }
 
+    /// Subtract another histogram from this histogram
     pub fn sub_assign(&self, other: &Self) {
         for bucket in other {
             self.decrement(bucket.value, bucket.count);
         }
     }
 
+    /// Convert this `AtomicHistogram` to a non-atomic version by allocating a
+    /// new histogram and performing relaxed loads.
+    ///
+    /// Note: users needing stronger consistency should ensure that no other
+    /// threads are writing to the histogram while this operation is
+    /// in-progress.
     pub fn load(&self) -> Histogram<Value, <Count as Atomic>::Primitive>
     where
         Value: Copy + std::ops::Sub<Output = Value>,

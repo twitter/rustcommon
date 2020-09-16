@@ -5,7 +5,7 @@
 use crate::{Bucket, Counter, HistogramError, Indexing};
 
 #[derive(Clone)]
-/// A histogram type which follows normal ownership rules.
+/// A histogram structure which stores counts for a range of values.
 pub struct Histogram<Value, Count> {
     buckets: Vec<Count>,
     exact: Value,
@@ -65,7 +65,7 @@ where
         }
     }
 
-    /// Clear all counts
+    /// Clear all counts.
     pub fn clear(&mut self) {
         for i in 0..self.buckets.len() {
             self.buckets[i] = Count::default();
@@ -73,6 +73,7 @@ where
         self.too_high = Count::default();
     }
 
+    /// Return the number of buckets stored within the histogram.
     pub fn buckets(&self) -> usize {
         self.buckets.len()
     }
@@ -114,6 +115,7 @@ where
         Err(HistogramError::OutOfRange)
     }
 
+    /// Internal function to get a bucket by index
     fn get_bucket(&self, index: usize) -> Option<Bucket<Value, Count>> {
         if let Ok(min) = Value::get_min_value(
             index,
@@ -150,6 +152,7 @@ where
         }
     }
 
+    /// Subtracts another histogram from this histogram
     pub fn sub_assign(&mut self, other: &Self) {
         for bucket in other {
             self.decrement(bucket.value, bucket.count);

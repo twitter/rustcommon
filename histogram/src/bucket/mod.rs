@@ -4,7 +4,7 @@
 
 use crate::Counter;
 
-/// A `Bucket` stores a count across a range of values
+/// A bucket stores a count across a range of values
 pub struct Bucket<Value, Count> {
     pub(crate) min: Value,
     pub(crate) max: Value,
