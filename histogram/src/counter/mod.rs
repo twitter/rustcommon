@@ -2,6 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+/// A trait which is used to restrict the types that may be used to store counts
+/// for atomic types.
 pub trait AtomicCounter:
     rustcommon_atomics::Atomic
     + rustcommon_atomics::Unsigned
@@ -16,6 +18,8 @@ impl AtomicCounter for rustcommon_atomics::AtomicU32 {}
 impl AtomicCounter for rustcommon_atomics::AtomicU64 {}
 impl AtomicCounter for rustcommon_atomics::AtomicUsize {}
 
+/// A trait which is used to restrict the types that may be used to store counts
+/// for non-atomic types.
 pub trait Counter: Default + Copy {
     fn saturating_add(&mut self, value: Self);
     fn saturating_sub(&mut self, value: Self);

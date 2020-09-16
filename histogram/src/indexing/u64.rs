@@ -1,3 +1,7 @@
+// Copyright 2020 Twitter, Inc.
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 impl crate::Indexing for u64 {
     fn constrain_precision(precision: u8) -> u8 {
         if precision == 0 {
