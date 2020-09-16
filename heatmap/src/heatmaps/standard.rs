@@ -50,7 +50,7 @@ where
         }
     }
 
-    /// Returns the number of windows stored in the `Heatmap` 
+    /// Returns the number of windows stored in the `Heatmap`
     pub fn windows(&self) -> usize {
         self.slices.len()
     }
@@ -78,7 +78,9 @@ where
     /// and the distribution of your data.
     pub fn percentile(&mut self, percentile: f64) -> Result<Value, HeatmapError> {
         self.tick(Instant::now());
-        self.summary.percentile(percentile).map_err(|e| HeatmapError::from(e))
+        self.summary
+            .percentile(percentile)
+            .map_err(|e| HeatmapError::from(e))
     }
 
     /// Internal function which handles reuse of older windows to store newer

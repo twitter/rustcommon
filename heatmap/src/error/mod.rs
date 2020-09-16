@@ -16,11 +16,11 @@ pub enum HeatmapError {
 }
 
 impl From<HistogramError> for HeatmapError {
-	fn from(other: HistogramError) -> Self {
-		match other {
-			HistogramError::Empty => Self::Empty,
-			HistogramError::InvalidPercentile => Self::InvalidPercentile,
-			HistogramError::OutOfRange => Self::OutOfRange,
-		}
-	}
+    fn from(other: HistogramError) -> Self {
+        match other {
+            HistogramError::Empty => Self::Empty,
+            HistogramError::InvalidPercentile => Self::InvalidPercentile,
+            HistogramError::OutOfRange => Self::OutOfRange,
+        }
+    }
 }

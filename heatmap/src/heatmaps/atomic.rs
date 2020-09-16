@@ -54,7 +54,7 @@ where
         }
     }
 
-    /// Returns the number of windows stored in the `AtomicHeatmap` 
+    /// Returns the number of windows stored in the `AtomicHeatmap`
     pub fn windows(&self) -> usize {
         self.slices.len()
     }
@@ -80,14 +80,16 @@ where
     /// results even without concurrent writers. For instance, you may see a
     /// 90th percentile that is higher than the 100th percentile depending on
     /// the timing of calls to this function and the distribution of your data.
-    /// 
+    ///
     /// Note: concurrent writes may also effect the value returned by this
     /// function. Users needing better consistency should ensure that other
     /// threads are not writing into the heatmap while this function is
     /// in-progress.
     pub fn percentile(&self, percentile: f64) -> Result<Value, HeatmapError> {
         self.tick(Instant::now());
-        self.summary.percentile(percentile).map_err(|e| HeatmapError::from(e))
+        self.summary
+            .percentile(percentile)
+            .map_err(|e| HeatmapError::from(e))
     }
 
     // Internal function which handles reuse of older windows to store newer
