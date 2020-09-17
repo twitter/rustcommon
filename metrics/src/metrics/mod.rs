@@ -125,18 +125,18 @@ where
         time: Instant,
         value: <Value as Atomic>::Primitive,
         count: <Count as Atomic>::Primitive,
-    ) -> Result<(), ()> {
+    ) -> Result<(), MetricsError> {
         let entry = Entry::from(statistic);
         if statistic.source() == Source::Distribution {
             if let Some(channel) = self.channels.get(&entry) {
                 channel.record_bucket(time, value, count)
             } else {
                 // statistic not registered
-                Err(())
+                Err(MetricsError::NotRegistered)
             }
         } else {
             // source mismatch
-            Err(())
+            Err(MetricsError::SourceMismatch)
         }
     }
 
@@ -148,7 +148,7 @@ where
         statistic: &dyn Statistic<Value, Count>,
         time: Instant,
         value: <Value as Atomic>::Primitive,
-    ) -> Result<(), ()> {
+    ) -> Result<(), MetricsError> {
         let entry = Entry::from(statistic);
         if statistic.source() == Source::Counter {
             if let Some(channel) = self.channels.get(&entry) {
@@ -156,11 +156,11 @@ where
                 Ok(())
             } else {
                 // statistic not registered
-                Err(())
+                Err(MetricsError::NotRegistered)
             }
         } else {
             // source mismatch
-            Err(())
+            Err(MetricsError::SourceMismatch)
         }
     }
 
@@ -171,7 +171,7 @@ where
         &self,
         statistic: &dyn Statistic<Value, Count>,
         value: <Value as Atomic>::Primitive,
-    ) -> Result<(), ()> {
+    ) -> Result<(), MetricsError> {
         let entry = Entry::from(statistic);
         if statistic.source() == Source::Counter {
             if let Some(channel) = self.channels.get(&entry) {
@@ -179,11 +179,11 @@ where
                 Ok(())
             } else {
                 // statistic not registered
-                Err(())
+                Err(MetricsError::NotRegistered)
             }
         } else {
             // source mismatch
-            Err(())
+            Err(MetricsError::SourceMismatch)
         }
     }
 
@@ -194,7 +194,7 @@ where
         statistic: &dyn Statistic<Value, Count>,
         time: Instant,
         value: <Value as Atomic>::Primitive,
-    ) -> Result<(), ()> {
+    ) -> Result<(), MetricsError> {
         let entry = Entry::from(statistic);
         if statistic.source() == Source::Gauge {
             if let Some(channel) = self.channels.get(&entry) {
@@ -202,11 +202,11 @@ where
                 Ok(())
             } else {
                 // statistic not registered
-                Err(())
+                Err(MetricsError::NotRegistered)
             }
         } else {
             // source mismatch
-            Err(())
+            Err(MetricsError::SourceMismatch)
         }
     }
 
@@ -218,12 +218,12 @@ where
         &self,
         statistic: &dyn Statistic<Value, Count>,
         percentile: f64,
-    ) -> Result<<Value as Atomic>::Primitive, ()> {
+    ) -> Result<<Value as Atomic>::Primitive, MetricsError> {
         let entry = Entry::from(statistic);
         if let Some(channel) = self.channels.get(&entry) {
-            channel.percentile(percentile).map_err(|_| ())
+            channel.percentile(percentile)
         } else {
-            Err(())
+            Err(MetricsError::NotRegistered)
         }
     }
 
@@ -233,12 +233,12 @@ where
     pub fn reading(
         &self,
         statistic: &dyn Statistic<Value, Count>,
-    ) -> Result<<Value as Atomic>::Primitive, ()> {
+    ) -> Result<<Value as Atomic>::Primitive, MetricsError> {
         let entry = Entry::from(statistic);
         if let Some(channel) = self.channels.get(&entry) {
             channel.reading()
         } else {
-            Err(())
+            Err(MetricsError::NotRegistered)
         }
     }
 
