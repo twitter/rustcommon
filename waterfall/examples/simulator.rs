@@ -5,6 +5,7 @@
 use rand::thread_rng;
 use rand_distr::*;
 use rustcommon_logger::*;
+use rustcommon_waterfall::Palette;
 use rustcommon_waterfall::WaterfallBuilder;
 use std::time::Duration;
 use std::time::Instant;
@@ -67,21 +68,33 @@ pub fn simulate(shape: Shape) {
             Shape::Gamma => gamma.sample(&mut rng) * 1_000_000.0,
         };
         let value = value.floor() as u64;
-        heatmap.increment(Instant::now(), value, 1);
+        if value != 0 {
+            heatmap.increment(Instant::now(), value, 1);
+        }
     }
 
-    let filename = match shape {
-        Shape::Cauchy => "cauchy_new.png",
-        Shape::Normal => "normal_new.png",
-        Shape::Uniform => "uniform_new.png",
-        Shape::Triangular => "triangular_new.png",
-        Shape::Gamma => "gamma_new.png",
+    let shape_name = match shape {
+        Shape::Cauchy => "cauchy",
+        Shape::Normal => "normal",
+        Shape::Uniform => "uniform",
+        Shape::Triangular => "triangular",
+        Shape::Gamma => "gamma",
     };
 
-    WaterfallBuilder::new(filename)
-        .label(100, "100")
-        .label(1000, "1000")
-        .label(10000, "10000")
-        .label(100000, "100000")
-        .build(&heatmap);
+    for palette in [Palette::Classic, Palette::Ironbow].iter() {
+        let palette_name = match palette {
+            Palette::Classic => "classic",
+            Palette::Ironbow => "ironbow",
+        };
+
+        let filename = format!("{}_{}.png", shape_name, palette_name);
+
+        WaterfallBuilder::new(&filename)
+            .label(100, "100")
+            .label(1000, "1000")
+            .label(10000, "10000")
+            .label(100000, "100000")
+            .palette(*palette)
+            .build(&heatmap);
+    }
 }
