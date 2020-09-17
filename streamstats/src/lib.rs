@@ -8,13 +8,16 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum StreamstatsError {
-    #[error("histogram contains no samples")]
-    /// The histogram contains no samples.
+    #[error("streamstats contains no samples")]
+    /// There are no samples in the streamstats struct
     Empty,
     #[error("invalid percentile")]
+    /// The requested percentile is not in the range 0.0 - 100.0
     InvalidPercentile,
 }
 
+/// A datastructure for concurrently writing a stream of values into a buffer
+/// which can be used to produce summary statistics such as percentiles.
 pub struct AtomicStreamstats<T>
 where
     T: Atomic,
@@ -118,6 +121,7 @@ where
         }
     }
 
+    /// Clear all samples from the buffer.
     pub fn clear(&mut self) {
         self.current.store(0, Ordering::Relaxed);
         self.len.store(0, Ordering::Relaxed);
@@ -125,6 +129,8 @@ where
     }
 }
 
+/// A datastructure for writing a stream of values into a buffer which can be
+/// used to produce summary statistics such as percentiles.
 pub struct Streamstats<T> {
     buffer: Vec<T>,
     current: usize,
@@ -213,6 +219,7 @@ where
         }
     }
 
+    /// Clear all samples from the buffer.
     pub fn clear(&mut self) {
         self.oldest = self.current;
         self.sorted.clear();
