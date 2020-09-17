@@ -9,4 +9,4 @@ dashmap = "3.11.10"
 rustcommon-atomics = { path = "../atomics" }
 rustcommon-heatmap = { path = "../heatmap" }
 rustcommon-streamstats = { path = "../streamstats" }
-
+thiserror = "1.0.20"

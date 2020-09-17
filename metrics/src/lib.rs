@@ -4,12 +4,14 @@
 
 mod channel;
 mod entry;
+mod error;
 mod metrics;
 mod outputs;
 mod source;
 mod summary;
 mod traits;
 
+pub use error::MetricsError;
 pub use metrics::{Metric, Metrics};
 pub use outputs::Output;
 pub use source::Source;

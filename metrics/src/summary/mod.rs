@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::error::SummaryError;
 use crate::*;
 use core::marker::PhantomData;
 
@@ -44,10 +45,17 @@ where
         }
     }
 
-    pub fn percentile(&self, percentile: f64) -> Result<<Value as Atomic>::Primitive, ()> {
+    pub fn percentile(
+        &self,
+        percentile: f64,
+    ) -> Result<<Value as Atomic>::Primitive, SummaryError> {
         match self {
-            Self::Heatmap(heatmap) => heatmap.percentile(percentile).map_err(|_| ()),
-            Self::Stream(stream) => stream.percentile(percentile).map_err(|_| ()),
+            Self::Heatmap(heatmap) => heatmap
+                .percentile(percentile)
+                .map_err(|e| SummaryError::from(e)),
+            Self::Stream(stream) => stream
+                .percentile(percentile)
+                .map_err(|e| SummaryError::from(e)),
         }
     }
 

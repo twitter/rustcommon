@@ -4,6 +4,7 @@
 
 use crate::summary::SummaryStruct;
 use crate::traits::*;
+use crate::MetricsError;
 use crate::Summary;
 
 use rustcommon_atomics::{Atomic, AtomicBool, Ordering};
@@ -52,12 +53,12 @@ where
         time: Instant,
         value: <Value as Atomic>::Primitive,
         count: <Count as Atomic>::Primitive,
-    ) -> Result<(), ()> {
+    ) -> Result<(), MetricsError> {
         if let Some(summary) = &self.summary {
             summary.increment(time, value, count);
             Ok(())
         } else {
-            Err(())
+            Err(MetricsError::NoSummary)
         }
     }
 
@@ -119,20 +120,25 @@ where
     }
 
     /// Returns a percentile across stored readings/rates/...
-    pub fn percentile(&self, percentile: f64) -> Result<<Value as Atomic>::Primitive, ()> {
+    pub fn percentile(
+        &self,
+        percentile: f64,
+    ) -> Result<<Value as Atomic>::Primitive, MetricsError> {
         if let Some(summary) = &self.summary {
-            summary.percentile(percentile).map_err(|_| ())
+            summary
+                .percentile(percentile)
+                .map_err(|e| MetricsError::from(e))
         } else {
-            Err(())
+            Err(MetricsError::NoSummary)
         }
     }
 
     /// Returns the main reading for the channel (eg: counter, gauge)
-    pub fn reading(&self) -> Result<<Value as Atomic>::Primitive, ()> {
+    pub fn reading(&self) -> Result<<Value as Atomic>::Primitive, MetricsError> {
         if !self.empty.load(Ordering::Relaxed) {
             Ok(self.reading.load(Ordering::Relaxed))
         } else {
-            Err(())
+            Err(MetricsError::Empty)
         }
     }
 
