@@ -197,11 +197,11 @@ fn render_text(string: &str, size: f32, x_pos: usize, y_pos: usize, buf: &mut Rg
                 let x = (x as i32 + bb.min.x) as usize;
                 let y = (y as i32 + bb.min.y) as usize;
                 if v > 0.25 {
-                    buf.put_pixel(
-                        (x + x_pos).try_into().unwrap(),
-                        (y + y_pos).try_into().unwrap(),
-                        Rgb([255, 255, 255]),
-                    );
+                    let x = (x + x_pos).try_into().unwrap();
+                    let y = (y + y_pos).try_into().unwrap();
+                    if x < buf.width() && y < buf.height() {
+                        buf.put_pixel(x, y, Rgb([255, 255, 255]));
+                    }
                 }
             })
         }
