@@ -5,8 +5,7 @@
 use rand::thread_rng;
 use rand_distr::*;
 use rustcommon_logger::*;
-use rustcommon_waterfall::Palette;
-use rustcommon_waterfall::WaterfallBuilder;
+use rustcommon_waterfall::*;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -40,7 +39,7 @@ pub enum Shape {
 }
 
 pub fn simulate(shape: Shape) {
-    println!("simulating for {:?}", shape);
+    info!("Simulating for {:?} distribution", shape);
     let duration = 120;
 
     let mut heatmap =
@@ -65,7 +64,7 @@ pub fn simulate(shape: Shape) {
             Shape::Normal => normal.sample(&mut rng),
             Shape::Uniform => uniform.sample(&mut rng),
             Shape::Triangular => triangular.sample(&mut rng),
-            Shape::Gamma => gamma.sample(&mut rng) * 1_000_000.0,
+            Shape::Gamma => gamma.sample(&mut rng) * 100_000.0,
         };
         let value = value.floor() as u64;
         if value != 0 {
@@ -81,20 +80,28 @@ pub fn simulate(shape: Shape) {
         Shape::Gamma => "gamma",
     };
 
-    for palette in [Palette::Classic, Palette::Ironbow].iter() {
-        let palette_name = match palette {
-            Palette::Classic => "classic",
-            Palette::Ironbow => "ironbow",
-        };
+    for scale in [Scale::Linear, Scale::Logarithmic].iter() {
+        for palette in [Palette::Classic, Palette::Ironbow].iter() {
+            let scale_name = match scale {
+                Scale::Linear => "linear",
+                Scale::Logarithmic => "logarithmic",
+            };
 
-        let filename = format!("{}_{}.png", shape_name, palette_name);
+            let palette_name = match palette {
+                Palette::Classic => "classic",
+                Palette::Ironbow => "ironbow",
+            };
 
-        WaterfallBuilder::new(&filename)
-            .label(100, "100")
-            .label(1000, "1000")
-            .label(10000, "10000")
-            .label(100000, "100000")
-            .palette(*palette)
-            .build(&heatmap);
+            let filename = format!("{}_{}_{}.png", shape_name, palette_name, scale_name);
+
+            WaterfallBuilder::new(&filename)
+                .label(100, "100")
+                .label(1000, "1000")
+                .label(10000, "10000")
+                .label(100000, "100000")
+                .scale(*scale)
+                .palette(*palette)
+                .build(&heatmap);
+        }
     }
 }
