@@ -102,6 +102,18 @@ pub fn simulate(shape: Shape) {
                 .scale(*scale)
                 .palette(*palette)
                 .build(&heatmap);
+
+            let filename = format!("{}_{}_{}_smooth.png", shape_name, palette_name, scale_name);
+
+            WaterfallBuilder::new(&filename)
+                .label(100, "100")
+                .label(1000, "1000")
+                .label(10000, "10000")
+                .label(100000, "100000")
+                .scale(*scale)
+                .palette(*palette)
+                .smooth(Some(1.0))
+                .build(&heatmap);
         }
     }
 }
