@@ -6,26 +6,35 @@
 
 mod palettes;
 
-use palettes::*;
-use std::convert::TryInto;
-
 pub use palettes::Palette;
 
 use chrono::Utc;
+use image::*;
+use palettes::*;
+use rustcommon_heatmap::*;
+use rusttype::{point, FontCollection, PositionedGlyph, Scale as TypeScale};
+
 use core::hash::Hash;
 use core::ops::Sub;
-use image::*;
-use rustcommon_heatmap::*;
-use rusttype::{point, FontCollection, PositionedGlyph, Scale};
 use std::collections::HashMap;
-use std::convert::From;
+use std::convert::{From, TryInto};
 use std::time::{Duration, Instant};
+
+#[derive(Copy, Clone)]
+/// Used to configure various strategies for mapping values to colors
+pub enum Scale {
+    /// Use a linear mapping
+    Linear,
+    /// Use a logarithmic mapping
+    Logarithmic,
+}
 
 pub struct WaterfallBuilder<Value> {
     output: String,
     labels: HashMap<Value, String>,
     palette: Palette,
     interval: Duration,
+    scale: Scale,
 }
 
 impl<Value> WaterfallBuilder<Value>
@@ -39,6 +48,7 @@ where
             labels: HashMap::new(),
             palette: Palette::Classic,
             interval: Duration::new(60, 0),
+            scale: Scale::Linear,
         }
     }
 
@@ -49,6 +59,11 @@ where
 
     pub fn palette(mut self, palette: Palette) -> Self {
         self.palette = palette;
+        self
+    }
+
+    pub fn scale(mut self, scale: Scale) -> Self {
+        self.scale = scale;
         self
     }
 
@@ -74,7 +89,12 @@ where
         let mut max_weight = 0.0;
         for slice in heatmap {
             for b in slice.histogram() {
-                let weight = u64::from(b.count()) as f64 / u64::from(b.width()) as f64;
+                let weight = match self.scale {
+                    Scale::Linear => u64::from(b.count()) as f64 / u64::from(b.width()) as f64,
+                    Scale::Logarithmic => {
+                        (u64::from(b.count()) as f64 / u64::from(b.width()) as f64).log2()
+                    }
+                };
                 if weight > max_weight {
                     max_weight = weight;
                 }
@@ -99,7 +119,12 @@ where
         // set the pixels in the buffer
         for (y, slice) in heatmap.into_iter().enumerate() {
             for (x, b) in slice.histogram().into_iter().enumerate() {
-                let weight = u64::from(b.count()) as f64 / u64::from(b.width()) as f64;
+                let weight = match self.scale {
+                    Scale::Linear => u64::from(b.count()) as f64 / u64::from(b.width()) as f64,
+                    Scale::Logarithmic => {
+                        (u64::from(b.count()) as f64 / u64::from(b.width()) as f64).log2()
+                    }
+                };
                 let scaled_weight = weight / max_weight;
                 let index = (scaled_weight * (colors.len() - 1) as f64).round() as usize;
                 let color = colors[index];
@@ -181,7 +206,7 @@ fn render_text(string: &str, size: f32, x_pos: usize, y_pos: usize, buf: &mut Rg
 
     // size and scaling
     let height: f32 = size;
-    let scale = Scale {
+    let scale = TypeScale {
         x: height * 1.0,
         y: height,
     };
