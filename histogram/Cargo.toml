@@ -11,3 +11,10 @@ repository = "https://github.com/twitter/rustcommon"
 [dependencies]
 rustcommon-atomics = { path = "../atomics" }
 thiserror = "1.0.20"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "standard"
+harness = false

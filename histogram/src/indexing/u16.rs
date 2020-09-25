@@ -27,7 +27,17 @@ impl crate::Indexing for u16 {
         } else if value <= exact {
             Ok(value.into())
         } else {
-            let power = (value as f64).log10().floor() as u16;
+            let power = if value < 10 {
+                0
+            } else if value < 100 {
+                1
+            } else if value < 1_000 {
+                2
+            } else if value < 10_000 {
+                3
+            } else {
+                4
+            };
             let denominator = 10_usize.pow((power - precision as u16 + 1).into());
             let power_offset =
                 (0.9_f64 * f64::from(exact as u32 * (power as u32 - precision as u32))) as usize;
