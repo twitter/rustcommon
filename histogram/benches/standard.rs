@@ -177,11 +177,23 @@ fn increment_u64(c: &mut Criterion) {
     });
 }
 
+fn subtract(c: &mut Criterion) {
+    let max = 1_000_000_000;
+
+    let mut alpha = Histogram::<u64, u64>::new(max, 6);
+    let bravo = alpha.clone();
+
+    c.bench_function("Histogram::<u64, u64>::increment() precision 6 min", |b| {
+        b.iter(|| alpha.sub_assign(&bravo))
+    });
+}
+
 criterion_group!(
     benches,
     increment_u8,
     increment_u16,
     increment_u32,
-    increment_u64
+    increment_u64,
+    subtract,
 );
 criterion_main!(benches);
