@@ -34,15 +34,19 @@ where
     /// Create a new `AtomicHeatmap` which can store values up and including the
     /// `max` while maintaining precision across a wide range of values. The
     /// `precision` is expressed in the number of significant figures preserved.
-    /// The heatmap will store a histogram for each of the `windows` where each
-    /// window will consist of a duration specified as the `resolution`. The
-    /// combination of the number of windows and resolution places bounds on the
-    /// overall span of time maintained within the heatmap as well as how much
-    /// of the heatmap will be cleared when windows age-out.
-    pub fn new(max: Value, precision: u8, windows: usize, resolution: Duration) -> Self {
+    /// The heatmap will contain a histogram for each time step, specified by
+    /// the resolution, necessary to represent the entire span of time stored
+    /// within the heatmap. If the span is not evenly divisible by the
+    /// resolution an additional window will be allocated and the true span will
+    /// be slightly longer than the requested span. Smaller durations for the
+    /// resolution cause more memory to be used, but a smaller batches of
+    /// samples to age out at each time step.
+    pub fn new(max: Value, precision: u8, span: Duration, resolution: Duration) -> Self {
         let mut slices = Vec::new();
-        for _ in 0..windows {
+        let mut true_span = Duration::new(0, 0);
+        while true_span < span {
             slices.push(AtomicHistogram::new(max, precision));
+            true_span += resolution;
         }
         slices.shrink_to_fit();
         Self {
@@ -145,7 +149,7 @@ mod tests {
 
     #[test]
     fn age_out() {
-        let mut heatmap = Heatmap::<u64, u64>::new(1_000_000, 2, 1000, Duration::from_millis(1));
+        let mut heatmap = Heatmap::<u64, u64>::new(1_000_000, 2, Duration::new(1, 0), Duration::from_millis(1));
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
         heatmap.increment(Instant::now(), 1, 1);
         assert_eq!(heatmap.percentile(0.0), Ok(1));
@@ -155,7 +159,7 @@ mod tests {
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
 
         let heatmap =
-            AtomicHeatmap::<u64, AtomicU64>::new(1_000_000, 2, 1000, Duration::from_millis(1));
+            AtomicHeatmap::<u64, AtomicU64>::new(1_000_000, 2, Duration::new(1, 0), Duration::from_millis(1));
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
         heatmap.increment(Instant::now(), 1, 1);
         assert_eq!(heatmap.percentile(0.0), Ok(1));
