@@ -158,10 +158,21 @@ where
         }
     }
 
-    /// Subtract another histogram from this histogram
+    /// Subtracts another histogram from this histogram
     pub fn sub_assign(&self, other: &Self) {
-        for bucket in other {
-            self.decrement(bucket.value, bucket.count);
+        if u64::from(self.max) == u64::from(other.max) && self.precision == other.precision {
+            // fast path when histograms have same configuration
+            for i in 0..self.buckets.len() {
+                self.buckets[i].fetch_saturating_sub(
+                    other.buckets[i].load(Ordering::Relaxed),
+                    Ordering::Relaxed,
+                );
+            }
+        } else {
+            // slow path if we need to calculate appropriate index for each bucket
+            for bucket in other {
+                self.decrement(bucket.value, bucket.count);
+            }
         }
     }
 

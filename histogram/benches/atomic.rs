@@ -1,15 +1,15 @@
 use criterion::BenchmarkId;
 use criterion::Throughput;
 use criterion::{criterion_group, criterion_main, Criterion};
-use rustcommon_histogram::Histogram;
+use rustcommon_histogram::*;
 
 fn increment_u8(c: &mut Criterion) {
     let max = u8::MAX;
 
-    let mut group = c.benchmark_group("Histogram/u8/u8/increment");
+    let mut group = c.benchmark_group("AtomicHistogram/u8/AtomicU8/increment");
 
     for precision in 1..=3 {
-        let mut histogram = Histogram::<u8, u8>::new(max, precision);
+        let histogram = AtomicHistogram::<u8, AtomicU8>::new(max, precision);
         group.throughput(Throughput::Elements(1));
         group.bench_function(BenchmarkId::new("min/precision", precision), |b| {
             b.iter(|| histogram.increment(1, 1))
@@ -23,10 +23,10 @@ fn increment_u8(c: &mut Criterion) {
 fn increment_u16(c: &mut Criterion) {
     let max = u16::MAX;
 
-    let mut group = c.benchmark_group("Histogram/u16/u16/increment");
+    let mut group = c.benchmark_group("AtomicHistogram/u16/AtomicU16/increment");
 
     for precision in 1..=5 {
-        let mut histogram = Histogram::<u16, u16>::new(max, precision);
+        let histogram = AtomicHistogram::<u16, AtomicU16>::new(max, precision);
         group.throughput(Throughput::Elements(1));
         group.bench_function(BenchmarkId::new("min/precision", precision), |b| {
             b.iter(|| histogram.increment(1, 1))
@@ -40,10 +40,10 @@ fn increment_u16(c: &mut Criterion) {
 fn increment_u32(c: &mut Criterion) {
     let max = u32::MAX;
 
-    let mut group = c.benchmark_group("Histogram/u32/u32/increment");
+    let mut group = c.benchmark_group("AtomicHistogram/u32/AtomicU32/increment");
 
     for precision in 1..=6 {
-        let mut histogram = Histogram::<u32, u32>::new(max, precision);
+        let histogram = AtomicHistogram::<u32, AtomicU32>::new(max, precision);
         group.throughput(Throughput::Elements(1));
         group.bench_function(BenchmarkId::new("min/precision", precision), |b| {
             b.iter(|| histogram.increment(1, 1))
@@ -57,10 +57,10 @@ fn increment_u32(c: &mut Criterion) {
 fn increment_u64(c: &mut Criterion) {
     let max = u64::MAX;
 
-    let mut group = c.benchmark_group("Histogram/u64/u64/increment");
+    let mut group = c.benchmark_group("AtomicHistogram/u64/AtomicU64/increment");
 
     for precision in 1..=6 {
-        let mut histogram = Histogram::<u64, u64>::new(max, precision);
+        let histogram = AtomicHistogram::<u64, AtomicU64>::new(max, precision);
         group.throughput(Throughput::Elements(1));
         group.bench_function(BenchmarkId::new("min/precision", precision), |b| {
             b.iter(|| histogram.increment(1, 1))
@@ -74,11 +74,11 @@ fn increment_u64(c: &mut Criterion) {
 fn sub_assign_u64(c: &mut Criterion) {
     let max = u64::MAX;
 
-    let mut group = c.benchmark_group("Histogram/u64/u64/sub_assign/fast");
+    let mut group = c.benchmark_group("AtomicHistogram/u64/AtomicU64/sub_assign/fast");
 
     for precision in 1..=6 {
-        let mut alpha = Histogram::<u64, u64>::new(max, precision);
-        let bravo = Histogram::<u64, u64>::new(max, precision);
+        let alpha = AtomicHistogram::<u64, AtomicU64>::new(max, precision);
+        let bravo = AtomicHistogram::<u64, AtomicU64>::new(max, precision);
         group.bench_function(BenchmarkId::new("precision", precision), |b| {
             b.iter(|| alpha.sub_assign(&bravo))
         });

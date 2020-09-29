@@ -27,9 +27,7 @@ impl crate::Indexing for u16 {
         } else if value <= exact {
             Ok(value.into())
         } else {
-            let power = if value < 10 {
-                0
-            } else if value < 100 {
+            let power = if value < 100 {
                 1
             } else if value < 1_000 {
                 2

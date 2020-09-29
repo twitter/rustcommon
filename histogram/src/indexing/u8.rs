@@ -27,13 +27,7 @@ impl crate::Indexing for u8 {
         } else if value <= exact {
             Ok(value.into())
         } else {
-            let power = if value < 10 {
-                0
-            } else if value < 100 {
-                1
-            } else {
-                2
-            };
+            let power = if value < 100 { 1 } else { 2 };
             let denominator = 10_usize.pow((power - precision + 1).into());
             let power_offset =
                 (0.9_f64 * f64::from(exact as u32 * (power as u32 - precision as u32))) as usize;
