@@ -163,7 +163,10 @@ where
         if u64::from(self.max) == u64::from(other.max) && self.precision == other.precision {
             // fast path when histograms have same configuration
             for i in 0..self.buckets.len() {
-                self.buckets[i].fetch_saturating_sub(other.buckets[i].load(Ordering::Relaxed), Ordering::Relaxed);
+                self.buckets[i].fetch_saturating_sub(
+                    other.buckets[i].load(Ordering::Relaxed),
+                    Ordering::Relaxed,
+                );
             }
         } else {
             // slow path if we need to calculate appropriate index for each bucket

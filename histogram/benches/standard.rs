@@ -1,5 +1,5 @@
-use criterion::Throughput;
 use criterion::BenchmarkId;
+use criterion::Throughput;
 use criterion::{criterion_group, criterion_main, Criterion};
 use rustcommon_histogram::Histogram;
 
@@ -11,10 +11,12 @@ fn increment_u8(c: &mut Criterion) {
     for precision in 1..=3 {
         let mut histogram = Histogram::<u8, u8>::new(max, precision);
         group.throughput(Throughput::Elements(1));
-        group.bench_function(BenchmarkId::new("min/precision", precision),
-            |b| { b.iter(|| histogram.increment(1, 1)) });
-        group.bench_function(BenchmarkId::new("max/precision", precision),
-            |b| { b.iter(|| histogram.increment(max, 1)) });
+        group.bench_function(BenchmarkId::new("min/precision", precision), |b| {
+            b.iter(|| histogram.increment(1, 1))
+        });
+        group.bench_function(BenchmarkId::new("max/precision", precision), |b| {
+            b.iter(|| histogram.increment(max, 1))
+        });
     }
 }
 
@@ -26,10 +28,12 @@ fn increment_u16(c: &mut Criterion) {
     for precision in 1..=5 {
         let mut histogram = Histogram::<u16, u16>::new(max, precision);
         group.throughput(Throughput::Elements(1));
-        group.bench_function(BenchmarkId::new("min/precision", precision),
-            |b| { b.iter(|| histogram.increment(1, 1)) });
-        group.bench_function(BenchmarkId::new("max/precision", precision),
-            |b| { b.iter(|| histogram.increment(max, 1)) });
+        group.bench_function(BenchmarkId::new("min/precision", precision), |b| {
+            b.iter(|| histogram.increment(1, 1))
+        });
+        group.bench_function(BenchmarkId::new("max/precision", precision), |b| {
+            b.iter(|| histogram.increment(max, 1))
+        });
     }
 }
 
@@ -41,10 +45,12 @@ fn increment_u32(c: &mut Criterion) {
     for precision in 1..=6 {
         let mut histogram = Histogram::<u32, u32>::new(max, precision);
         group.throughput(Throughput::Elements(1));
-        group.bench_function(BenchmarkId::new("min/precision", precision),
-            |b| { b.iter(|| histogram.increment(1, 1)) });
-        group.bench_function(BenchmarkId::new("max/precision", precision),
-            |b| { b.iter(|| histogram.increment(max, 1)) });
+        group.bench_function(BenchmarkId::new("min/precision", precision), |b| {
+            b.iter(|| histogram.increment(1, 1))
+        });
+        group.bench_function(BenchmarkId::new("max/precision", precision), |b| {
+            b.iter(|| histogram.increment(max, 1))
+        });
     }
 }
 
@@ -56,10 +62,12 @@ fn increment_u64(c: &mut Criterion) {
     for precision in 1..=6 {
         let mut histogram = Histogram::<u64, u64>::new(max, precision);
         group.throughput(Throughput::Elements(1));
-        group.bench_function(BenchmarkId::new("min/precision", precision),
-            |b| { b.iter(|| histogram.increment(1, 1)) });
-        group.bench_function(BenchmarkId::new("max/precision", precision),
-            |b| { b.iter(|| histogram.increment(max, 1)) });
+        group.bench_function(BenchmarkId::new("min/precision", precision), |b| {
+            b.iter(|| histogram.increment(1, 1))
+        });
+        group.bench_function(BenchmarkId::new("max/precision", precision), |b| {
+            b.iter(|| histogram.increment(max, 1))
+        });
     }
 }
 
@@ -71,8 +79,9 @@ fn sub_assign_u64(c: &mut Criterion) {
     for precision in 1..=6 {
         let mut alpha = Histogram::<u64, u64>::new(max, precision);
         let bravo = Histogram::<u64, u64>::new(max, precision);
-        group.bench_function(BenchmarkId::new("precision", precision),
-            |b| { b.iter(|| alpha.sub_assign(&bravo)) });
+        group.bench_function(BenchmarkId::new("precision", precision), |b| {
+            b.iter(|| alpha.sub_assign(&bravo))
+        });
     }
 }
 
