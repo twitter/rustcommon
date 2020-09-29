@@ -21,7 +21,8 @@ mod tests {
 
     #[test]
     fn age_out() {
-        let mut heatmap = Heatmap::<u64, u64>::new(1_000_000, 2, 1000, Duration::from_millis(1));
+        let mut heatmap =
+            Heatmap::<u64, u64>::new(1_000_000, 2, Duration::new(1, 0), Duration::from_millis(1));
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
         heatmap.increment(Instant::now(), 1, 1);
         assert_eq!(heatmap.percentile(0.0), Ok(1));
@@ -30,8 +31,12 @@ mod tests {
         std::thread::sleep(Duration::from_millis(2000));
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
 
-        let heatmap =
-            AtomicHeatmap::<u64, AtomicU64>::new(1_000_000, 2, 1000, Duration::from_millis(1));
+        let heatmap = AtomicHeatmap::<u64, AtomicU64>::new(
+            1_000_000,
+            2,
+            Duration::new(1, 0),
+            Duration::from_millis(1),
+        );
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
         heatmap.increment(Instant::now(), 1, 1);
         assert_eq!(heatmap.percentile(0.0), Ok(1));

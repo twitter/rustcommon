@@ -62,10 +62,10 @@ where
     pub fn heatmap(
         max: <Value as Atomic>::Primitive,
         precision: u8,
-        windows: usize,
+        span: Duration,
         resolution: Duration,
     ) -> Self {
-        Self::Heatmap(AtomicHeatmap::new(max, precision, windows, resolution))
+        Self::Heatmap(AtomicHeatmap::new(max, precision, span, resolution))
     }
 
     pub fn stream(samples: usize) -> Self {
@@ -79,7 +79,7 @@ where
     <Value as Atomic>::Primitive: Primitive,
     u64: From<<Value as Atomic>::Primitive>,
 {
-    Heatmap(<Value as Atomic>::Primitive, u8, usize, Duration),
+    Heatmap(<Value as Atomic>::Primitive, u8, Duration, Duration),
     Stream(usize),
 }
 
@@ -106,11 +106,11 @@ where
     pub fn heatmap(
         max: <Value as Atomic>::Primitive,
         precision: u8,
-        windows: usize,
+        span: Duration,
         resolution: Duration,
     ) -> Summary<Value, Count> {
         Self {
-            inner: SummaryType::Heatmap(max, precision, windows, resolution),
+            inner: SummaryType::Heatmap(max, precision, span, resolution),
             _count: PhantomData,
         }
     }
@@ -124,8 +124,8 @@ where
 
     pub(crate) fn build(&self) -> SummaryStruct<Value, Count> {
         match self.inner {
-            SummaryType::Heatmap(max, precision, windows, resolution) => {
-                SummaryStruct::heatmap(max, precision, windows, resolution)
+            SummaryType::Heatmap(max, precision, span, resolution) => {
+                SummaryStruct::heatmap(max, precision, span, resolution)
             }
             SummaryType::Stream(samples) => SummaryStruct::stream(samples),
         }

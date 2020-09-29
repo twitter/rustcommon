@@ -40,10 +40,10 @@ pub enum Shape {
 
 pub fn simulate(shape: Shape) {
     info!("Simulating for {:?} distribution", shape);
-    let duration = 120;
+    let duration = Duration::new(120, 0);
 
     let mut heatmap =
-        rustcommon_heatmap::Heatmap::<u64, u64>::new(1_000_000, 3, 120, Duration::new(1, 0));
+        rustcommon_heatmap::Heatmap::<u64, u64>::new(1_000_000, 3, duration, Duration::new(1, 0));
 
     let cauchy = Cauchy::new(500_000.0, 2_000.00).unwrap();
     let normal = Normal::new(200_000.0, 100_000.0).unwrap();
@@ -51,12 +51,10 @@ pub fn simulate(shape: Shape) {
     let triangular = Triangular::new(1.0, 200_000.0, 50_000.0).unwrap();
     let gamma = Gamma::new(2.0, 2.0).unwrap();
 
-    let start = std::time::Instant::now();
     let mut rng = thread_rng();
-
+    let start = std::time::Instant::now();
     loop {
-        let now = std::time::Instant::now();
-        if now - start >= std::time::Duration::new(duration, 0) {
+        if start.elapsed() >= duration {
             break;
         }
         let value: f64 = match shape {
