@@ -137,7 +137,6 @@ fn sub_assign_u32(c: &mut Criterion) {
     }
 }
 
-
 fn sub_assign_u64(c: &mut Criterion) {
     let max = u64::MAX;
 

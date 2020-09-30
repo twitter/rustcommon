@@ -75,9 +75,7 @@ impl crate::Indexing for u32 {
             let base_offset = 10_usize.pow(precision.into());
             let shift = base_offset / 10;
             let power = precision as usize + (index - base_offset) / (9 * shift);
-            let power_offset = (0.9
-                * (base_offset * (power - precision as usize)) as f64)
-                as usize;
+            let power_offset = (0.9 * (base_offset * (power - precision as usize)) as f64) as usize;
             let value = (index + shift - base_offset - power_offset) as u32
                 * 10_u32.pow((power - precision as usize + 1) as u32);
             Ok(value)
