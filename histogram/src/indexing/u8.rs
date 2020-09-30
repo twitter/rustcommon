@@ -29,8 +29,7 @@ impl crate::Indexing for u8 {
         } else {
             let power = if value < 100 { 1 } else { 2 };
             let denominator = 10_usize.pow((power - precision + 1).into());
-            let power_offset =
-                9 * exact as usize * (power as usize - precision as usize) / 10;
+            let power_offset = 9 * exact as usize * (power as usize - precision as usize) / 10;
             let remainder: usize = value as usize / denominator;
             let shift = exact as usize / 10;
             let index = exact as usize + power_offset + remainder - shift;
