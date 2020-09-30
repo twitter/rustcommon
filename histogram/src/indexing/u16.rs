@@ -37,8 +37,7 @@ impl crate::Indexing for u16 {
                 4
             };
             let denominator = 10_usize.pow((power - precision as u16 + 1).into());
-            let power_offset =
-                (0.9_f64 * f64::from(exact as u32 * (power as u32 - precision as u32))) as usize;
+            let power_offset = 9 * exact as usize * (power as usize - precision as usize) / 10;
             let remainder: usize = value as usize / denominator;
             let shift = exact as usize / 10;
             let index = exact as usize + power_offset + remainder - shift;
@@ -61,12 +60,10 @@ impl crate::Indexing for u16 {
         } else if index == buckets - 1 {
             Ok(max)
         } else {
-            let shift = 10_usize.pow((precision - 1).into());
             let base_offset = 10_usize.pow(precision.into());
+            let shift = base_offset / 10;
             let power = precision as usize + (index - base_offset) / (9 * shift);
-            let power_offset = (0.9
-                * (10_usize.pow(precision.into()) * (power - precision as usize)) as f64)
-                as usize;
+            let power_offset = 9 * (shift * (power - precision as usize));
             let value = (index + shift - base_offset - power_offset) as u16
                 * 10_u16.pow((power - precision as usize + 1) as u32);
             Ok(value)
