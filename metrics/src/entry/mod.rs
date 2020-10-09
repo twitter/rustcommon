@@ -10,7 +10,6 @@ use crate::*;
 
 use rustcommon_atomics::Atomic;
 
-#[derive(Clone)]
 pub struct Entry<Value, Count>
 where
     Value: crate::Value,
@@ -23,6 +22,24 @@ where
     source: Source,
     _value: PhantomData<Value>,
     _count: PhantomData<Count>,
+}
+
+impl<Value, Count> Clone for Entry<Value, Count>
+where
+    Value: crate::Value,
+    Count: crate::Count,
+    <Value as Atomic>::Primitive: Primitive,
+    <Count as Atomic>::Primitive: Primitive,
+    u64: From<<Value as Atomic>::Primitive> + From<<Count as Atomic>::Primitive>,
+{
+    fn clone(&self) -> Self {
+        Self {
+            name: self.name.clone(),
+            source: self.source.clone(),
+            _value: self._value.clone(),
+            _count: self._count.clone(),
+        }
+    }
 }
 
 impl<Value, Count> Statistic<Value, Count> for Entry<Value, Count>
