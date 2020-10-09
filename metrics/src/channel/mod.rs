@@ -2,10 +2,15 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::entry::Entry;
+use crate::outputs::ApproxOutput;
 use crate::summary::SummaryStruct;
 use crate::traits::*;
 use crate::MetricsError;
+use crate::Output;
 use crate::Summary;
+use std::collections::HashSet;
+use std::sync::Mutex;
 
 use rustcommon_atomics::{Atomic, AtomicBool, Ordering};
 
@@ -23,9 +28,11 @@ where
     u64: From<<Value as Atomic>::Primitive> + From<<Count as Atomic>::Primitive>,
 {
     refreshed: RwLock<Instant>,
+    statistic: Entry<Value, Count>,
     empty: AtomicBool,
     reading: Value,
     summary: Option<SummaryStruct<Value, Count>>,
+    outputs: Mutex<HashSet<ApproxOutput>>,
 }
 
 impl<Value, Count> Channel<Value, Count>
@@ -41,9 +48,11 @@ where
         let summary = statistic.summary().map(|v| v.build());
         Self {
             empty: AtomicBool::new(true),
+            statistic: Entry::from(statistic),
             reading: Default::default(),
             refreshed: RwLock::new(Instant::now()),
             summary,
+            outputs: Default::default(),
         }
     }
 
@@ -125,9 +134,7 @@ where
         percentile: f64,
     ) -> Result<<Value as Atomic>::Primitive, MetricsError> {
         if let Some(summary) = &self.summary {
-            summary
-                .percentile(percentile)
-                .map_err(|e| MetricsError::from(e))
+            summary.percentile(percentile).map_err(MetricsError::from)
         } else {
             Err(MetricsError::NoSummary)
         }
@@ -153,5 +160,28 @@ where
         if self.summary.is_none() {
             self.set_summary(summary);
         }
+    }
+
+    pub fn statistic(&self) -> &dyn Statistic<Value, Count> {
+        &self.statistic
+    }
+
+    pub fn outputs(&self) -> Vec<ApproxOutput> {
+        let mut ret = Vec::new();
+        let outputs = self.outputs.lock().unwrap();
+        for output in (*outputs).iter().map(|v| *v) {
+            ret.push(output);
+        }
+        ret
+    }
+
+    pub fn add_output(&self, output: Output) {
+        let mut outputs = self.outputs.lock().unwrap();
+        (*outputs).insert(ApproxOutput::from(output));
+    }
+
+    pub fn remove_output(&self, output: Output) {
+        let mut outputs = self.outputs.lock().unwrap();
+        (*outputs).remove(&ApproxOutput::from(output));
     }
 }

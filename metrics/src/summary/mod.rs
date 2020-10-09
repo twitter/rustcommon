@@ -50,12 +50,8 @@ where
         percentile: f64,
     ) -> Result<<Value as Atomic>::Primitive, SummaryError> {
         match self {
-            Self::Heatmap(heatmap) => heatmap
-                .percentile(percentile)
-                .map_err(|e| SummaryError::from(e)),
-            Self::Stream(stream) => stream
-                .percentile(percentile)
-                .map_err(|e| SummaryError::from(e)),
+            Self::Heatmap(heatmap) => heatmap.percentile(percentile).map_err(SummaryError::from),
+            Self::Stream(stream) => stream.percentile(percentile).map_err(SummaryError::from),
         }
     }
 

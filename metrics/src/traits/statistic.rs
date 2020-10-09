@@ -55,7 +55,7 @@ where
     u64: From<<Value as Atomic>::Primitive> + From<<Count as Atomic>::Primitive>,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.name().to_string() == other.name().to_string()
+        self.name() == other.name()
     }
 }
 
