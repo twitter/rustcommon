@@ -4,7 +4,7 @@
 
 use crate::channel::Channel;
 use crate::entry::Entry;
-use crate::outputs::{ApproxOutput, Outputs};
+use crate::outputs::ApproxOutput;
 use crate::*;
 use core::hash::Hash;
 use core::hash::Hasher;
@@ -28,11 +28,25 @@ where
     <Count as Atomic>::Primitive: Primitive,
     u64: From<<Value as Atomic>::Primitive> + From<<Count as Atomic>::Primitive>,
 {
-    channels: DashMap<Entry<Value, Count>, Channel<Value, Count>>,
-    outputs: Outputs<Value, Count>,
+    channels: DashMap<String, Channel<Value, Count>>,
 }
 
-impl<Value, Count> Metrics<Value, Count>
+impl<'a, Value: 'a, Count: 'a> Default for Metrics<Value, Count>
+where
+    Value: crate::Value,
+    Count: crate::Count,
+    <Value as Atomic>::Primitive: Primitive,
+    <Count as Atomic>::Primitive: Primitive,
+    u64: From<<Value as Atomic>::Primitive> + From<<Count as Atomic>::Primitive>,
+{
+    fn default() -> Self {
+        Self {
+            channels: DashMap::new(),
+        }
+    }
+}
+
+impl<'a, Value: 'a, Count: 'a> Metrics<Value, Count>
 where
     Value: crate::Value,
     Count: crate::Count,
@@ -42,35 +56,31 @@ where
 {
     /// Create a new empty metrics registry
     pub fn new() -> Self {
-        Self {
-            channels: DashMap::new(),
-            outputs: Outputs::new(),
-        }
+        Default::default()
     }
 
     /// Begin tracking a new statistic without a corresponding output. Useful if
     /// metrics will be retrieved and reported manually in a command-line tool.
-    pub fn register(&self, statistic: &dyn Statistic<Value, Count>) {
-        let entry = Entry::from(statistic);
-        if !self.channels.contains_key(&entry) {
+    pub fn register(&self, statistic: &'a (dyn Statistic<Value, Count> + 'a)) {
+        if !self.channels.contains_key(statistic.name()) {
             let channel = Channel::new(statistic);
-            self.channels.insert(entry, channel);
+            self.channels.insert(statistic.name().to_string(), channel);
         }
     }
 
     /// Stop tracking a statistics and any corresponding outputs.
-    pub fn deregister(&self, statistic: &dyn Statistic<Value, Count>) {
-        let entry = Entry::from(statistic);
-        self.outputs.deregister_statistic(statistic);
-        self.channels.remove(&entry);
+    pub fn deregister(&self, statistic: &'a (dyn Statistic<Value, Count> + 'a)) {
+        self.channels.remove(statistic.name());
     }
 
     /// Adds a new output to the registry which will be included in future
     /// snapshots. If the statistic is not already tracked, it will be
     /// registered.
-    pub fn add_output(&self, statistic: &dyn Statistic<Value, Count>, output: Output) {
+    pub fn add_output(&self, statistic: &'a (dyn Statistic<Value, Count> + 'a), output: Output) {
         self.register(statistic);
-        self.outputs.register(statistic, output);
+        if let Some(channel) = self.channels.get_mut(statistic.name()) {
+            channel.add_output(output);
+        }
     }
 
     /// Remove an output from the registry so that it will not be included in
@@ -78,7 +88,9 @@ where
     /// the statistic even if no outputs remain. Use `deregister` method to stop
     /// tracking a statistic entirely.
     pub fn remove_output(&self, statistic: &dyn Statistic<Value, Count>, output: Output) {
-        self.outputs.deregister(statistic, output);
+        if let Some(channel) = self.channels.get_mut(statistic.name()) {
+            channel.remove_output(output);
+        }
     }
 
     /// Set the `Summary` for an already registered `Statistic`. This can be
@@ -87,11 +99,10 @@ where
     /// may need to be higher for stream summaries.
     pub fn set_summary(
         &self,
-        statistic: &dyn Statistic<Value, Count>,
+        statistic: &'a (dyn Statistic<Value, Count> + 'a),
         summary: Summary<Value, Count>,
     ) {
-        let entry = Entry::from(statistic);
-        if let Some(mut channel) = self.channels.get_mut(&entry) {
+        if let Some(mut channel) = self.channels.get_mut(statistic.name()) {
             channel.set_summary(summary);
         }
     }
@@ -101,18 +112,16 @@ where
     /// prevent clearing an existing summary.
     pub fn add_summary(
         &self,
-        statistic: &dyn Statistic<Value, Count>,
+        statistic: &'a (dyn Statistic<Value, Count> + 'a),
         summary: Summary<Value, Count>,
     ) {
-        let entry = Entry::from(statistic);
-        if let Some(mut channel) = self.channels.get_mut(&entry) {
+        if let Some(mut channel) = self.channels.get_mut(statistic.name()) {
             channel.add_summary(summary);
         }
     }
 
     /// Remove all statistics and outputs.
     pub fn clear(&self) {
-        self.outputs.clear();
         self.channels.clear();
     }
 
@@ -121,14 +130,13 @@ where
     /// for the statistic is a heatmap.
     pub fn record_bucket(
         &self,
-        statistic: &dyn Statistic<Value, Count>,
+        statistic: &'a (dyn Statistic<Value, Count> + 'a),
         time: Instant,
         value: <Value as Atomic>::Primitive,
         count: <Count as Atomic>::Primitive,
     ) -> Result<(), MetricsError> {
-        let entry = Entry::from(statistic);
         if statistic.source() == Source::Distribution {
-            if let Some(channel) = self.channels.get(&entry) {
+            if let Some(channel) = self.channels.get(statistic.name()) {
                 channel.record_bucket(time, value, count)
             } else {
                 // statistic not registered
@@ -145,13 +153,12 @@ where
     /// changes.
     pub fn record_counter(
         &self,
-        statistic: &dyn Statistic<Value, Count>,
+        statistic: &'a (dyn Statistic<Value, Count> + 'a),
         time: Instant,
         value: <Value as Atomic>::Primitive,
     ) -> Result<(), MetricsError> {
-        let entry = Entry::from(statistic);
         if statistic.source() == Source::Counter {
-            if let Some(channel) = self.channels.get(&entry) {
+            if let Some(channel) = self.channels.get(statistic.name()) {
                 channel.record_counter(time, value);
                 Ok(())
             } else {
@@ -169,12 +176,11 @@ where
     /// with out-of-order increments.
     pub fn increment_counter(
         &self,
-        statistic: &dyn Statistic<Value, Count>,
+        statistic: &'a (dyn Statistic<Value, Count> + 'a),
         value: <Value as Atomic>::Primitive,
     ) -> Result<(), MetricsError> {
-        let entry = Entry::from(statistic);
         if statistic.source() == Source::Counter {
-            if let Some(channel) = self.channels.get(&entry) {
+            if let Some(channel) = self.channels.get(statistic.name()) {
                 channel.increment_counter(value);
                 Ok(())
             } else {
@@ -191,13 +197,12 @@ where
     /// any summary type. Summary tracks instantaneous gauge readings.
     pub fn record_gauge(
         &self,
-        statistic: &dyn Statistic<Value, Count>,
+        statistic: &'a (dyn Statistic<Value, Count> + 'a),
         time: Instant,
         value: <Value as Atomic>::Primitive,
     ) -> Result<(), MetricsError> {
-        let entry = Entry::from(statistic);
         if statistic.source() == Source::Gauge {
-            if let Some(channel) = self.channels.get(&entry) {
+            if let Some(channel) = self.channels.get(statistic.name()) {
                 channel.record_gauge(time, value);
                 Ok(())
             } else {
@@ -216,11 +221,10 @@ where
     /// distributions it is the percentile across the configured summary.
     pub fn percentile(
         &self,
-        statistic: &dyn Statistic<Value, Count>,
+        statistic: &'a (dyn Statistic<Value, Count> + 'a),
         percentile: f64,
     ) -> Result<<Value as Atomic>::Primitive, MetricsError> {
-        let entry = Entry::from(statistic);
-        if let Some(channel) = self.channels.get(&entry) {
+        if let Some(channel) = self.channels.get(statistic.name()) {
             channel.percentile(percentile)
         } else {
             Err(MetricsError::NotRegistered)
@@ -232,10 +236,9 @@ where
     // TODO: decide on how to handle distribution channels
     pub fn reading(
         &self,
-        statistic: &dyn Statistic<Value, Count>,
+        statistic: &'a (dyn Statistic<Value, Count> + 'a),
     ) -> Result<<Value as Atomic>::Primitive, MetricsError> {
-        let entry = Entry::from(statistic);
-        if let Some(channel) = self.channels.get(&entry) {
+        if let Some(channel) = self.channels.get(statistic.name()) {
             channel.reading()
         } else {
             Err(MetricsError::NotRegistered)
@@ -246,19 +249,24 @@ where
     pub fn snapshot(&self) -> HashMap<Metric<Value, Count>, <Value as Atomic>::Primitive> {
         #[allow(unused_mut)]
         let mut result = HashMap::new();
-        for entry in self.outputs.outputs.iter() {
-            let (statistic, outputs) = entry.pair();
-            for output in outputs.iter() {
-                let output = *output.key();
-                let metric = Metric {
-                    statistic: Entry::from(statistic as &dyn Statistic<Value, Count>),
-                    output,
-                };
+        for entry in &self.channels {
+            let (_name, channel) = entry.pair();
+            for output in channel.outputs() {
                 if let Ok(value) = match Output::from(output) {
-                    Output::Reading => self.reading(statistic as &dyn Statistic<Value, Count>),
-                    Output::Percentile(percentile) => self.percentile(statistic, percentile),
+                    Output::Reading => {
+                        self.reading(channel.statistic() as &dyn Statistic<Value, Count>)
+                    }
+                    Output::Percentile(percentile) => {
+                        self.percentile(channel.statistic(), percentile)
+                    }
                 } {
-                    result.insert(metric, value);
+                    result.insert(
+                        Metric {
+                            statistic: Entry::from(channel.statistic()),
+                            output,
+                        },
+                        value,
+                    );
                 }
             }
         }
