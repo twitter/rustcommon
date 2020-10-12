@@ -14,12 +14,36 @@ impl<K, V> AtomicHashMap<K, V>
 where
     K: std::cmp::PartialEq + std::hash::Hash + std::clone::Clone + std::fmt::Display,
 {
+    /// Allocate a new map with the ability to store up to the specified number
+    /// of items. Depending on the keys, and overall size of the map, you may
+    /// need to size the map to hold more keys than you have to ensure that
+    /// inserts will be successful.
     pub fn with_capacity(items: usize) -> Self {
         let hashers = [
-            RandomState::with_seeds(0xbb8c484891ec6c86, 0x0522a25ae9c769f9),
-            RandomState::with_seeds(0x8311d8f153515ff4, 0xd22e51032364b4d3),
-            RandomState::with_seeds(0x1bb782fb90137932, 0x82bdf5530d94544e),
-            RandomState::with_seeds(0xba4b6fc9f600b396, 0x9579f32609013d9f),
+            RandomState::with_seeds(
+                0xbb8c484891ec6c86,
+                0x0522a25ae9c769f9,
+                0x5b61bed2f4aed656,
+                0xfdc618b31537d9ce,
+            ),
+            RandomState::with_seeds(
+                0x8311d8f153515ff4,
+                0xd22e51032364b4d3,
+                0x7df7c397f82f015a,
+                0x1a7a95f345f35b1f,
+            ),
+            RandomState::with_seeds(
+                0x1bb782fb90137932,
+                0x82bdf5530d94544e,
+                0x040193377aba6b8b,
+                0x7180722ed7f32bd8,
+            ),
+            RandomState::with_seeds(
+                0xba4b6fc9f600b396,
+                0x9579f32609013d9f,
+                0x0f0742982048fcb2,
+                0xf149d7b74b2b4dbf,
+            ),
         ];
         let size = items.next_power_of_two();
         let mut data = Vec::with_capacity(size);
@@ -29,7 +53,12 @@ where
         Self { hashers, data }
     }
 
-    // TODO: this is a terrible function signature, change the return
+    /// Try to add a new key-value pair to the map. This function returns a
+    /// error variant containing a key-value pair if the insert failed.
+    /// *NOTE*: it is possible the key-value pair returned won't be the same
+    /// pair as those inserted. This edge-case is possible if another thread
+    /// raced our thread in-between checking an existing entry and performing
+    /// the pointer swap.
     pub fn insert(&self, key: K, value: V) -> Result<(), (K, V)> {
         let mut positions = [0; 4];
 
@@ -44,7 +73,8 @@ where
                     let new = RawEntry::new(key.clone(), value);
                     if let Some(previous) = self.data[*position].swap(new) {
                         if previous.key != key {
-                            // we raced and need to pust a key back
+                            // we raced and need to try to put the key-value pair
+                            // back
                             return self.insert(previous.key.clone(), previous.value);
                         }
                     }
@@ -64,7 +94,8 @@ where
                     // check the key to figure out which, and reinsert the previous
                     // entry if it was just a race
                     if previous.key != key {
-                        // probably should swap back if this insert fails?
+                        // we raced and need to try to put the key-value pair
+                        // back
                         return self.insert(previous.key.clone(), previous.value);
                     }
                 }
@@ -72,9 +103,8 @@ where
             }
         }
 
-        // eprintln!("initial positions are full, shuffling to make room");
-
-        // we didn't find any empty entries =(
+        // there were no empty positions available for this key, we need to try
+        // to find a key-value pair
         for position in &positions {
             // for each position the new key hashes to, we check if the current
             // key could map to an empty entry in the table. if it does, we will
