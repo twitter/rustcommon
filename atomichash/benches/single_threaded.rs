@@ -1,10 +1,10 @@
-use rand::distributions::Distribution;
-use rand::thread_rng;
-use rand::distributions::Uniform;
-use rustcommon_atomichash::AtomicHashMap;
-use std::sync::Arc;
 use criterion::Throughput;
 use criterion::{criterion_group, criterion_main, Criterion};
+use rand::distributions::Distribution;
+use rand::distributions::Uniform;
+use rand::thread_rng;
+use rustcommon_atomichash::AtomicHashMap;
+use std::sync::Arc;
 
 fn u64_u64(c: &mut Criterion) {
     let map = Arc::new(AtomicHashMap::<u64, u64>::with_capacity(1000000));
@@ -15,7 +15,7 @@ fn u64_u64(c: &mut Criterion) {
 
     let mut rng = thread_rng();
     let distribution = Uniform::new_inclusive(0.0, u32::MAX as f64);
-    
+
     let mut value = distribution.sample(&mut rng).floor() as u64;
     // pre-fill to 50% occupancy
     for _ in 0..500000 {
@@ -45,7 +45,7 @@ fn std_hashmap(c: &mut Criterion) {
 
     let mut rng = thread_rng();
     let distribution = Uniform::new_inclusive(0.0, u32::MAX as f64);
-    
+
     let mut value = distribution.sample(&mut rng).floor() as u64;
     // pre-fill to 50% occupancy
     for _ in 0..500000 {
@@ -66,9 +66,5 @@ fn std_hashmap(c: &mut Criterion) {
     });
 }
 
-criterion_group!(
-    benches,
-    u64_u64,
-    std_hashmap,
-);
+criterion_group!(benches, u64_u64, std_hashmap,);
 criterion_main!(benches);
