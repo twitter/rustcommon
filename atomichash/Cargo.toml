@@ -11,9 +11,9 @@ ahash = "*"
 
 [dev-dependencies]
 criterion = "0.3"
+dashmap = "*"
 rand = "0.7.3"
 rand_distr = "0.2.2"
-# rustcommon_atomic = { git = "https://github.com/twitter/rustcommon" }
 
 [[bench]]
 name = "single_threaded"
