@@ -5,6 +5,7 @@ authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
 
 [dependencies]
+crossbeam = "0.8.0"
 dashmap = "3.11.10"
 rustcommon-atomics = { path = "../atomics" }
 rustcommon-heatmap = { path = "../heatmap" }

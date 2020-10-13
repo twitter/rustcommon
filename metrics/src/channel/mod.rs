@@ -12,9 +12,9 @@ use crate::Summary;
 use std::collections::HashSet;
 use std::sync::Mutex;
 
+use crossbeam::atomic::AtomicCell;
 use rustcommon_atomics::{Atomic, AtomicBool, Ordering};
 
-use std::sync::RwLock;
 use std::time::Instant;
 
 /// Internal type which stores fields necessary to track a corresponding
@@ -27,7 +27,7 @@ where
     <Count as Atomic>::Primitive: Primitive,
     u64: From<<Value as Atomic>::Primitive> + From<<Count as Atomic>::Primitive>,
 {
-    refreshed: RwLock<Instant>,
+    refreshed: AtomicCell<Instant>,
     statistic: Entry<Value, Count>,
     empty: AtomicBool,
     reading: Value,
@@ -50,7 +50,7 @@ where
             empty: AtomicBool::new(true),
             statistic: Entry::from(statistic),
             reading: Default::default(),
-            refreshed: RwLock::new(Instant::now()),
+            refreshed: AtomicCell::new(Instant::now()),
             summary,
             outputs: Default::default(),
         }
@@ -74,17 +74,15 @@ where
     /// Updates a counter to a new value if the reading is newer than the stored
     /// reading.
     pub fn record_counter(&self, time: Instant, value: <Value as Atomic>::Primitive) {
-        {
-            let t0 = self.refreshed.read().unwrap();
-            if time <= *t0 {
-                return;
-            }
+        let t0 = self.refreshed.load();
+        if time <= t0 {
+            return;
         }
         if !self.empty.load(Ordering::Relaxed) {
             if let Some(summary) = &self.summary {
-                let mut t0 = self.refreshed.write().unwrap();
+                self.refreshed.store(time);
                 let v0 = self.reading.load(Ordering::Relaxed);
-                let dt = time - *t0;
+                let dt = time - t0;
                 let dv = (value - v0).to_float();
                 let rate = (dv
                     / (dt.as_secs() as f64 + dt.subsec_nanos() as f64 / 1_000_000_000.0))
@@ -94,14 +92,12 @@ where
                     <Value as Atomic>::Primitive::from_float(rate),
                     1_u8.into(),
                 );
-                *t0 = time;
             }
             self.reading.store(value, Ordering::Relaxed);
         } else {
             self.reading.store(value, Ordering::Relaxed);
             self.empty.store(false, Ordering::Relaxed);
-            let mut t0 = self.refreshed.write().unwrap();
-            *t0 = time;
+            self.refreshed.store(time);
         }
     }
 
@@ -114,8 +110,8 @@ where
     /// Updates a gauge reading if the new value is newer than the stored value.
     pub fn record_gauge(&self, time: Instant, value: <Value as Atomic>::Primitive) {
         {
-            let t0 = self.refreshed.read().unwrap();
-            if time <= *t0 {
+            let t0 = self.refreshed.load();
+            if time <= t0 {
                 return;
             }
         }
@@ -124,8 +120,7 @@ where
         }
         self.reading.store(value, Ordering::Relaxed);
         self.empty.store(false, Ordering::Relaxed);
-        let mut t0 = self.refreshed.write().unwrap();
-        *t0 = time;
+        self.refreshed.store(time);
     }
 
     /// Returns a percentile across stored readings/rates/...
