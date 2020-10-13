@@ -10,7 +10,7 @@ cargo build --release
 cargo test --release
 
 echo "Getting previous benchmark results"
-git checkout master
+git checkout origin/master
 cargo bench
 
 echo "Calculating performance change"
