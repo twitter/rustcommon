@@ -4,10 +4,10 @@
 
 use crate::*;
 
+use crossbeam::atomic::AtomicCell;
 use rustcommon_atomics::*;
 use rustcommon_histogram::{AtomicCounter, AtomicHistogram, Counter, Indexing};
 
-use std::sync::RwLock;
 use std::time::{Duration, Instant};
 
 /// AtomicHeatmaps are concurrent datastructures which store counts for
@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 pub struct AtomicHeatmap<Value, Count> {
     slices: Vec<AtomicHistogram<Value, Count>>,
     current: AtomicUsize,
-    next_tick: RwLock<Instant>,
+    next_tick: AtomicCell<Instant>,
     resolution: Duration,
     summary: AtomicHistogram<Value, Count>,
 }
@@ -52,7 +52,7 @@ where
         Self {
             slices,
             current: AtomicUsize::new(0),
-            next_tick: RwLock::new(Instant::now() + resolution),
+            next_tick: AtomicCell::new(Instant::now() + resolution),
             resolution,
             summary: AtomicHistogram::new(max, precision),
         }
@@ -100,11 +100,11 @@ where
     /// values.
     fn tick(&self, time: Instant) {
         loop {
-            if time < *self.next_tick.read().unwrap() {
+            let next_tick = self.next_tick.load();
+            if time < next_tick {
                 return;
             } else {
-                let mut next_tick = self.next_tick.write().unwrap();
-                *next_tick += self.resolution;
+                self.next_tick.store(next_tick + self.resolution);
                 self.current.fetch_add(1, Ordering::Relaxed);
                 if self.current.load(Ordering::Relaxed) >= self.slices.len() {
                     self.current.store(0, Ordering::Relaxed);
@@ -131,7 +131,7 @@ where
         let mut result = Heatmap {
             slices: Vec::with_capacity(self.slices.len()),
             current: self.current.load(Ordering::Relaxed),
-            next_tick: self.next_tick.read().unwrap().clone(),
+            next_tick: self.next_tick.load(),
             resolution: self.resolution,
             summary: self.summary.load(),
         };
