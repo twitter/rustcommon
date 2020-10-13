@@ -13,3 +13,10 @@ crossbeam = "0.8.0"
 rustcommon-atomics = { path = "../atomics" }
 rustcommon-histogram = { path = "../histogram" }
 thiserror = "1.0.20"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "heatmaps"
+harness = false
