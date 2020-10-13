@@ -15,6 +15,15 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run
       run: bash .github/workflows/ci.sh
+    - uses: actions/checkout@v2
+      with:
+        repository: 'twitter/rustcommon'
+        ref: 'master'
+    - name: Benchmark Baseline
+      run: cargo bench
+    - uses: actions/checkout@v2
+    - name: Benchmark Comparison
+      run: cargo bench
   macos:
     name: macos
     runs-on: macos-10.15
