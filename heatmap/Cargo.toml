@@ -9,6 +9,7 @@ homepage = "https://github.com/twitter/rustcommon/heatmap"
 repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
+crossbeam = "0.8.0"
 rustcommon-atomics = { path = "../atomics" }
 rustcommon-histogram = { path = "../histogram" }
 thiserror = "1.0.20"
