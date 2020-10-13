@@ -5,12 +5,8 @@ use rustcommon_heatmap::*;
 use std::time::Instant;
 
 fn u64_u64(c: &mut Criterion) {
-    let mut heatmap = Heatmap::<u64, u64>::new(
-        1_000_000,
-        2,
-        Duration::new(1, 0),
-        Duration::from_millis(1)
-    );
+    let mut heatmap =
+        Heatmap::<u64, u64>::new(1_000_000, 2, Duration::new(1, 0), Duration::from_millis(1));
 
     let mut group = c.benchmark_group("Heatmap/u64/u64");
 
@@ -30,7 +26,7 @@ fn atomic_u64_u64(c: &mut Criterion) {
         1_000_000,
         2,
         Duration::new(1, 0),
-        Duration::from_millis(1)
+        Duration::from_millis(1),
     );
 
     let mut group = c.benchmark_group("AtomicHeatmap/u64/AtomicU64");
