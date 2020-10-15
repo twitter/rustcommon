@@ -66,7 +66,7 @@ impl crate::Indexing for u64 {
             } else {
                 19
             };
-            let denominator = 10_usize.pow((power - precision as u32 + 1).into());
+            let denominator = 10_usize.pow(power - precision as u32 + 1);
             let power_offset = 9 * exact as usize * (power as usize - precision as usize) / 10;
             let remainder: usize = value as usize / denominator;
             let shift = exact as usize / 10;

@@ -153,17 +153,58 @@ where
     }
 
     /// Subtracts another histogram from this histogram
+    ///
+    /// NOTES:
+    /// If the histograms differ in their configured range, we treat the samples
+    /// that were too high on the right hand side as if they would also be too
+    /// high on the histogram those counts are subtracted from. This may produce
+    /// unexpected results if subtracting a histogram with a smaller range from
+    /// one with a wider range.
+    ///
+    /// If the histograms differ in their configured precision, unusual
+    /// artifacts may be introduced by subtracting a low precision histogram
+    /// from one with higher precision.
     pub fn sub_assign(&mut self, other: &Self) {
         if u64::from(self.max) == u64::from(other.max) && self.precision == other.precision {
             // fast path when histograms have same configuration
             for i in 0..self.buckets.len() {
                 self.buckets[i].saturating_sub(other.buckets[i]);
             }
+            self.too_high.saturating_sub(other.too_high);
         } else {
             // slow path if we need to calculate appropriate index for each bucket
             for bucket in other {
                 self.decrement(bucket.value, bucket.count);
             }
+            self.too_high.saturating_sub(other.too_high);
+        }
+    }
+
+    /// Adds another histogram to this histogram
+    ///
+    /// NOTES:
+    /// If the histograms differ in their configured range, we treat the samples
+    /// that were too high on the right hand side as if they would also be too
+    /// high on the histogram those counts are added to. This may produce
+    /// unexpected results if adding a histogram with a smaller range to one
+    /// with a wider range.
+    ///
+    /// If the histograms differ in their configured precision, unusual
+    /// artifacts may be introduced by adding a low precision histogram to one
+    /// with higher precision.
+    pub fn add_assign(&mut self, other: &Self) {
+        if u64::from(self.max) == u64::from(other.max) && self.precision == other.precision {
+            // fast path when histograms have same configuration
+            for i in 0..self.buckets.len() {
+                self.buckets[i].saturating_add(other.buckets[i]);
+            }
+            self.too_high.saturating_add(other.too_high);
+        } else {
+            // slow path if we need to calculate appropriate index for each bucket
+            for bucket in other {
+                self.increment(bucket.value, bucket.count);
+            }
+            self.too_high.saturating_add(other.too_high);
         }
     }
 }
