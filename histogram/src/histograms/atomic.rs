@@ -228,7 +228,6 @@ where
         }
     }
 
-
     /// Convert this `AtomicHistogram` to a non-atomic version by allocating a
     /// new histogram and performing relaxed loads.
     ///
