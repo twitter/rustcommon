@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "atomics",
+    "buffer",
     "datastructures",
     "heatmap",
     "histogram",
