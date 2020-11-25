@@ -9,10 +9,9 @@ use crate::traits::*;
 use crate::MetricsError;
 use crate::Output;
 use crate::Summary;
-use std::collections::HashSet;
-use std::sync::Mutex;
 
 use crossbeam::atomic::AtomicCell;
+use dashmap::DashSet;
 use rustcommon_atomics::{Atomic, AtomicBool, Ordering};
 
 use std::time::Instant;
@@ -32,7 +31,7 @@ where
     empty: AtomicBool,
     reading: Value,
     summary: Option<SummaryStruct<Value, Count>>,
-    outputs: Mutex<HashSet<ApproxOutput>>,
+    outputs: DashSet<ApproxOutput>,
 }
 
 impl<Value, Count> Channel<Value, Count>
@@ -163,20 +162,17 @@ where
 
     pub fn outputs(&self) -> Vec<ApproxOutput> {
         let mut ret = Vec::new();
-        let outputs = self.outputs.lock().unwrap();
-        for output in (*outputs).iter().map(|v| *v) {
+        for output in self.outputs.iter().map(|v| *v) {
             ret.push(output);
         }
         ret
     }
 
     pub fn add_output(&self, output: Output) {
-        let mut outputs = self.outputs.lock().unwrap();
-        (*outputs).insert(ApproxOutput::from(output));
+        self.outputs.insert(ApproxOutput::from(output));
     }
 
     pub fn remove_output(&self, output: Output) {
-        let mut outputs = self.outputs.lock().unwrap();
-        (*outputs).remove(&ApproxOutput::from(output));
+        self.outputs.remove(&ApproxOutput::from(output));
     }
 }
