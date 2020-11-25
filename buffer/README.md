@@ -7,12 +7,8 @@ Bi-directional buffer
 This crate provides a simple bi-directional buffer which is particularly useful
 for socket communications.
 
-It provides an interface that allows reading from and writing to a type that
-implements Read and Write. It buffers bytes that have been read, enabling access
-to partial reads without calling `peek()`. This is useful for when receive
-traffic may need to be assembled from multiple frames. Writes are also buffered
-before writing the contents out to a sink. This can make it easier to form
-complex transmit traffic, such as serializing to Thrift.
+It acts as both a `BufReader` and `BufWriter`, helping to reduce system call
+overhead by accumulating writes and buffering read results.
 
 ## Getting Started
 
