@@ -102,13 +102,16 @@ impl BufRead for Buffer {
         if self.read_pending() > 0 {
             Ok(self.read.borrow())
         } else {
-            Err(std::io::Error::new(std::io::ErrorKind::WouldBlock, "Buffer contains no bytes to read"))
+            Err(std::io::Error::new(
+                std::io::ErrorKind::WouldBlock,
+                "Buffer contains no bytes to read",
+            ))
         }
     }
 
     fn consume(&mut self, amt: usize) {
         self.read.advance(amt);
-    } 
+    }
 }
 
 impl Read for Buffer {
@@ -119,7 +122,7 @@ impl Read for Buffer {
                 self.read.advance(bytes);
                 Ok(bytes)
             }
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 }
