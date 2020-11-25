@@ -1,10 +1,10 @@
 [package]
 name = "rustcommon-buffer"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
 license = "Apache-2.0"
-description = "Bi-directional buffer for socket communications"
+description = "Bi-directional buffer"
 homepage = "https://github.com/twitter/rustcommon/buffer"
 repository = "https://github.com/twitter/rustcommon"
 
