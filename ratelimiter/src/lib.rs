@@ -9,7 +9,7 @@
 use core::convert::TryFrom;
 
 use rand_distr::{Distribution, Normal, Uniform};
-use rustcommon_datastructures::*;
+use rustcommon_atomics::*;
 
 /// A token bucket ratelimiter
 pub struct Ratelimiter {

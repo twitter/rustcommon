@@ -2,7 +2,6 @@
 members = [
     "atomics",
     "buffer",
-    "datastructures",
     "heatmap",
     "histogram",
     "logger",

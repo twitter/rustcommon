@@ -11,5 +11,5 @@ repository = "https://github.com/twitter/rustcommon"
 [dependencies]
 rand = "0.7.3"
 rand_distr = "0.2.2"
-rustcommon-datastructures = { path = "../datastructures" }
+rustcommon-atomics = { path = "../atomics" }
 time = "0.1.42"
