@@ -2,15 +2,106 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use bytes::buf::UninitSlice;
 use bytes::*;
 use std::borrow::Borrow;
 use std::io::*;
 
 #[derive(Debug, PartialEq, Eq)]
+struct ShrinkingBytesMut {
+    target_capacity: usize,
+    inner: BytesMut,
+}
+
+impl ShrinkingBytesMut {
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            target_capacity: capacity,
+            inner: BytesMut::with_capacity(capacity),
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    pub fn clear(&mut self) {
+        self.inner.clear();
+        if self.inner.capacity() > self.target_capacity {
+            self.inner.truncate(self.target_capacity);
+        }
+    }
+
+    pub fn extend_from_slice(&mut self, slice: &[u8]) {
+        self.inner.extend_from_slice(slice)
+    }
+}
+
+impl Borrow<[u8]> for ShrinkingBytesMut {
+    fn borrow(&self) -> &[u8] {
+        self.inner.borrow()
+    }
+}
+
+impl Read for ShrinkingBytesMut {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+        let mut buffer: Cursor<&[u8]> = Cursor::new(self.inner.borrow());
+        match buffer.read(buf) {
+            Ok(bytes) => {
+                self.advance(bytes);
+                Ok(bytes)
+            }
+            Err(e) => Err(e),
+        }
+    }
+}
+
+unsafe impl BufMut for ShrinkingBytesMut {
+    #[inline]
+    fn remaining_mut(&self) -> usize {
+        self.inner.remaining_mut()
+    }
+
+    #[inline]
+    unsafe fn advance_mut(&mut self, cnt: usize) {
+        self.inner.advance_mut(cnt)
+    }
+
+    #[inline]
+    fn chunk_mut(&mut self) -> &mut UninitSlice {
+        self.inner.chunk_mut()
+    }
+}
+
+impl Buf for ShrinkingBytesMut {
+    fn remaining(&self) -> usize {
+        self.inner.remaining()
+    }
+
+    fn chunk(&self) -> &[u8] {
+        self.inner.chunk()
+    }
+
+    fn advance(&mut self, cnt: usize) {
+        self.inner.advance(cnt);
+        if self.inner.capacity() > self.target_capacity && self.inner.len() < self.inner.capacity()
+        {
+            self.inner.truncate(self.inner.len())
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub struct Buffer {
-    read: BytesMut,
-    write: BytesMut,
+    read: ShrinkingBytesMut,
+    write: ShrinkingBytesMut,
     tmp: Vec<u8>,
+}
+
+impl Default for Buffer {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Buffer {
@@ -20,8 +111,8 @@ impl Buffer {
 
     pub fn with_capacity(read: usize, write: usize) -> Self {
         Self {
-            read: BytesMut::with_capacity(read),
-            write: BytesMut::with_capacity(write),
+            read: ShrinkingBytesMut::with_capacity(read),
+            write: ShrinkingBytesMut::with_capacity(write),
             tmp: vec![0; read],
         }
     }
@@ -33,7 +124,7 @@ impl Buffer {
 
     // write from the tx buffer to a given sink
     pub fn write_to<T: Write>(&mut self, sink: &mut T) -> Result<Option<usize>> {
-        match sink.write(self.write.bytes()) {
+        match sink.write(self.write.borrow()) {
             Ok(bytes) => {
                 self.write.advance(bytes);
                 Ok(Some(bytes))
@@ -77,10 +168,6 @@ impl Buffer {
         self.read.len()
     }
 
-    pub fn put_slice(&mut self, slice: &[u8]) {
-        self.write.put_slice(slice)
-    }
-
     pub fn put_u32(&mut self, n: u32) {
         self.write.put_u32(n)
     }
@@ -88,7 +175,7 @@ impl Buffer {
 
 impl Write for Buffer {
     fn write(&mut self, buf: &[u8]) -> Result<usize> {
-        self.write.put_slice(buf);
+        self.write.extend_from_slice(buf);
         Ok(buf.len())
     }
 
