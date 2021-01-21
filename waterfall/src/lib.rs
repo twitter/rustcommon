@@ -12,7 +12,7 @@ use chrono::Utc;
 use image::*;
 use palettes::*;
 use rustcommon_heatmap::*;
-use rusttype::{point, FontCollection, PositionedGlyph, Scale as TypeScale};
+use rusttype::{point, Font, PositionedGlyph, Scale as TypeScale};
 
 use core::hash::Hash;
 use core::ops::Sub;
@@ -252,8 +252,7 @@ pub(crate) struct ColorRgb {
 fn render_text(string: &str, size: f32, x_pos: usize, y_pos: usize, buf: &mut RgbImage) {
     // load font
     let font_data = dejavu::sans_mono::regular();
-    let collection = FontCollection::from_bytes(font_data as &[u8]).unwrap();
-    let font = collection.into_font().unwrap();
+    let font = Font::try_from_bytes(font_data as &[u8]).unwrap();
 
     // size and scaling
     let height: f32 = size;
