@@ -138,7 +138,7 @@ where
         }
 
         let mut label_keys: Vec<u64> = labels.keys().cloned().collect();
-        label_keys.sort();
+        label_keys.sort_unstable();
 
         let mut l = 0;
 
@@ -226,7 +226,7 @@ where
                 .unwrap();
 
             if slice.start() - begin >= self.interval {
-                let label = format!("{}", slice_start_utc.to_rfc3339());
+                let label = slice_start_utc.to_rfc3339().to_string();
                 render_text(&label, 25.0, 0, y + 2, &mut buf);
                 for x in 0..width {
                     buf.put_pixel(

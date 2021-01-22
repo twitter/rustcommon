@@ -145,13 +145,16 @@ impl Ratelimiter {
     ///     }
     /// }
     /// ```
-    pub fn try_wait(&self) -> Result<(), ()> {
+    pub fn try_wait(&self) -> Result<(), std::io::Error> {
         self.tick();
         if self.available.load(Ordering::Relaxed) > 0 {
             self.available.fetch_saturating_sub(1, Ordering::Relaxed);
             Ok(())
         } else {
-            Err(())
+            Err(std::io::Error::new(
+                std::io::ErrorKind::WouldBlock,
+                "no tokens in bucket",
+            ))
         }
     }
 
