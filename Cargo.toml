@@ -2,6 +2,7 @@
 members = [
     "atomics",
     "buffer",
+    "fastmetrics",
     "heatmap",
     "histogram",
     "logger",
