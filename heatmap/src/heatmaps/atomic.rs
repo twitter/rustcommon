@@ -72,8 +72,10 @@ where
     /// Increment a time-value pair by a specified count
     pub fn increment(&self, time: Instant, value: Value, count: <Count as Atomic>::Primitive) {
         self.tick(time);
-        self.slices[self.current.load(Ordering::Relaxed)].increment(value, count);
-        self.summary.increment(value, count);
+        if let Some(slice) = self.slices.get(self.current.load(Ordering::Relaxed)) {
+            slice.increment(value, count);
+            self.summary.increment(value, count);
+        }
     }
 
     /// Return the nearest value for the requested percentile (0.0 - 100.0)
@@ -110,8 +112,10 @@ where
                     self.current.store(0, Ordering::Relaxed);
                 }
                 let current = self.current.load(Ordering::Relaxed);
-                self.summary.sub_assign(&self.slices[current]);
-                self.slices[current].clear();
+                if let Some(slice) = self.slices.get(current) {
+                    self.summary.sub_assign(slice);
+                    slice.clear();
+                }
             }
         }
     }
