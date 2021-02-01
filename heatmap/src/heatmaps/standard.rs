@@ -68,8 +68,10 @@ where
     /// Increment a time-value pair by a specified count
     pub fn increment(&mut self, time: Instant, value: Value, count: Count) {
         self.tick(time);
-        self.slices[self.current].increment(value, count);
-        self.summary.increment(value, count);
+        if let Some(slice) = self.slices.get_mut(self.current) {
+            slice.increment(value, count);
+            self.summary.increment(value, count);
+        }
     }
 
     /// Return the nearest value for the requested percentile (0.0 - 100.0)
@@ -96,8 +98,10 @@ where
                 self.current = 0;
             }
             self.next_tick += self.resolution;
-            self.summary.sub_assign(&self.slices[self.current]);
-            self.slices[self.current].clear();
+            if let Some(slice) = self.slices.get_mut(self.current) {
+                self.summary.sub_assign(slice);
+                slice.clear();
+            }
         }
     }
 
