@@ -10,13 +10,13 @@ where
 {
     fn get_counter(&self, metric: &dyn Metric) -> Result<u64, MetricsError> {
         match self.get(metric.index()) {
-            None => {
-                Err(MetricsError::NotRegistered(metric.to_string()))
-            }
+            None => Err(MetricsError::NotRegistered(metric.to_string())),
             Some(Channel::Counter { counter, .. }) => Ok(counter.load(Ordering::Relaxed)),
-            _ => {
-                Err(MetricsError::WrongType(metric.to_string(), metric.source(), Source::Counter))
-            }
+            _ => Err(MetricsError::WrongType(
+                metric.to_string(),
+                metric.source(),
+                Source::Counter,
+            )),
         }
     }
 
@@ -34,13 +34,13 @@ where
 
     fn get_gauge(&self, metric: &dyn Metric) -> Result<i64, MetricsError> {
         match self.get(metric.index()) {
-            None => {
-                Err(MetricsError::NotRegistered(metric.to_string()))
-            }
+            None => Err(MetricsError::NotRegistered(metric.to_string())),
             Some(Channel::Gauge { gauge, .. }) => Ok(gauge.load(Ordering::Relaxed)),
-            _ => {
-                Err(MetricsError::WrongType(metric.to_string(), metric.source(), Source::Gauge))
-            }
+            _ => Err(MetricsError::WrongType(
+                metric.to_string(),
+                metric.source(),
+                Source::Gauge,
+            )),
         }
     }
 
@@ -204,7 +204,7 @@ where
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
-// except according to those terms. 
+// except according to those terms.
 fn set_metrics(metrics: Box<dyn MetricsLib>) -> Result<(), MetricsError> {
     let old_state = match STATE.compare_exchange(
         UNINITIALIZED,
@@ -231,4 +231,3 @@ fn set_metrics(metrics: Box<dyn MetricsLib>) -> Result<(), MetricsError> {
         _ => Err(MetricsError::AlreadyInitialized),
     }
 }
-

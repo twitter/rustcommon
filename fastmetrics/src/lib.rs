@@ -12,17 +12,17 @@ mod metrics;
 mod metrics_lib;
 mod nop_metrics;
 
-use crate::nop_metrics::NopMetrics;
 use crate::metrics_lib::MetricsLib;
+use crate::nop_metrics::NopMetrics;
 
 pub use error::MetricsError;
 pub use macros::*;
-pub use metrics::{Metrics, MetricsBuilder};
 pub use metric::{Metric, Source};
+pub use metrics::{Metrics, MetricsBuilder};
 
-use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::AtomicI64;
 use core::sync::atomic::AtomicU64;
+use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::Ordering;
 
 static mut METRICS: &dyn MetricsLib = &NopMetrics;
@@ -38,8 +38,8 @@ pub fn metrics() -> &'static dyn MetricsLib {
 
 #[cfg(test)]
 mod tests {
-    use core::fmt::Display;
     use super::*;
+    use core::fmt::Display;
 
     #[derive(Copy, Clone)]
     #[allow(dead_code)]
@@ -94,7 +94,8 @@ mod tests {
     fn macros() {
         MetricsBuilder::new()
             .metrics(&[Metric::Alpha, Metric::Charlie])
-            .build().unwrap();
+            .build()
+            .unwrap();
         set_counter!(&Metric::Alpha, 100);
         assert_eq!(get_counter!(&Metric::Alpha), Ok(100));
         increment_counter!(&Metric::Alpha);

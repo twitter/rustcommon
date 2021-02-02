@@ -42,9 +42,7 @@ fn run(c: &mut Criterion) {
     let mut group = c.benchmark_group("Metrics/counter");
 
     group.throughput(Throughput::Elements(1));
-    group.bench_function("set", |b| {
-        b.iter(|| set_counter!(&Metric::Alpha, 255))
-    });
+    group.bench_function("set", |b| b.iter(|| set_counter!(&Metric::Alpha, 255)));
     group.bench_function("increment", |b| {
         b.iter(|| increment_counter!(&Metric::Alpha))
     });
