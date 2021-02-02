@@ -1,10 +1,11 @@
 [package]
 name = "rustcommon-fastmetrics"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
 
 [dependencies]
+thiserror = "1.0.23"
 
 [dev-dependencies]
 criterion = "0.3"

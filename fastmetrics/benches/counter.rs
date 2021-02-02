@@ -18,7 +18,15 @@ impl Into<usize> for Metric {
     }
 }
 
-impl rustcommon_fastmetrics::Metric for Metric {}
+impl rustcommon_fastmetrics::Metric for Metric {
+    fn source(&self) -> Source {
+        Source::Counter
+    }
+
+    fn index(&self) -> usize {
+        (*self).into()
+    }
+}
 
 impl Display for Metric {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -29,13 +37,14 @@ impl Display for Metric {
 }
 
 fn run(c: &mut Criterion) {
-    let metrics = MetricsBuilder::new().counter(Metric::Alpha).build();
+    MetricsBuilder::new().metric(Metric::Alpha).build().unwrap();
 
     let mut group = c.benchmark_group("Metrics/counter");
 
     group.throughput(Throughput::Elements(1));
-    group.bench_function("record", |b| {
-        b.iter(|| metrics.record_counter(Metric::Alpha, 255))
+    group.bench_function("set", |b| b.iter(|| set_counter!(&Metric::Alpha, 255)));
+    group.bench_function("increment", |b| {
+        b.iter(|| increment_counter!(&Metric::Alpha))
     });
 }
 
