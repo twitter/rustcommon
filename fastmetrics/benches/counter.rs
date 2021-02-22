@@ -5,11 +5,10 @@
 #[macro_use]
 extern crate rustcommon_fastmetrics;
 
-use rustcommon_fastmetrics::{Source, MetricsBuilder};
 use core::fmt::Display;
 use criterion::Throughput;
 use criterion::{criterion_group, criterion_main, Criterion};
-
+use rustcommon_fastmetrics::{MetricsBuilder, Source};
 
 #[derive(Copy, Clone)]
 enum Metric {
