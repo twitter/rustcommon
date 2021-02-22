@@ -7,7 +7,7 @@
 /// See [`Metrics::get_counter()`](struct.Metrics.html#method.get_counter)
 macro_rules! get_counter {
     ($($arg:tt)+) => (
-        metrics().get_counter($($arg)+)
+        $crate::_metrics().get_counter($($arg)+)
     )
 }
 
@@ -16,7 +16,7 @@ macro_rules! get_counter {
 /// See [`Metrics::set_counter()`](struct.Metrics.html#method.set_counter)
 macro_rules! set_counter {
     ($($arg:tt)+) => (
-        metrics().set_counter($($arg)+)
+        $crate::_metrics().set_counter($($arg)+)
     )
 }
 
@@ -25,7 +25,7 @@ macro_rules! set_counter {
 /// See [`Metrics::increment_counter()`](struct.Metrics.html#method.increment_counter_by)
 macro_rules! increment_counter {
     ($($arg:tt)+) => (
-        metrics().increment_counter_by($($arg)+, 1)
+        $crate::_metrics().increment_counter_by($($arg)+, 1)
     )
 }
 
@@ -34,7 +34,7 @@ macro_rules! increment_counter {
 /// See [`Metrics::increment_counter()`](struct.Metrics.html#method.increment_counter_by)
 macro_rules! increment_counter_by {
     ($($arg:tt)+) => (
-        metrics().increment_counter_by($($arg)+)
+        $crate::_metrics().increment_counter_by($($arg)+)
     )
 }
 
@@ -43,7 +43,7 @@ macro_rules! increment_counter_by {
 /// See [`Metrics::get_gauge()`](struct.Metrics.html#method.get_gauge)
 macro_rules! get_gauge {
     ($($arg:tt)+) => (
-        metrics().get_gauge($($arg)+)
+        $crate::_metrics().get_gauge($($arg)+)
     )
 }
 
@@ -52,7 +52,7 @@ macro_rules! get_gauge {
 /// See [`Metrics::set_gauge()`](struct.Metrics.html#method.set_gauge)
 macro_rules! set_gauge {
     ($($arg:tt)+) => (
-        metrics().set_gauge($($arg)+)
+        $crate::_metrics().set_gauge($($arg)+)
     )
 }
 
@@ -61,7 +61,7 @@ macro_rules! set_gauge {
 /// See [`Metrics::increment_gauge()`](struct.Metrics.html#method.increment_gauge_by)
 macro_rules! increment_gauge {
     ($($arg:tt)+) => (
-        metrics().increment_gauge_by($($arg)+, 1)
+        $crate::_metrics().increment_gauge_by($($arg)+, 1)
     )
 }
 
@@ -70,7 +70,7 @@ macro_rules! increment_gauge {
 /// See [`Metrics::increment_gauge()`](struct.Metrics.html#method.increment_gauge_by)
 macro_rules! increment_gauge_by {
     ($($arg:tt)+) => (
-        metrics().increment_gauge_by($($arg)+)
+        $crate::_metrics().increment_gauge_by($($arg)+)
     )
 }
 
@@ -79,7 +79,7 @@ macro_rules! increment_gauge_by {
 /// See [`Metrics::decrement_gauge()`](struct.Metrics.html#method.decrement_gauge_by)
 macro_rules! decrement_gauge {
     ($($arg:tt)+) => (
-        metrics().decrement_gauge_by($($arg)+, 1)
+        $crate::_metrics().decrement_gauge_by($($arg)+, 1)
     )
 }
 
@@ -88,6 +88,6 @@ macro_rules! decrement_gauge {
 /// See [`Metrics::decrement_gauge()`](struct.Metrics.html#method.decrement_gauge_by)
 macro_rules! decrement_gauge_by {
     ($($arg:tt)+) => (
-        metrics().decrement_gauge_by($($arg)+)
+        $crate::_metrics().decrement_gauge_by($($arg)+)
     )
 }
