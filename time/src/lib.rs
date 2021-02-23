@@ -107,16 +107,14 @@ impl AtomicCoarseInstant {
     }
 }
 
-
 impl CoarseInstant {
     pub fn now() -> Self {
         let now = Instant::now();
         Self {
-            s: (now.ns as f64 / NS_PER_SECOND as f64).round() as u32
+            s: (now.ns as f64 / NS_PER_SECOND as f64).round() as u32,
         }
     }
 }
-
 
 impl CoarseInstant {
     pub fn elapsed(&self) -> CoarseDuration {
