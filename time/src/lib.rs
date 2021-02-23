@@ -2,6 +2,8 @@ use core::sync::atomic::AtomicU32;
 use core::sync::atomic::AtomicU64;
 use core::sync::atomic::Ordering;
 
+const NS_PER_MICROSECOND: u64 = 1_000;
+const NS_PER_MILLISECOND: u64 = 1_000_000;
 const NS_PER_SECOND: u64 = 1_000_000_000;
 
 /// `Instant` is an opaque type that represents a moment in time.
@@ -339,8 +341,25 @@ pub struct CoarseDuration {
 }
 
 impl CoarseDuration {
-    pub fn as_sec(&self) -> u32 {
+    pub const SECOND: CoarseDuration = CoarseDuration::from_secs(1);
+    pub const ZERO: CoarseDuration = CoarseDuration::from_secs(0);
+    pub const MAX: CoarseDuration = CoarseDuration::from_secs(u32::MAX);
+
+    pub const fn new(secs: u32) -> Self {
+        Self { s: secs }
+    }
+
+    pub const fn from_secs(secs: u32) -> Self {
+        Self::new(secs)
+    }
+
+    pub const fn as_sec(&self) -> u32 {
         self.s
+    }
+
+    /// Check if the duration spans no time
+    pub const fn is_zero(&self) -> bool {
+        self.s == 0
     }
 }
 
@@ -351,15 +370,74 @@ pub struct Duration {
 }
 
 impl Duration {
+    pub const SECOND: Duration = Duration::from_nanos(NS_PER_SECOND);
+    pub const MILLISECOND: Duration = Duration::from_nanos(NS_PER_MILLISECOND);
+    pub const MICROSECOND: Duration = Duration::from_nanos(NS_PER_MICROSECOND);
+    pub const NANOSECOND: Duration = Duration::from_nanos(1);
+    pub const ZERO: Duration = Duration::from_nanos(0);
+    pub const MAX: Duration = Duration::from_nanos(u64::MAX);
+
+    /// Create a duration from the specified number of seconds.
+    ///
+    /// # Panics
+    ///
+    /// This constructor will panic if the number of seconds exceeds the maximum
+    /// representable duration.
+    pub fn from_secs(secs: u64) -> Self {
+        assert!(secs < u64::MAX / NS_PER_SECOND);
+        Self {
+            ns: secs * NS_PER_SECOND,
+        }
+    }
+
+    /// Create a duration from the specified number of milliseconds.
+    ///
+    /// # Panics
+    ///
+    /// This constructor will panic if the number of milliseconds exceeds the
+    /// maximum representable duration.
+    pub fn from_millis(millis: u64) -> Self {
+        assert!(millis < u64::MAX / NS_PER_MILLISECOND);
+        Self {
+            ns: millis * NS_PER_MILLISECOND,
+        }
+    }
+
+    /// Create a duration from the specified number of microseconds.
+    ///
+    /// # Panics
+    ///
+    /// This constructor will panic if the number of microseconds exceeds the
+    /// maximum representable duration.
+    pub fn from_micros(micros: u64) -> Self {
+        assert!(micros < u64::MAX / NS_PER_MICROSECOND);
+        Self {
+            ns: micros * NS_PER_MICROSECOND,
+        }
+    }
+
+    /// Create a duration from the specified number of nanoseconds
+    pub const fn from_nanos(nanos: u64) -> Self {
+        Self { ns: nanos }
+    }
+
+    /// Check if the duration spans no time
+    pub const fn is_zero(&self) -> bool {
+        self.ns == 0
+    }
+
+    /// Returns the total duration in fractional seconds
     pub fn as_sec_f64(&self) -> f64 {
         self.ns as f64 / NS_PER_SECOND as f64
     }
 
-    pub fn as_sec(&self) -> u64 {
+    /// Returns the whole number of seconds in the duration
+    pub const fn as_sec(&self) -> u64 {
         self.ns / NS_PER_SECOND
     }
 
-    pub fn as_nanos(&self) -> u64 {
+    /// Returns the total number of nanoseconds in the duration
+    pub const fn as_nanos(&self) -> u64 {
         self.ns
     }
 }
