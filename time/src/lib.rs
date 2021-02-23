@@ -1,3 +1,4 @@
+use core::sync::atomic::AtomicU32;
 use core::sync::atomic::AtomicU64;
 use core::sync::atomic::Ordering;
 
@@ -7,6 +8,19 @@ const NS_PER_SECOND: u64 = 1_000_000_000;
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
 pub struct Instant {
     ns: u64, // This is enough for 500 years without overflow
+}
+
+/// `CoarseInstant` is an opaque type that represents a moment in time to the
+/// nearest second.
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
+pub struct CoarseInstant {
+    s: u32, // This is enough for >100 years without overflow
+}
+
+/// `AtomicCoarseInstant` is an opaque type that represents a moment in time to
+/// the nearest second. Unlike `CoarseInstant`, it is thread-safe.
+pub struct AtomicCoarseInstant {
+    s: AtomicU32, // This is enough for >100 years without overflow
 }
 
 /// `AtomicInstant` is an opaque type that represents a moment in time. Unlike
@@ -51,6 +65,128 @@ impl AtomicInstant {
 
     pub fn elapsed(&self, ordering: Ordering) -> Duration {
         self.load(ordering).elapsed()
+    }
+}
+
+impl AtomicCoarseInstant {
+    pub fn now() -> Self {
+        let instant = CoarseInstant::now();
+        Self {
+            s: AtomicU32::new(instant.s),
+        }
+    }
+
+    pub fn load(&self, ordering: Ordering) -> CoarseInstant {
+        CoarseInstant {
+            s: self.s.load(ordering),
+        }
+    }
+
+    pub fn store(&self, value: CoarseInstant, ordering: Ordering) {
+        self.s.store(value.s, ordering)
+    }
+
+    pub fn fetch_add(&self, other: CoarseDuration, ordering: Ordering) -> CoarseInstant {
+        CoarseInstant {
+            s: self.s.fetch_add(other.s, ordering),
+        }
+    }
+
+    pub fn fetch_sub(&self, other: CoarseDuration, ordering: Ordering) -> CoarseInstant {
+        CoarseInstant {
+            s: self.s.fetch_sub(other.s, ordering),
+        }
+    }
+
+    pub fn refresh(&self, ordering: Ordering) {
+        self.store(CoarseInstant::now(), ordering)
+    }
+
+    pub fn elapsed(&self, ordering: Ordering) -> CoarseDuration {
+        self.load(ordering).elapsed()
+    }
+}
+
+
+impl CoarseInstant {
+    pub fn now() -> Self {
+        let now = Instant::now();
+        Self {
+            s: (now.ns as f64 / NS_PER_SECOND as f64).round() as u32
+        }
+    }
+}
+
+
+impl CoarseInstant {
+    pub fn elapsed(&self) -> CoarseDuration {
+        CoarseInstant::now() - self
+    }
+}
+
+impl std::ops::Sub<&CoarseInstant> for CoarseInstant {
+    type Output = CoarseDuration;
+
+    fn sub(self, other: &CoarseInstant) -> <Self as std::ops::Sub<&CoarseInstant>>::Output {
+        CoarseDuration {
+            s: self.s - other.s,
+        }
+    }
+}
+
+impl std::ops::Sub<CoarseInstant> for CoarseInstant {
+    type Output = CoarseDuration;
+
+    fn sub(self, other: CoarseInstant) -> <Self as std::ops::Sub<CoarseInstant>>::Output {
+        self.sub(&other)
+    }
+}
+
+impl std::ops::Add<&CoarseDuration> for CoarseInstant {
+    type Output = CoarseInstant;
+
+    fn add(self, other: &CoarseDuration) -> <Self as std::ops::Add<&CoarseDuration>>::Output {
+        CoarseInstant {
+            s: self.s + other.s,
+        }
+    }
+}
+
+impl std::ops::Add<CoarseDuration> for CoarseInstant {
+    type Output = CoarseInstant;
+
+    fn add(self, other: CoarseDuration) -> <Self as std::ops::Add<CoarseDuration>>::Output {
+        self.add(&other)
+    }
+}
+
+impl std::ops::AddAssign<CoarseDuration> for CoarseInstant {
+    fn add_assign(&mut self, other: CoarseDuration) {
+        self.s += other.s
+    }
+}
+
+impl std::ops::Sub<&CoarseDuration> for CoarseInstant {
+    type Output = CoarseInstant;
+
+    fn sub(self, other: &CoarseDuration) -> <Self as std::ops::Sub<&CoarseDuration>>::Output {
+        CoarseInstant {
+            s: self.s - other.s,
+        }
+    }
+}
+
+impl std::ops::Sub<CoarseDuration> for CoarseInstant {
+    type Output = CoarseInstant;
+
+    fn sub(self, other: CoarseDuration) -> <Self as std::ops::Sub<CoarseDuration>>::Output {
+        self.sub(&other)
+    }
+}
+
+impl std::ops::SubAssign<CoarseDuration> for CoarseInstant {
+    fn sub_assign(&mut self, other: CoarseDuration) {
+        self.s -= other.s
     }
 }
 
@@ -194,6 +330,18 @@ impl std::ops::Sub<Duration> for Instant {
 impl std::ops::SubAssign<Duration> for Instant {
     fn sub_assign(&mut self, other: Duration) {
         self.ns -= other.ns
+    }
+}
+
+/// `CoarseDuration` is a lower-resolution version of `Duration`. It represents
+/// a period of time with one-second resolution.
+pub struct CoarseDuration {
+    s: u32,
+}
+
+impl CoarseDuration {
+    pub fn as_sec(&self) -> u32 {
+        self.s
     }
 }
 
