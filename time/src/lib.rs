@@ -333,6 +333,7 @@ impl std::ops::SubAssign<Duration> for Instant {
 
 /// `CoarseDuration` is a lower-resolution version of `Duration`. It represents
 /// a period of time with one-second resolution.
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
 pub struct CoarseDuration {
     s: u32,
 }
@@ -344,6 +345,7 @@ impl CoarseDuration {
 }
 
 /// `Duration` is the amount of time between two instants.
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
 pub struct Duration {
     ns: u64,
 }
