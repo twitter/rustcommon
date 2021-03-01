@@ -1,3 +1,4 @@
+use core::sync::atomic::AtomicBool;
 use core::sync::atomic::AtomicU32;
 use core::sync::atomic::AtomicU64;
 use core::sync::atomic::Ordering;
@@ -5,6 +6,91 @@ use core::sync::atomic::Ordering;
 const NS_PER_MICROSECOND: u64 = 1_000;
 const NS_PER_MILLISECOND: u64 = 1_000_000;
 const NS_PER_SECOND: u64 = 1_000_000_000;
+
+// We initialize the clock for the static lifetime.
+// TODO(bmartin): this probably doesn't even need to be mutable...
+static mut CLOCK: Clock = Clock::new();
+
+fn _clock() -> &'static Clock {
+    unsafe { &CLOCK }
+}
+
+// convenience functions
+
+/// Returns a precise instant by reading the underlying clock.
+pub fn now_precise() -> Instant {
+    _clock().now_precise()
+}
+
+/// Returns a coarse instant by reading the underlying clock.
+pub fn now_coarse() -> CoarseInstant {
+    _clock().now_coarse()
+}
+
+/// Returns a recent precise instant by reading a cached view of the clock.
+pub fn recent_precise() -> Instant {
+    _clock().recent_precise()
+}
+
+/// Returns a recent coarse instant by reading a cached view of the clock.
+pub fn recent_coarse() -> CoarseInstant {
+    _clock().recent_coarse()
+}
+
+/// Update the cached view of the clock by reading the underlying clock.
+pub fn refresh_clock() {
+    _clock().refresh()
+}
+
+// Clock provides functionality to get current and recent times
+struct Clock {
+    recent: AtomicInstant,
+    initialized: AtomicBool,
+}
+
+impl Clock {
+    /// Return the current precise time
+    fn now_precise(&self) -> Instant {
+        Instant::now()
+    }
+
+    /// Return the current coarse time
+    fn now_coarse(&self) -> CoarseInstant {
+        CoarseInstant::now()
+    }
+
+    /// Return a cached precise time
+    fn recent_precise(&self) -> Instant {
+        if self.initialized.load(Ordering::Relaxed) {
+            self.recent.load(Ordering::Relaxed)
+        } else {
+            self.refresh();
+            self.recent.load(Ordering::Relaxed)
+        }
+    }
+
+    /// Return a cached coarse time
+    fn recent_coarse(&self) -> CoarseInstant {
+        CoarseInstant::from(self.recent_precise())
+    }
+
+    /// Refresh the cached time
+    fn refresh(&self) {
+        self.recent.store(Instant::now(), Ordering::Relaxed);
+        self.initialized.store(true, Ordering::Relaxed);
+    }
+}
+
+impl Clock {
+    const fn new() -> Self {
+        Clock {
+            recent: AtomicInstant {
+                ns: AtomicU64::new(0),
+            },
+            initialized: AtomicBool::new(false),
+        }
+    }
+}
 
 /// `Instant` is an opaque type that represents a moment in time.
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
@@ -19,8 +105,17 @@ pub struct CoarseInstant {
     s: u32, // This is enough for >100 years without overflow
 }
 
+impl From<Instant> for CoarseInstant {
+    fn from(instant: Instant) -> Self {
+        Self {
+            s: (instant.ns / NS_PER_SECOND) as u32,
+        }
+    }
+}
+
 /// `AtomicCoarseInstant` is an opaque type that represents a moment in time to
 /// the nearest second. Unlike `CoarseInstant`, it is thread-safe.
+#[derive(Debug)]
 pub struct AtomicCoarseInstant {
     s: AtomicU32, // This is enough for >100 years without overflow
 }
@@ -34,6 +129,13 @@ pub struct AtomicInstant {
 impl AtomicInstant {
     pub fn now() -> Self {
         let instant = Instant::now();
+        Self {
+            ns: AtomicU64::new(instant.ns),
+        }
+    }
+
+    pub fn recent() -> Self {
+        let instant = _clock().recent_precise();
         Self {
             ns: AtomicU64::new(instant.ns),
         }
@@ -78,6 +180,13 @@ impl AtomicCoarseInstant {
         }
     }
 
+    pub fn recent() -> Self {
+        let instant = _clock().recent_coarse();
+        Self {
+            s: AtomicU32::new(instant.s),
+        }
+    }
+
     pub fn load(&self, ordering: Ordering) -> CoarseInstant {
         CoarseInstant {
             s: self.s.load(ordering),
@@ -113,12 +222,14 @@ impl CoarseInstant {
     pub fn now() -> Self {
         let now = Instant::now();
         Self {
-            s: (now.ns as f64 / NS_PER_SECOND as f64).round() as u32,
+            s: (now.ns / NS_PER_SECOND) as u32,
         }
     }
-}
 
-impl CoarseInstant {
+    pub fn recent() -> Self {
+        _clock().recent_coarse()
+    }
+
     pub fn elapsed(&self) -> CoarseDuration {
         CoarseInstant::now() - self
     }
@@ -264,6 +375,10 @@ impl Instant {
 impl Instant {
     pub fn elapsed(&self) -> Duration {
         Instant::now() - self
+    }
+
+    pub fn recent() -> Instant {
+        _clock().recent_precise()
     }
 }
 
@@ -447,10 +562,33 @@ mod tests {
     use crate::*;
 
     #[test]
-    fn it_works() {
+    // This tests the direct interface to `Instant` and `Duration`
+    fn basic() {
         let now = Instant::now();
         std::thread::sleep(std::time::Duration::new(1, 0));
         let elapsed = now.elapsed();
         assert!(elapsed.as_sec_f64() >= 1.0);
+        assert!(elapsed.as_sec() >= 1);
+        assert!(elapsed.as_nanos() >= 1_000_000_000);
+    }
+
+    #[test]
+    // This tests the 'clock' interface which is hidden behind macros
+    fn clock() {
+        let now = Instant::now();
+        std::thread::sleep(std::time::Duration::new(1, 0));
+        let elapsed = now.elapsed();
+        assert!(elapsed.as_sec() >= 1);
+        assert!(elapsed.as_nanos() >= 1_000_000_000);
+
+        let t0 = Instant::recent();
+        let t0_c = Instant::recent();
+        std::thread::sleep(std::time::Duration::new(1, 0));
+        assert_eq!(Instant::recent(), t0);
+        refresh_clock();
+        let t1 = Instant::recent();
+        let t1_c = Instant::recent();
+        assert!((t1 - t0).as_sec_f64() >= 1.0);
+        assert!((t1_c - t0_c).as_sec() >= 1);
     }
 }
