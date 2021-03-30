@@ -47,15 +47,6 @@ macro_rules! float {
             }
 
             #[inline]
-            fn compare_and_swap(&self, current: Self::Primitive, new: Self::Primitive, ordering: Ordering) -> Self::Primitive {
-                <$type>::from_bits(self.inner.compare_and_swap(
-                    current.to_bits(),
-                    new.to_bits(),
-                    ordering,
-                ))
-            }
-
-            #[inline]
             fn compare_exchange(
                 &self,
                 current: Self::Primitive,

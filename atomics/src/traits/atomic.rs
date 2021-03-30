@@ -33,25 +33,6 @@ pub trait Atomic {
     fn swap(&self, value: Self::Primitive, order: Ordering) -> Self::Primitive;
 
     /// Stores a value into the atomic type if the current value is the same as
-    /// the `current` value.
-    ///
-    /// The return value is always the previous value. If it is equal to
-    /// `current`, then the value was updated.
-    ///
-    /// `compare_and_swap` takes an `Ordering` argument which describes the
-    /// memory ordering of this operation. Note that even when using `AcqRel`,
-    /// the operation might fail and hence just perform an `Acquire` load, but
-    /// not have `Release` semantics. Using `Acquire` makes the store part of
-    /// this operation `Relaxed` if it happens, and using `Release` makes the
-    /// load part `Relaxed`.
-    fn compare_and_swap(
-        &self,
-        current: Self::Primitive,
-        new: Self::Primitive,
-        order: Ordering,
-    ) -> Self::Primitive;
-
-    /// Stores a value into the atomic type if the current value is the same as
     /// as the `current` value.
     ///
     /// The return value is a result indicating whether the new value was

@@ -10,30 +10,7 @@ macro_rules! fetch_compare_store {
                 value: <Self as Atomic>::Primitive,
                 ordering: Ordering,
             ) -> <Self as Atomic>::Primitive {
-                let load_ordering = match ordering {
-                    Ordering::AcqRel => Ordering::Acquire,
-                    Ordering::Release => Ordering::Relaxed,
-                    _ => ordering,
-                };
-                let mut previous = self.load(load_ordering);
-                if value <= previous {
-                    // new value is not larger, return previous
-                    previous
-                } else {
-                    loop {
-                        let result = self.compare_and_swap(previous, value, ordering);
-                        if result == previous {
-                            // updated successfully. return previous value.
-                            return previous;
-                        }
-                        previous = result;
-                        if previous >= value {
-                            // value concurrently modified and now new value is not
-                            // larger. return updated previous value.
-                            return previous;
-                        }
-                    }
-                }
+                self.inner.fetch_max(value, ordering)
             }
 
             fn fetch_min(
@@ -41,30 +18,7 @@ macro_rules! fetch_compare_store {
                 value: <Self as Atomic>::Primitive,
                 ordering: Ordering,
             ) -> <Self as Atomic>::Primitive {
-                let load_ordering = match ordering {
-                    Ordering::AcqRel => Ordering::Acquire,
-                    Ordering::Release => Ordering::Relaxed,
-                    _ => ordering,
-                };
-                let mut previous = self.load(load_ordering);
-                if value >= previous {
-                    // new value is not smaller, return previous value.
-                    previous
-                } else {
-                    loop {
-                        let result = self.compare_and_swap(previous, value, ordering);
-                        if result == previous {
-                            // updated successfully. return previous value.
-                            return previous;
-                        }
-                        previous = result;
-                        if previous <= value {
-                            // value concurrently modified and now new value is not
-                            // smaller. return updated previous value.
-                            return previous;
-                        }
-                    }
-                }
+                self.inner.fetch_min(value, ordering)
             }
         }
     };

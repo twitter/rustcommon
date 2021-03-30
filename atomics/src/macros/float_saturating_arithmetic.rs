@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Twitter, Inc.
+// Copyright 2019 Twitter, Inc.
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -25,16 +25,19 @@ macro_rules! saturating_arithmetic {
                         } else {
                             sum
                         };
-                        let result = self.compare_and_swap(previous, new, ordering);
-                        if result == previous {
-                            // value updated, return previous.
-                            return previous;
-                        }
-                        previous = result;
-                        if previous == <$type>::max_value() {
-                            // value concurrently updated and now at numeric bound.
-                            // return its new value as the previous value.
-                            return previous;
+                        let result = self.compare_exchange(previous, new, ordering, load_ordering);
+                        match result {
+                            Ok(v) => {
+                                return v;
+                            }
+                            Err(v) => {
+                                previous = v;
+                                if previous == <$type>::max_value() {
+                                    // value concurrently updated and now at numeric bound.
+                                    // return its new value as the previous value.
+                                    return previous;
+                                }
+                            }
                         }
                     }
                 }
@@ -59,16 +62,19 @@ macro_rules! saturating_arithmetic {
                         } else {
                             diff
                         };
-                        let result = self.compare_and_swap(previous, new, ordering);
-                        if result == previous {
-                            // value updated, return previous.
-                            return previous;
-                        }
-                        previous = result;
-                        if previous == <$type>::min_value() {
-                            // value concurrently updated, and now at numeric bound.
-                            // return its new value as the previous value.
-                            return previous;
+                        let result = self.compare_exchange(previous, new, ordering, load_ordering);
+                        match result {
+                            Ok(v) => {
+                                return v;
+                            }
+                            Err(v) => {
+                                previous = v;
+                                if previous == <$type>::max_value() {
+                                    // value concurrently updated and now at numeric bound.
+                                    // return its new value as the previous value.
+                                    return previous;
+                                }
+                            }
                         }
                     }
                 }
