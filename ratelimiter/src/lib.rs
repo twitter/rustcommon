@@ -121,16 +121,17 @@ impl Ratelimiter {
             };
             if self
                 .next
-                .compare_exchange(next, next + tick, Ordering::AcqRel, Ordering::Relaxed)
+                .compare_exchange(next, next + tick, Ordering::SeqCst, Ordering::SeqCst)
                 .is_ok()
             {
                 let quantum = self.quantum.load(Ordering::Relaxed);
                 let capacity = self.capacity.load(Ordering::Relaxed);
                 let available = self.available.load(Ordering::Relaxed);
                 if available + quantum >= capacity {
-                    self.available.store(capacity, Ordering::Release);
+                    let quantum = capacity - available;
+                    self.available.fetch_add(quantum, Ordering::Relaxed);
                 } else {
-                    self.available.fetch_add(quantum, Ordering::Release);
+                    self.available.fetch_add(quantum, Ordering::Relaxed);
                 }
             }
         }
