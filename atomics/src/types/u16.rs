@@ -163,13 +163,6 @@ mod tests {
     }
 
     #[test]
-    fn compare_and_swap() {
-        let atomic = AtomicU16::new(0);
-        assert_eq!(atomic.compare_and_swap(0, 1, Ordering::SeqCst), 0);
-        assert_eq!(atomic.compare_and_swap(0, 2, Ordering::SeqCst), 1);
-    }
-
-    #[test]
     fn compare_exchange() {
         let atomic = AtomicU16::new(0);
         assert_eq!(

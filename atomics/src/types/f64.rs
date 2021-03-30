@@ -152,13 +152,6 @@ mod tests {
     }
 
     #[test]
-    fn compare_and_swap() {
-        let atomic = AtomicF64::new(0.0);
-        assert_eq!(atomic.compare_and_swap(0.0, 3.14, Ordering::SeqCst), 0.0);
-        assert_eq!(atomic.compare_and_swap(0.0, 42.0, Ordering::SeqCst), 3.14);
-    }
-
-    #[test]
     fn compare_exchange() {
         let atomic = AtomicF64::new(0.0);
         assert_eq!(

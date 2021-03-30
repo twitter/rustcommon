@@ -47,11 +47,6 @@ macro_rules! native {
             }
 
             #[inline]
-            fn compare_and_swap(&self, current: Self::Primitive, new: Self::Primitive, ordering: Ordering) -> Self::Primitive {
-                self.inner.compare_and_swap(current, new, ordering)
-            }
-
-            #[inline]
             fn compare_exchange(
                 &self,
                 current: Self::Primitive,

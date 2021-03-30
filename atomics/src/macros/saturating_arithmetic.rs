@@ -23,16 +23,19 @@ macro_rules! saturating_arithmetic {
                 } else {
                     loop {
                         let new = previous.saturating_add(value);
-                        let result = self.compare_and_swap(previous, new, ordering);
-                        if result == previous {
-                            // value updated, return previous.
-                            return previous;
-                        }
-                        previous = result;
-                        if previous == <$type>::max_value() {
-                            // value concurrently updated and now at numeric bound.
-                            // return its new value as the previous value.
-                            return previous;
+                        let result = self.compare_exchange(previous, new, ordering, load_ordering);
+                        match result {
+                            Ok(v) => {
+                                return v;
+                            }
+                            Err(v) => {
+                                previous = v;
+                                if previous == <$type>::max_value() {
+                                    // value concurrently updated and now at numeric bound.
+                                    // return its new value as the previous value.
+                                    return previous;
+                                }
+                            }
                         }
                     }
                 }
@@ -56,16 +59,19 @@ macro_rules! saturating_arithmetic {
                 } else {
                     loop {
                         let new = previous.saturating_sub(value);
-                        let result = self.compare_and_swap(previous, new, ordering);
-                        if result == previous {
-                            // value updated, return previous.
-                            return previous;
-                        }
-                        previous = result;
-                        if previous == <$type>::min_value() {
-                            // value concurrently updated, and now at numeric bound.
-                            // return its new value as the previous value.
-                            return previous;
+                        let result = self.compare_exchange(previous, new, ordering, load_ordering);
+                        match result {
+                            Ok(v) => {
+                                return v;
+                            }
+                            Err(v) => {
+                                previous = v;
+                                if previous == <$type>::max_value() {
+                                    // value concurrently updated and now at numeric bound.
+                                    // return its new value as the previous value.
+                                    return previous;
+                                }
+                            }
                         }
                     }
                 }

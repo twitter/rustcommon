@@ -60,13 +60,16 @@ where
             } else {
                 0
             };
-            let previous = self
-                .current
-                .compare_and_swap(current, next, Ordering::Relaxed);
-            if previous == current {
-                break;
-            } else {
-                current = previous;
+            let result =
+                self.current
+                    .compare_exchange(current, next, Ordering::Relaxed, Ordering::Relaxed);
+            match result {
+                Ok(_) => {
+                    break;
+                }
+                Err(v) => {
+                    current = v;
+                }
             }
         }
         if self.len.load(Ordering::Relaxed) < self.buffer.len() {
