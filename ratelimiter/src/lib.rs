@@ -119,7 +119,11 @@ impl Ratelimiter {
                 Ok(Refill::Normal) => self.normal.sample(&mut rand::thread_rng()) as u64,
                 Err(_) => self.tick.load(Ordering::Relaxed),
             };
-            if self.next.compare_exchange(next, next + tick, Ordering::AcqRel, Ordering::Relaxed).is_ok() {
+            if self
+                .next
+                .compare_exchange(next, next + tick, Ordering::AcqRel, Ordering::Relaxed)
+                .is_ok()
+            {
                 let quantum = self.quantum.load(Ordering::Relaxed);
                 let capacity = self.capacity.load(Ordering::Relaxed);
                 let available = self.available.load(Ordering::Relaxed);
