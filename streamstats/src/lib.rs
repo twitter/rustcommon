@@ -60,9 +60,9 @@ where
             } else {
                 0
             };
-            let result = self
-                .current
-                .compare_exchange(current, next, Ordering::Relaxed, Ordering::Relaxed);
+            let result =
+                self.current
+                    .compare_exchange(current, next, Ordering::Relaxed, Ordering::Relaxed);
             match result {
                 Ok(_) => {
                     break;
