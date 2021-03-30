@@ -1,6 +1,6 @@
 [package]
 name = "rustcommon-time"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
 
