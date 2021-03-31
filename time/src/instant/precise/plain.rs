@@ -80,7 +80,7 @@ fn now() -> Instant {
         libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut ts);
     }
     Instant {
-        nanos: ts.tv_sec as u64 * NS_PER_SECOND + ts.tv_nsec as u64,
+        nanos: ts.tv_sec as u64 * NANOS_PER_SEC + ts.tv_nsec as u64,
     }
 }
 
@@ -131,7 +131,7 @@ fn now() -> Instant {
     };
 
     Instant {
-        nanos: (cnt as f64 / (*PRF_FREQUENCY as f64 / 1_000_000_000_f64)) as u64,
+        nanos: (cnt as f64 / (*PRF_FREQUENCY as f64 / (NANOS_PER_SEC as f64))) as u64,
     }
 }
 
