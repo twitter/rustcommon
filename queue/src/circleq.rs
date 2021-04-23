@@ -176,7 +176,7 @@ impl<T> CircleQ<T> {
             if self.len > 1 {
                 self.tail = node.prev;
                 (*self.tail.unwrap().as_ptr()).next = self.head;
-                (*self.head.unwrap().as_ptr()).prev = self.head;
+                (*self.head.unwrap().as_ptr()).prev = self.tail;
             } else {
                 self.head = None;
                 self.tail = None;
