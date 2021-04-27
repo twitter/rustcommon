@@ -17,10 +17,10 @@ const NANOS_PER_MICRO: u64 = 1_000;
 
 // We initialize the clock for the static lifetime.
 // TODO(bmartin): this probably doesn't even need to be mutable...
-static mut CLOCK: Clock = Clock::new();
+static CLOCK: Clock = Clock::new();
 
 fn _clock() -> &'static Clock {
-    unsafe { &CLOCK }
+    &CLOCK
 }
 
 // convenience functions
