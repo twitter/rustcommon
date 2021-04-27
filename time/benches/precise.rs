@@ -1,4 +1,3 @@
-// use criterion::BenchmarkId;
 use criterion::Throughput;
 use criterion::{criterion_group, criterion_main, Criterion};
 use rustcommon_time::*;
@@ -19,5 +18,5 @@ fn atomic(c: &mut Criterion) {
     group.bench_function("recent", |b| b.iter(AtomicInstant::recent));
 }
 
-criterion_group!(benches, plain, atomic,);
+criterion_group!(benches, plain, atomic);
 criterion_main!(benches);
