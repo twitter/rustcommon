@@ -16,38 +16,33 @@ const NANOS_PER_MILLI: u64 = 1_000_000;
 const NANOS_PER_MICRO: u64 = 1_000;
 
 // We initialize the clock for the static lifetime.
-// TODO(bmartin): this probably doesn't even need to be mutable...
 static CLOCK: Clock = Clock::new();
-
-fn _clock() -> &'static Clock {
-    &CLOCK
-}
 
 // convenience functions
 
 /// Returns a precise instant by reading the underlying clock.
 pub fn now_precise() -> Instant {
-    _clock().now_precise()
+    CLOCK.now_precise()
 }
 
 /// Returns a coarse instant by reading the underlying clock.
 pub fn now_coarse() -> CoarseInstant {
-    _clock().now_coarse()
+    CLOCK.now_coarse()
 }
 
 /// Returns a recent precise instant by reading a cached view of the clock.
 pub fn recent_precise() -> Instant {
-    _clock().recent_precise()
+    CLOCK.recent_precise()
 }
 
 /// Returns a recent coarse instant by reading a cached view of the clock.
 pub fn recent_coarse() -> CoarseInstant {
-    _clock().recent_coarse()
+    CLOCK.recent_coarse()
 }
 
 /// Update the cached view of the clock by reading the underlying clock.
 pub fn refresh_clock() {
-    _clock().refresh()
+    CLOCK.refresh()
 }
 
 // Clock provides functionality to get current and recent times

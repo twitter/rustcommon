@@ -165,7 +165,7 @@ impl Instant {
     /// let recent = Instant::recent();
     /// ```
     pub fn recent() -> Instant {
-        _clock().recent_precise()
+        CLOCK.recent_precise()
     }
 
     /// Returns the amount of time elapsed from another instant to this one.
