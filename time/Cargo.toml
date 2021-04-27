@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 libc = "0.2.86"
+lazy_static = "1.4.0"
 
 [target.'cfg(windows)'.dependencies]
 lazy_static = "1.4.0"

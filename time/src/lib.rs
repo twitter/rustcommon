@@ -2,6 +2,7 @@ use core::sync::atomic::AtomicBool;
 use core::sync::atomic::AtomicU32;
 use core::sync::atomic::AtomicU64;
 use core::sync::atomic::Ordering;
+use lazy_static::lazy_static;
 
 mod duration;
 mod instant;
@@ -16,11 +17,12 @@ const NANOS_PER_MILLI: u64 = 1_000_000;
 const NANOS_PER_MICRO: u64 = 1_000;
 
 // We initialize the clock for the static lifetime.
-// TODO(bmartin): this probably doesn't even need to be mutable...
-static mut CLOCK: Clock = Clock::new();
+lazy_static! {
+    static ref CLOCK: Clock = Clock::new();
+}
 
 fn _clock() -> &'static Clock {
-    unsafe { &CLOCK }
+    &CLOCK
 }
 
 // convenience functions
