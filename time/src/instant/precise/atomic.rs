@@ -52,7 +52,7 @@ impl AtomicInstant {
     /// let recent = AtomicInstant::recent();
     /// ```
     pub fn recent() -> Self {
-        let instant = _clock().recent_precise();
+        let instant = CLOCK.recent_precise();
         Self {
             nanos: AtomicU64::new(instant.nanos),
         }

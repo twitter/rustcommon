@@ -67,7 +67,7 @@ impl CoarseInstant {
     /// let now = CoarseInstant::now();
     /// ```
     pub fn recent() -> CoarseInstant {
-        _clock().recent_coarse()
+        CLOCK.recent_coarse()
     }
 
     /// Returns the amount of time elapsed from another instant to this one.

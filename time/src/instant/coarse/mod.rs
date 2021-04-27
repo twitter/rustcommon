@@ -23,7 +23,7 @@ impl AtomicCoarseInstant {
     }
 
     pub fn recent() -> Self {
-        let instant = _clock().recent_coarse();
+        let instant = CLOCK.recent_coarse();
         Self {
             secs: AtomicU32::new(instant.secs),
         }
