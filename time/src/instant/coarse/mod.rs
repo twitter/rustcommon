@@ -58,4 +58,10 @@ impl AtomicCoarseInstant {
     pub fn elapsed(&self, ordering: Ordering) -> CoarseDuration {
         self.load(ordering).elapsed()
     }
+
+    pub fn swap(&self, value: CoarseInstant, ordering: Ordering) -> CoarseInstant {
+        CoarseInstant {
+            secs: self.secs.swap(value.secs, ordering),
+        }
+    }
 }

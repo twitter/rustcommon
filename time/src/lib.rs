@@ -2,6 +2,7 @@ use core::sync::atomic::AtomicBool;
 use core::sync::atomic::AtomicU32;
 use core::sync::atomic::AtomicU64;
 use core::sync::atomic::Ordering;
+use std::time::SystemTime;
 
 mod duration;
 mod instant;
@@ -40,6 +41,11 @@ pub fn recent_coarse() -> CoarseInstant {
     CLOCK.recent_coarse()
 }
 
+/// Returns the unix time by reading a cached view of the clock.
+pub fn recent_unix() -> u32 {
+    CLOCK.recent_unix()
+}
+
 /// Update the cached view of the clock by reading the underlying clock.
 pub fn refresh_clock() {
     CLOCK.refresh()
@@ -47,9 +53,10 @@ pub fn refresh_clock() {
 
 // Clock provides functionality to get current and recent times
 struct Clock {
-    recent_precise: AtomicInstant,
-    recent_coarse: AtomicCoarseInstant,
     initialized: AtomicBool,
+    recent_coarse: AtomicCoarseInstant,
+    recent_precise: AtomicInstant,
+    recent_unix: AtomicU32,
 }
 
 impl Clock {
@@ -83,14 +90,40 @@ impl Clock {
         }
     }
 
+    /// Return a cached UNIX time
+    fn recent_unix(&self) -> u32 {
+        if self.initialized.load(Ordering::Relaxed) {
+            self.recent_unix.load(Ordering::Relaxed)
+        } else {
+            self.refresh();
+            self.recent_unix.load(Ordering::Relaxed)
+        }
+    }
+
     /// Refresh the cached time
     fn refresh(&self) {
         let precise = Instant::now();
         let coarse = CoarseInstant {
             secs: (precise.nanos / NANOS_PER_SEC) as u32,
         };
+
         self.recent_precise.store(precise, Ordering::Relaxed);
-        self.recent_coarse.store(coarse, Ordering::Relaxed);
+
+        // special case initializing the recent unix time
+        if self.initialized.load(Ordering::Relaxed) {
+            let last = self.recent_coarse.swap(coarse, Ordering::Relaxed);
+            if last < coarse {
+                let delta = (coarse - last).as_secs();
+                self.recent_unix.fetch_add(delta, Ordering::Relaxed);
+            }
+        } else {
+            self.recent_coarse.store(coarse, Ordering::Relaxed);
+            let unix = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as u32;
+            self.recent_unix.store(unix, Ordering::Relaxed);
+        }
         self.initialized.store(true, Ordering::Relaxed);
     }
 }
@@ -98,13 +131,14 @@ impl Clock {
 impl Clock {
     const fn new() -> Self {
         Clock {
-            recent_precise: AtomicInstant {
-                nanos: AtomicU64::new(0),
-            },
+            initialized: AtomicBool::new(false),
             recent_coarse: AtomicCoarseInstant {
                 secs: AtomicU32::new(0),
             },
-            initialized: AtomicBool::new(false),
+            recent_precise: AtomicInstant {
+                nanos: AtomicU64::new(0),
+            },
+            recent_unix: AtomicU32::new(0),
         }
     }
 }
