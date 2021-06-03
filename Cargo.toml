@@ -7,7 +7,6 @@ members = [
     "histogram",
     "logger",
     "metrics",
-    "queue",
     "ratelimiter",
     "streamstats",
     "time",
