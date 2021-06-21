@@ -3,6 +3,10 @@ name = "rustcommon-time"
 version = "0.0.6"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
+description = "Library for getting current and recent timestamps"
+homepage = "https://github.com/twitter/rustcommon"
+repository = "https://github.com/twitter/rustcommon"
+license = "Apache-2.0"
 
 [dependencies]
 libc = "0.2.86"

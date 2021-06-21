@@ -3,6 +3,10 @@ name = "rustcommon-metrics"
 version = "2.0.0-alpha.0"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
+description = "Rich metrics library"
+homepage = "https://github.com/twitter/rustcommon/metrics"
+repository = "https://github.com/twitter/rustcommon"
+license = "Apache-2.0"
 
 [dependencies]
 crossbeam = "0.8.0"
