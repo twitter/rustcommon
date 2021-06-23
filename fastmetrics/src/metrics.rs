@@ -224,7 +224,7 @@ fn set_metrics(metrics: Box<dyn MetricsLib>) -> Result<(), MetricsError> {
         }
         INITIALIZING => {
             while STATE.load(Ordering::SeqCst) == INITIALIZING {
-                std::sync::atomic::spin_loop_hint();
+                std::hint::spin_loop();
             }
             Err(MetricsError::AlreadyInitialized)
         }
