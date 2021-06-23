@@ -3,6 +3,10 @@ name = "rustcommon-fastmetrics"
 version = "0.0.3"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
+description = "High-performance metrics"
+homepage = "https://github.com/twitter/rustcommon/fastmetrics"
+repository = "https://github.com/twitter/rustcommon"
+license = "Apache-2.0"
 
 [dependencies]
 thiserror = "1.0.23"
