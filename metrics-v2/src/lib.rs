@@ -1,3 +1,7 @@
+// Copyright 2021 Twitter, Inc.
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 //! Easily registered distributed metrics.
 //!
 //! More docs todo...
@@ -52,7 +56,6 @@
 //! is registered via the [`metric!`] macro.
 
 use std::any::Any;
-use std::fmt;
 
 mod counter;
 mod gauge;
@@ -98,6 +101,8 @@ pub trait Metric: Sync {
 
 /// A statically declared metric entry.
 pub struct MetricEntry {
+    // These fields need to be public until it is possibe to create a const method with 
+    // &'static dyn Metric as a parameter.
     #[doc(hidden)]
     pub metric: &'static dyn Metric,
     #[doc(hidden)]
@@ -105,10 +110,12 @@ pub struct MetricEntry {
 }
 
 impl MetricEntry {
+    /// Get a reference to the metric that this entry corresponds to.
     pub fn metric(&self) -> &'static dyn Metric {
         self.metric
     }
 
+    /// Get the name of this metric.
     pub fn name(&self) -> &'static str {
         self.name
     }
@@ -122,8 +129,8 @@ impl std::ops::Deref for MetricEntry {
     }
 }
 
-impl fmt::Debug for MetricEntry {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Debug for MetricEntry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MetricEntry")
             .field("name", &self.name())
             .field("metric", &"<dyn Metric>")

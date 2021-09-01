@@ -8,6 +8,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 /// A counter. Can be incremented or added to.
 ///
+/// In case of overflow the counter will wrap around. However, internally it
+/// uses an unsigned 64-bit integer so for most use cases this should be
+/// unlikely.
+///
 /// # Example
 /// ```
 /// # use rustcommon_metrics_v2::{metric, Counter};
