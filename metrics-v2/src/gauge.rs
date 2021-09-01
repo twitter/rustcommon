@@ -25,10 +25,12 @@ use std::{
 pub struct Gauge(AtomicI64);
 
 impl Gauge {
+    /// Create a new guage with the default value of 0.
     pub const fn new() -> Self {
         Self::with_value(0)
     }
 
+    /// Create a new guage with the provided initial value.
     pub const fn with_value(value: i64) -> Self {
         Self(AtomicI64::new(value))
     }

@@ -90,7 +90,7 @@ macro_rules! __metric_filter_attrs {
 /// `metrics::custom::METRIC`.
 ///
 /// The name of the metric can be customized by adding a `name` attribute like
-/// so 
+/// so
 /// ```
 /// # use rustcommon_metrics_v2::{metric, Counter};
 /// metric! {
