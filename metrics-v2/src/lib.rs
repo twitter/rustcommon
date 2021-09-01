@@ -101,7 +101,7 @@ pub trait Metric: Sync {
 
 /// A statically declared metric entry.
 pub struct MetricEntry {
-    // These fields need to be public until it is possibe to create a const method with 
+    // These fields need to be public until it is possibe to create a const method with
     // &'static dyn Metric as a parameter.
     #[doc(hidden)]
     pub metric: &'static dyn Metric,
