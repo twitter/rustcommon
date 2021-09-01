@@ -8,7 +8,7 @@ use std::{
 ///
 /// # Example
 /// ```
-/// # use metrics_v2::{metric, Gauge};
+/// # use rustcommon_metrics_v2::{metric, Gauge};
 /// metric! {
 ///     #[name = "my.gauge"]
 ///     static A_METHOD_RUNNING: Gauge = Gauge::new();

@@ -8,7 +8,7 @@ use std::{
 ///
 /// # Example
 /// ```
-/// # use metrics_v2::{metric, Counter};
+/// # use rustcommon_metrics_v2::{metric, Counter};
 /// metric! {
 ///     #[name = "my.custom.metric"]
 ///     static MY_COUNTER: Counter = Counter::new();

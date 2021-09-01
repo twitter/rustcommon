@@ -78,7 +78,7 @@ macro_rules! __metric_filter_attrs {
 /// # Syntax
 /// The basic syntax is
 /// ```
-/// # use metrics_v2::{metric, Counter};
+/// # use rustcommon_metrics_v2::{metric, Counter};
 /// metric! {
 ///   /// My custom metric!
 ///   pub static METRIC: Counter = Counter::new();
@@ -92,7 +92,7 @@ macro_rules! __metric_filter_attrs {
 /// The name of the metric can be customized by adding a `name` attribute like
 /// so 
 /// ```
-/// # use metrics_v2::{metric, Counter};
+/// # use rustcommon_metrics_v2::{metric, Counter};
 /// metric! {
 ///   /// A counter!
 ///   #[name = "my-counter"]
@@ -139,7 +139,7 @@ macro_rules! metric {
 ///
 /// # Assert that the test name is as expected for non-explicit names
 /// ```
-/// use metrics_v2::*;
+/// use rustcommon_metrics_v2::*;
 /// metric! {
 ///   static TEST_METRIC: Counter = Counter::new();
 /// }
@@ -152,7 +152,7 @@ macro_rules! metric {
 ///
 /// # Assert that test name is as expected for named metrics
 /// ```
-/// use metrics_v2::*;
+/// use rustcommon_metrics_v2::*;
 /// metric! {
 ///   #[name = "custom-name"]
 ///   static METRIC: Counter = Counter::new();

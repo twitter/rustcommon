@@ -9,7 +9,7 @@
 //! be overridden by adding a `#[name]` attribute.
 //!
 //! ```
-//! # use metrics_v2::{metric, Counter};
+//! # use rustcommon_metrics_v2::*;
 //! metric! {
 //!     /// A counter metric named "<crate name>::COUNTER_A"
 //!     static COUNTER_A: Counter = Counter::new();
@@ -28,7 +28,7 @@
 //! Suppose we have the metrics declared in the example above.
 //! ```
 //! # // This should remain in sync with the example above.
-//! # use metrics_v2::{metric, Counter};
+//! # use rustcommon_metrics_v2::*;
 //! # metric! {
 //! #     /// A counter metric named "COUNTER_A"
 //! #     static COUNTER_A: Counter = Counter::new();
@@ -37,7 +37,6 @@
 //! #     #[name = "my.metric.name"]
 //! #     static COUNTER_B: Counter = Counter::new();
 //! # }
-//! # use metrics_v2::metrics;
 //! let metrics = metrics();
 //! // Metrics may be in any arbitrary order
 //! let mut names: Vec<_> = metrics.iter().map(|metric| metric.name()).collect();
