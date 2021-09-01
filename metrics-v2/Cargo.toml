@@ -1,0 +1,10 @@
+[package]
+name = "rustcommon-metrics-v2"
+version = "0.1.0"
+edition = "2018"
+authors = ["Sean Lynch <seanl@twitter.com>"]
+license = "Apache-2.0"
+
+[dependencies]
+linkme = "0.2.6"
+
