@@ -45,6 +45,11 @@
 //! assert_eq!(names[0], "my.metric.name");
 //! assert_eq!(names[1], concat!(module_path!(), "::", "COUNTER_A"));
 //! ```
+//!
+//! # How it Works
+//! Behind the scenes, this crate uses the [`linkme`] crate to create a
+//! distributed slice containing a [`MetricEntry`] instance for each metric that
+//! is registered via the [`metric!`] macro.
 
 use std::any::Any;
 use std::fmt;
