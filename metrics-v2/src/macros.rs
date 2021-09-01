@@ -1,3 +1,7 @@
+// Copyright 2021 Twitter, Inc.
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 /// Macro to extract the parameter from the first #[name = "blah"] attribute
 /// or use a default otherwise.
 #[doc(hidden)]
