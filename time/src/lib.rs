@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use core::sync::atomic::AtomicBool;
-use core::sync::atomic::AtomicU32;
-use core::sync::atomic::AtomicU64;
-use core::sync::atomic::Ordering;
-use std::time::SystemTime;
+use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
+
+pub use std::time::SystemTime;
+
+pub use chrono::{DateTime, Local, TimeZone, Utc};
 
 mod duration;
 mod instant;
@@ -25,14 +25,40 @@ static CLOCK: Clock = Clock::new();
 
 // convenience functions
 
-/// Returns a precise instant by reading the underlying clock.
+/// Refresh the clock and return the current instant with high precision.
 pub fn now_precise() -> Instant {
-    CLOCK.now_precise()
+    CLOCK.refresh();
+    CLOCK.recent_precise()
 }
 
-/// Returns a coarse instant by reading the underlying clock.
+/// Refresh the clock and return the current instant with reduced precision.
 pub fn now_coarse() -> CoarseInstant {
-    CLOCK.now_coarse()
+    CLOCK.refresh();
+    CLOCK.recent_coarse()
+}
+
+/// Refresh the clock and return the current datetime in the local timezone.
+pub fn now_local() -> DateTime<Local> {
+    CLOCK.refresh();
+    CLOCK.recent_local()
+}
+
+/// Refresh the clock and return the current system time.
+pub fn now_system() -> SystemTime {
+    CLOCK.refresh();
+    CLOCK.recent_system()
+}
+
+/// Refresh the clock and return the current unix time in seconds.
+pub fn now_unix() -> u32 {
+    CLOCK.refresh();
+    CLOCK.recent_unix()
+}
+
+/// Refresh the clock and return the current datetime in the UTC timezone.
+pub fn now_utc() -> DateTime<Utc> {
+    CLOCK.refresh();
+    CLOCK.recent_utc()
 }
 
 /// Returns a recent precise instant by reading a cached view of the clock.
@@ -45,9 +71,24 @@ pub fn recent_coarse() -> CoarseInstant {
     CLOCK.recent_coarse()
 }
 
+/// Returns a `DateTime<Local>` from a cached view of the clock.
+pub fn recent_local() -> DateTime<Local> {
+    CLOCK.recent_local()
+}
+
+/// Returns the system time by reaching a cached view of the clock.
+pub fn recent_system() -> SystemTime {
+    CLOCK.recent_system()
+}
+
 /// Returns the unix time by reading a cached view of the clock.
 pub fn recent_unix() -> u32 {
     CLOCK.recent_unix()
+}
+
+/// Returns a `DateTime<Utc>` from a cached view of the clock.
+pub fn recent_utc() -> DateTime<Utc> {
+    CLOCK.recent_utc()
 }
 
 /// Update the cached view of the clock by reading the underlying clock.
@@ -64,38 +105,43 @@ struct Clock {
 }
 
 impl Clock {
-    /// Return the current precise time
-    fn now_precise(&self) -> Instant {
-        Instant::now()
-    }
-
-    /// Return the current coarse time
-    fn now_coarse(&self) -> CoarseInstant {
-        CoarseInstant::now()
+    fn initialize(&self) {
+        if !self.initialized.load(Ordering::Relaxed) {
+            self.refresh();
+        }
     }
 
     /// Return a cached precise time
     fn recent_precise(&self) -> Instant {
-        if !self.initialized.load(Ordering::Relaxed) {
-            self.refresh();
-        }
+        self.initialize();
         self.recent_precise.load(Ordering::Relaxed)
     }
 
     /// Return a cached coarse time
     fn recent_coarse(&self) -> CoarseInstant {
-        if !self.initialized.load(Ordering::Relaxed) {
-            self.refresh();
-        }
+        self.initialize();
         self.recent_coarse.load(Ordering::Relaxed)
+    }
+
+    /// Return a cached Local DateTime
+    fn recent_local(&self) -> DateTime<Local> {
+        Local.timestamp(self.recent_unix().into(), 0)
+    }
+
+    /// Return a cached SystemTime
+    fn recent_system(&self) -> SystemTime {
+        SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(self.recent_unix().into())
     }
 
     /// Return a cached UNIX time
     fn recent_unix(&self) -> u32 {
-        if !self.initialized.load(Ordering::Relaxed) {
-            self.refresh();
-        }
+        self.initialize();
         self.recent_unix.load(Ordering::Relaxed)
+    }
+
+    /// Return a cached UTC DateTime
+    fn recent_utc(&self) -> DateTime<Utc> {
+        Utc.timestamp(self.recent_unix().into(), 0)
     }
 
     /// Refresh the cached time
@@ -153,7 +199,15 @@ mod tests {
         let elapsed = now.elapsed();
         assert!(elapsed.as_secs_f64() >= 1.0);
         assert!(elapsed.as_secs() >= 1);
-        assert!(elapsed.as_nanos() >= 1_000_000_000);
+        assert!(elapsed.as_nanos() >= NANOS_PER_SEC.into());
+    }
+
+    #[test]
+    /// This tests the system time handling
+    fn system() {
+        let recent = recent_system();
+        let now = std::time::SystemTime::now();
+        assert!((now.duration_since(recent).unwrap()).as_secs() <= 1);
     }
 
     #[test]
@@ -163,7 +217,7 @@ mod tests {
         std::thread::sleep(std::time::Duration::new(1, 0));
         let elapsed = now.elapsed();
         assert!(elapsed.as_secs() >= 1);
-        assert!(elapsed.as_nanos() >= 1_000_000_000);
+        assert!(elapsed.as_nanos() >= NANOS_PER_SEC.into());
 
         let t0 = Instant::recent();
         let t0_c = Instant::recent();
