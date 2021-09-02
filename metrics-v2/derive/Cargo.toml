@@ -1,0 +1,13 @@
+[package]
+name = "rustcommon-metrics-derive"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "1.0.75", features = ["parsing", "full"] }
+quote = "1.0.9"
+proc-macro2 = "1.0.29"
+proc-macro-crate = "1.0.0"
