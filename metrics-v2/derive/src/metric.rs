@@ -4,7 +4,7 @@
 
 use proc_macro2::{Span, TokenStream};
 use proc_macro_crate::FoundCrate;
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{parse_quote, Error, Expr, Ident, ItemStatic, Token};
@@ -89,7 +89,7 @@ pub(crate) fn metric(
         Some(name) => name.value.to_token_stream(),
         None => {
             let item_name = &item.ident;
-            quote_spanned! { Span::call_site() => concat!(module_path!(), "::", stringify!(#item_name))}
+            quote! { concat!(module_path!(), "::", stringify!(#item_name)) }
         }
     };
 
