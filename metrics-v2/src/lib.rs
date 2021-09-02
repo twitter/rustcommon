@@ -69,7 +69,6 @@ use std::any::Any;
 
 mod counter;
 mod gauge;
-mod macros;
 
 pub use crate::counter::Counter;
 pub use crate::gauge::Gauge;

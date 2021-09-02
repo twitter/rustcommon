@@ -6,6 +6,12 @@ use proc_macro::TokenStream;
 
 mod metric;
 
+/// Declare a global metric that can be accessed via the `metrics` method.
+///
+/// # Parameters
+/// - (optional) `name`: The name that the metric should be exposed as. If not
+///   specified then the default name is one based on the path to the metric
+///   along with its name.
 #[proc_macro_attribute]
 pub fn metric(attr: TokenStream, item: TokenStream) -> TokenStream {
     match metric::metric(attr, item) {
