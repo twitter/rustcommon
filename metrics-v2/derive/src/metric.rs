@@ -76,14 +76,12 @@ pub(crate) fn metric(
     let mut item: ItemStatic = syn::parse(item_)?;
     let args: MetricArgs = syn::parse(attr_)?;
 
-    //
     let krate: TokenStream = proc_macro_crate::crate_name("metrics_v2")
         .map(|krate| match krate {
             FoundCrate::Name(name) => Ident::new(&name, Span::call_site()).to_token_stream(),
             FoundCrate::Itself => quote! { crate },
         })
         .unwrap_or(quote! { rustcommon_metrics_v2 });
-    // let krate = quote_spanned! { Span::mixed_site() => $crate };
 
     let name: TokenStream = match args.name {
         Some(name) => name.value.to_token_stream(),
