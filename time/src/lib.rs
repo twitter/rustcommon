@@ -99,6 +99,12 @@ struct Clock {
 }
 
 impl Clock {
+    fn initialize(&self) {
+        if !self.initialized.load(Ordering::Relaxed) {
+            self.refresh();
+        }
+    }
+
     /// Return the current precise time
     fn now_precise(&self) -> Instant {
         Instant::now()
@@ -134,17 +140,13 @@ impl Clock {
 
     /// Return a cached precise time
     fn recent_precise(&self) -> Instant {
-        if !self.initialized.load(Ordering::Relaxed) {
-            self.refresh();
-        }
+        self.initialize();
         self.recent_precise.load(Ordering::Relaxed)
     }
 
     /// Return a cached coarse time
     fn recent_coarse(&self) -> CoarseInstant {
-        if !self.initialized.load(Ordering::Relaxed) {
-            self.refresh();
-        }
+        self.initialize();
         self.recent_coarse.load(Ordering::Relaxed)
     }
 
@@ -160,9 +162,7 @@ impl Clock {
 
     /// Return a cached UNIX time
     fn recent_unix(&self) -> u32 {
-        if !self.initialized.load(Ordering::Relaxed) {
-            self.refresh();
-        }
+        self.initialize();
         self.recent_unix.load(Ordering::Relaxed)
     }
 
