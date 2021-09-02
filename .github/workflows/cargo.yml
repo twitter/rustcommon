@@ -1,47 +1,99 @@
 on:
   push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: full
 
 jobs:
-  linux:
-    name: ubuntu
-    runs-on: ubuntu-20.04
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04, macos-10.15 ]
+        profile: [ release, debug ]
+    name: build-${{ matrix.os }}-${{ matrix.profile }}
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Run
-      run: bash .github/workflows/ci.sh
-  macos:
-    name: macos
-    runs-on: macos-10.15
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Update cargo flags
+        if: ${{ matrix.profile == 'release' }}
+        run: echo 'CARGO_FLAGS=--release' >> $GITHUB_ENV
+        shell: bash
+      - name: Update cargo flags
+        if: ${{ matrix.profile == 'debug' }}
+        run: echo 'CARGO_FLAGS=' >> $GITHUB_ENV
+        shell: bash
+
+      - uses: Swatinem/rust-cache@v1
+        with:
+          key: ${{ matrix.profile }}
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          # rustcommon-time tests are very slow, we run it in a separate step
+          args: ${{ env.CARGO_FLAGS }} --workspace --exclude rustcommon-time
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: ${{ env.CARGO_FLAGS }} -p rustcommon-time -- --test-threads 16
+
+  # Fast clippy check to ensure things compile
+  check:
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04, macos-10.15 ]
+    name: check-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Run
-      run: bash .github/workflows/ci.sh
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --release
+
   rustfmt:
     name: rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: rustfmt
-      run: cargo fmt -- --check
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+  # Note: We could run these using the pull_request_target trigger. I haven't
+  #       done this since I'm not sure if it would be secure.
+  #
+  # See this link for more details on this
+  # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
   clippy:
     name: clippy
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: clippy
-      run: cargo clippy
+      - uses: actions/checkout@v2
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   audit:
     name: audit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: install
-      run: cargo install cargo-audit
-    - name: audit
-      run: cargo audit
+      - uses: actions/checkout@v2
+      - uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
