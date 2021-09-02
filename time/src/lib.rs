@@ -25,34 +25,40 @@ static CLOCK: Clock = Clock::new();
 
 // convenience functions
 
-/// Returns a precise instant by reading the underlying clock.
+/// Refresh the clock and return the current instant with high precision.
 pub fn now_precise() -> Instant {
-    CLOCK.now_precise()
+    CLOCK.refresh();
+    CLOCK.recent_precise()
 }
 
-/// Returns a coarse instant by reading the underlying clock.
+/// Refresh the clock and return the current instant with reduced precision.
 pub fn now_coarse() -> CoarseInstant {
-    CLOCK.now_coarse()
+    CLOCK.refresh();
+    CLOCK.recent_coarse()
 }
 
-/// Returns the current `DateTime<Local>` by reading the underlying clock.
+/// Refresh the clock and return the current datetime in the local timezone.
 pub fn now_local() -> DateTime<Local> {
-    CLOCK.now_local()
+    CLOCK.refresh();
+    CLOCK.recent_local()
 }
 
-/// Returns the current `SystemTime` by reading the underlying clock.
+/// Refresh the clock and return the current system time.
 pub fn now_system() -> SystemTime {
-    CLOCK.now_system()
+    CLOCK.refresh();
+    CLOCK.recent_system()
 }
 
-/// Returns the current unix time by reading the underlying clock.
+/// Refresh the clock and return the current unix time in seconds.
 pub fn now_unix() -> u32 {
-    CLOCK.now_unix()
+    CLOCK.refresh();
+    CLOCK.recent_unix()
 }
 
-/// Returns the current `DateTime<Utc>` by reading the underlying clock.
+/// Refresh the clock and return the current datetime in the UTC timezone.
 pub fn now_utc() -> DateTime<Utc> {
-    CLOCK.now_utc()
+    CLOCK.refresh();
+    CLOCK.recent_utc()
 }
 
 /// Returns a recent precise instant by reading a cached view of the clock.
@@ -103,39 +109,6 @@ impl Clock {
         if !self.initialized.load(Ordering::Relaxed) {
             self.refresh();
         }
-    }
-
-    /// Return the current precise time
-    fn now_precise(&self) -> Instant {
-        Instant::now()
-    }
-
-    /// Return the current coarse time
-    fn now_coarse(&self) -> CoarseInstant {
-        CoarseInstant::now()
-    }
-
-    /// Returns the current `DateTime<Local>`
-    fn now_local(&self) -> DateTime<Local> {
-        Local::now()
-    }
-
-    /// Returns the current `SystemTime`
-    fn now_system(&self) -> SystemTime {
-        SystemTime::now()
-    }
-
-    /// Returns the current unix time in seconds
-    fn now_unix(&self) -> u32 {
-        SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as u32
-    }
-
-    /// Returns the current `DateTime<Utc>`
-    fn now_utc(&self) -> DateTime<Utc> {
-        Utc::now()
     }
 
     /// Return a cached precise time
