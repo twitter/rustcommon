@@ -1,0 +1,15 @@
+[package]
+name = "rustcommon-metrics-derive"
+version = "0.1.0"
+edition = "2018"
+authors = ["Sean Lynch <seanl@twitter.com>"]
+license = "Apache-2.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.29"
+proc-macro-crate = "1.0.0"
+quote = "1.0.9"
+syn = { version = "1.0.75", features = ["full", "parsing"] }

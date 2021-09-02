@@ -15,10 +15,8 @@ use std::sync::atomic::{AtomicI64, Ordering};
 /// # Example
 /// ```
 /// # use rustcommon_metrics_v2::{metric, Gauge};
-/// metric! {
-///     #[name = "my.gauge"]
-///     static A_METHOD_RUNNING: Gauge = Gauge::new();
-/// }
+/// #[metric(name = "my.gauge")]
+/// static A_METHOD_RUNNING: Gauge = Gauge::new();
 ///
 /// fn a_method() {
 ///     A_METHOD_RUNNING.increment();
