@@ -76,32 +76,26 @@ impl Clock {
 
     /// Return a cached precise time
     fn recent_precise(&self) -> Instant {
-        if self.initialized.load(Ordering::Relaxed) {
-            self.recent_precise.load(Ordering::Relaxed)
-        } else {
+        if !self.initialized.load(Ordering::Relaxed) {
             self.refresh();
-            self.recent_precise.load(Ordering::Relaxed)
         }
+        self.recent_precise.load(Ordering::Relaxed)
     }
 
     /// Return a cached coarse time
     fn recent_coarse(&self) -> CoarseInstant {
-        if self.initialized.load(Ordering::Relaxed) {
-            self.recent_coarse.load(Ordering::Relaxed)
-        } else {
+        if !self.initialized.load(Ordering::Relaxed) {
             self.refresh();
-            self.recent_coarse.load(Ordering::Relaxed)
         }
+        self.recent_coarse.load(Ordering::Relaxed)
     }
 
     /// Return a cached UNIX time
     fn recent_unix(&self) -> u32 {
-        if self.initialized.load(Ordering::Relaxed) {
-            self.recent_unix.load(Ordering::Relaxed)
-        } else {
+        if !self.initialized.load(Ordering::Relaxed) {
             self.refresh();
-            self.recent_unix.load(Ordering::Relaxed)
         }
+        self.recent_unix.load(Ordering::Relaxed)
     }
 
     /// Refresh the cached time
