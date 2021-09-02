@@ -9,6 +9,7 @@ repository = "https://github.com/twitter/rustcommon"
 license = "Apache-2.0"
 
 [dependencies]
+chrono = "0.4.19"
 libc = "0.2.86"
 
 [target.'cfg(windows)'.dependencies]

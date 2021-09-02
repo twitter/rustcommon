@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use core::sync::atomic::AtomicBool;
-use core::sync::atomic::AtomicU32;
-use core::sync::atomic::AtomicU64;
-use core::sync::atomic::Ordering;
-use std::time::SystemTime;
+use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
+
+pub use std::time::SystemTime;
+
+pub use chrono::{DateTime, Local, TimeZone, Utc};
 
 mod duration;
 mod instant;
@@ -35,6 +35,26 @@ pub fn now_coarse() -> CoarseInstant {
     CLOCK.now_coarse()
 }
 
+/// Returns the current `DateTime<Local>` by reading the underlying clock.
+pub fn now_local() -> DateTime<Local> {
+    CLOCK.now_local()
+}
+
+/// Returns the current `SystemTime` by reading the underlying clock.
+pub fn now_system() -> SystemTime {
+    CLOCK.now_system()
+}
+
+/// Returns the current unix time by reading the underlying clock.
+pub fn now_unix() -> u32 {
+    CLOCK.now_unix()
+}
+
+/// Returns the current `DateTime<Utc>` by reading the underlying clock.
+pub fn now_utc() -> DateTime<Utc> {
+    CLOCK.now_utc()
+}
+
 /// Returns a recent precise instant by reading a cached view of the clock.
 pub fn recent_precise() -> Instant {
     CLOCK.recent_precise()
@@ -45,9 +65,24 @@ pub fn recent_coarse() -> CoarseInstant {
     CLOCK.recent_coarse()
 }
 
+/// Returns a `DateTime<Local>` from a cached view of the clock.
+pub fn recent_local() -> DateTime<Local> {
+    CLOCK.recent_local()
+}
+
+/// Returns the system time by reaching a cached view of the clock.
+pub fn recent_system() -> SystemTime {
+    CLOCK.recent_system()
+}
+
 /// Returns the unix time by reading a cached view of the clock.
 pub fn recent_unix() -> u32 {
     CLOCK.recent_unix()
+}
+
+/// Returns a `DateTime<Utc>` from a cached view of the clock.
+pub fn recent_utc() -> DateTime<Utc> {
+    CLOCK.recent_utc()
 }
 
 /// Update the cached view of the clock by reading the underlying clock.
@@ -74,6 +109,29 @@ impl Clock {
         CoarseInstant::now()
     }
 
+    /// Returns the current `DateTime<Local>`
+    fn now_local(&self) -> DateTime<Local> {
+        Local::now()
+    }
+
+    /// Returns the current `SystemTime`
+    fn now_system(&self) -> SystemTime {
+        SystemTime::now()
+    }
+
+    /// Returns the current unix time in seconds
+    fn now_unix(&self) -> u32 {
+        SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as u32
+    }
+
+    /// Returns the current `DateTime<Utc>`
+    fn now_utc(&self) -> DateTime<Utc> {
+        Utc::now()
+    }
+
     /// Return a cached precise time
     fn recent_precise(&self) -> Instant {
         if !self.initialized.load(Ordering::Relaxed) {
@@ -90,12 +148,27 @@ impl Clock {
         self.recent_coarse.load(Ordering::Relaxed)
     }
 
+    /// Return a cached Local DateTime
+    fn recent_local(&self) -> DateTime<Local> {
+        Local.timestamp(self.recent_unix().into(), 0)
+    }
+
+    /// Return a cached SystemTime
+    fn recent_system(&self) -> SystemTime {
+        SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(self.recent_unix().into())
+    }
+
     /// Return a cached UNIX time
     fn recent_unix(&self) -> u32 {
         if !self.initialized.load(Ordering::Relaxed) {
             self.refresh();
         }
         self.recent_unix.load(Ordering::Relaxed)
+    }
+
+    /// Return a cached UTC DateTime
+    fn recent_utc(&self) -> DateTime<Utc> {
+        Utc.timestamp(self.recent_unix().into(), 0)
     }
 
     /// Refresh the cached time
@@ -153,7 +226,15 @@ mod tests {
         let elapsed = now.elapsed();
         assert!(elapsed.as_secs_f64() >= 1.0);
         assert!(elapsed.as_secs() >= 1);
-        assert!(elapsed.as_nanos() >= 1_000_000_000);
+        assert!(elapsed.as_nanos() >= NANOS_PER_SEC.into());
+    }
+
+    #[test]
+    /// This tests the system time handling
+    fn system() {
+        let recent = recent_system();
+        let now = std::time::SystemTime::now();
+        assert!((now.duration_since(recent).unwrap()).as_secs() <= 1);
     }
 
     #[test]
@@ -163,7 +244,7 @@ mod tests {
         std::thread::sleep(std::time::Duration::new(1, 0));
         let elapsed = now.elapsed();
         assert!(elapsed.as_secs() >= 1);
-        assert!(elapsed.as_nanos() >= 1_000_000_000);
+        assert!(elapsed.as_nanos() >= NANOS_PER_SEC.into());
 
         let t0 = Instant::recent();
         let t0_c = Instant::recent();
