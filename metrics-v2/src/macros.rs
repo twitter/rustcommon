@@ -74,6 +74,7 @@ macro_rules! __metric_filter_attrs {
   }
 }
 
+#[cfg(any())]
 /// Declare a set of new metrics.
 ///
 /// These metrics will appear in the global array returned by the [`metrics`]
@@ -108,7 +109,8 @@ macro_rules! __metric_filter_attrs {
 /// attributes are specified then the last one will be used.
 ///
 /// [`metrics`]: crate::metrics
-#[macro_export]
+// #[macro_export]
+#[allow(unused_macros)]
 macro_rules! metric {
   {
     $(
@@ -137,33 +139,3 @@ macro_rules! metric {
     )*
   }
 }
-
-/// We use doctests here so that we can get a separate crate for each test
-/// (since metric registration is global).
-///
-/// # Assert that the test name is as expected for non-explicit names
-/// ```
-/// use rustcommon_metrics_v2::*;
-/// metric! {
-///   static TEST_METRIC: Counter = Counter::new();
-/// }
-///
-/// let metrics = metrics();
-///
-/// assert_eq!(metrics.len(), 1);
-/// assert_eq!(metrics[0].name(), concat!(module_path!(), "::", "TEST_METRIC"));
-/// ```
-///
-/// # Assert that test name is as expected for named metrics
-/// ```
-/// use rustcommon_metrics_v2::*;
-/// metric! {
-///   #[name = "custom-name"]
-///   static METRIC: Counter = Counter::new();
-/// }
-///
-/// let metrics = metrics();
-/// assert_eq!(metrics.len(), 1);
-/// assert_eq!(metrics[0].name(), "custom-name");
-/// ```
-mod test {}

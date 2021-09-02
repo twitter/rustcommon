@@ -8,44 +8,54 @@
 //!
 //! # Creating a Metric
 //! Registering a metric is straightforward. All that's needed is to declare a
-//! static within the [`metric!`] macro. By default, the metric will have the
+//! static within the [`metric`] macro. By default, the metric will have the
 //! name of the path to the static variable you used to declare it but this can
-//! be overridden by adding a `#[name]` attribute.
+//! be overridden by passing the `name` parameter to the macro.
 //!
 //! ```
-//! # use rustcommon_metrics_v2::*;
-//! metric! {
-//!     /// A counter metric named "<crate name>::COUNTER_A"
-//!     static COUNTER_A: Counter = Counter::new();
-//!
-//!     /// A counter metric named "my.metric.name"
-//!     #[name = "my.metric.name"]
-//!     static COUNTER_B: Counter = Counter::new();
-//! }
+//! # // This should remain in sync with the example below.
+//! use rustcommon_metrics_v2::*;
+//! /// A counter metric named "<crate name>::COUNTER_A"
+//! #[metric]
+//! static COUNTER_A: Counter = Counter::new();
+//! 
+//! /// A counter metric named "my.metric.name"
+//! #[metric(name = "my.metric.name")]
+//! static COUNTER_B: Counter = Counter::new();
+//! #
+//! # let metrics = metrics();
+//! # // Metrics may be in any arbitrary order
+//! # let mut names: Vec<_> = metrics.iter().map(|metric| metric.name()).collect();
+//! # names.sort();
+//! #
+//! # assert_eq!(names.len(), 2);
+//! # assert_eq!(names[0], "my.metric.name");
+//! # assert_eq!(names[1], concat!(module_path!(), "::", "COUNTER_A"));
 //! ```
 //!
 //! # Accessing Metrics
-//! All metrics registered via the [`metric!`] macro can be accessed by calling
+//! All metrics registered via the [`metric`] macro can be accessed by calling
 //! the [`metrics`] function. This will return a slice with one [`MetricEntry`]
-//! instance per metric that was registered via the [`metric!`] macro.
+//! instance per metric that was registered via the [`metric`] macro.
 //!
 //! Suppose we have the metrics declared in the example above.
 //! ```
 //! # // This should remain in sync with the example above.
 //! # use rustcommon_metrics_v2::*;
-//! # metric! {
-//! #     /// A counter metric named "COUNTER_A"
-//! #     static COUNTER_A: Counter = Counter::new();
+//! # /// A counter metric named "<crate name>::COUNTER_A"
+//! # #[metric]
+//! # static COUNTER_A: Counter = Counter::new();
 //! #
-//! #     /// A counter metric named "my.metric.name"
-//! #     #[name = "my.metric.name"]
-//! #     static COUNTER_B: Counter = Counter::new();
-//! # }
+//! # /// A counter metric named "my.metric.name"
+//! # #[metric(name = "my.metric.name")]
+//! # static COUNTER_B: Counter = Counter::new();
+//! #
 //! let metrics = metrics();
 //! // Metrics may be in any arbitrary order
 //! let mut names: Vec<_> = metrics.iter().map(|metric| metric.name()).collect();
 //! names.sort();
 //!
+//! assert_eq!(names.len(), 2);
 //! assert_eq!(names[0], "my.metric.name");
 //! assert_eq!(names[1], concat!(module_path!(), "::", "COUNTER_A"));
 //! ```
@@ -53,7 +63,7 @@
 //! # How it Works
 //! Behind the scenes, this crate uses the [`linkme`] crate to create a
 //! distributed slice containing a [`MetricEntry`] instance for each metric that
-//! is registered via the [`metric!`] macro.
+//! is registered via the [`metric`] attribute.
 
 use std::any::Any;
 
@@ -63,6 +73,7 @@ mod macros;
 
 pub use crate::counter::Counter;
 pub use crate::gauge::Gauge;
+pub use rustcommon_metrics_derive::metric;
 
 #[doc(hidden)]
 pub mod export {
@@ -72,7 +83,7 @@ pub mod export {
     pub static METRICS: [crate::MetricEntry] = [..];
 }
 
-/// The list of all metrics registered via the [`metric!`] macro.
+/// The list of all metrics registered via the [`metric`] macro.
 ///
 /// Names within metrics are not guaranteed to be unique and no aggregation of
 /// metrics with the same name is done.
