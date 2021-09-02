@@ -2,6 +2,8 @@
 name = "rustcommon-metrics-derive"
 version = "0.1.0"
 edition = "2018"
+authors = ["Sean Lynch <seanl@twitter.com>"]
+license = "Apache-2.0"
 
 [lib]
 proc-macro = true
