@@ -18,7 +18,7 @@
 //! /// A counter metric named "<crate name>::COUNTER_A"
 //! #[metric]
 //! static COUNTER_A: Counter = Counter::new();
-//! 
+//!
 //! /// A counter metric named "my.metric.name"
 //! #[metric(name = "my.metric.name")]
 //! static COUNTER_B: Counter = Counter::new();
