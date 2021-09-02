@@ -9,7 +9,7 @@ license = "Apache-2.0"
 proc-macro = true
 
 [dependencies]
-syn = { version = "1.0.75", features = ["parsing", "full"] }
-quote = "1.0.9"
 proc-macro2 = "1.0.29"
 proc-macro-crate = "1.0.0"
+quote = "1.0.9"
+syn = { version = "1.0.75", features = ["parsing", "full"] }
