@@ -6,7 +6,7 @@ use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 
 pub use std::time::SystemTime;
 
-pub use chrono::{DateTime, Local, TimeZone, Utc};
+pub use chrono::prelude::*;
 
 mod duration;
 mod instant;
