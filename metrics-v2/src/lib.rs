@@ -35,8 +35,9 @@
 //!
 //! # Accessing Metrics
 //! All metrics registered via the [`metric`] macro can be accessed by calling
-//! the [`metrics`] function. This will return a slice with one [`MetricEntry`]
-//! instance per metric that was registered via the [`metric`] macro.
+//! the [`metrics`] function. This will return an instance of the [`Metric`]
+//! struct which allows you to access all staticly and dynamically registered
+//! metrics.
 //!
 //! Suppose we have the metrics declared in the example above.
 //! ```
@@ -65,6 +66,7 @@
 //! distributed slice containing a [`MetricEntry`] instance for each metric that
 //! is registered via the [`metric`] attribute.
 
+use parking_lot::RwLockReadGuard;
 use std::any::Any;
 use std::borrow::Cow;
 
@@ -84,14 +86,6 @@ pub mod export {
 
     #[linkme::distributed_slice]
     pub static METRICS: [crate::MetricEntry] = [..];
-}
-
-/// The list of all metrics registered via the [`metric`] macro.
-///
-/// Names within metrics are not guaranteed to be unique and no aggregation of
-/// metrics with the same name is done.
-pub fn metrics() -> &'static [MetricEntry] {
-    &*crate::export::METRICS
 }
 
 /// Global interface to a metric.
@@ -184,3 +178,58 @@ impl std::fmt::Debug for MetricEntry {
 /// for the MetricEntry struct.
 #[doc(hidden)]
 pub struct MetricWrapper(pub *const dyn Metric);
+
+/// The list of all metrics registered via the either [`metric`] attribute or by
+/// using the types within the [`dynmetrics`] module.
+///
+/// Names within metrics are not guaranteed to be unique and no aggregation of
+/// metrics with the same name is done.
+pub fn metrics() -> Metrics {
+    Metrics {
+        dyn_metrics: crate::dynmetrics::get_registry(),
+    }
+}
+
+/// Provides access to all registered metrics both static and dynamic.
+///
+/// **IMPORTANT:** Note that while any instance of this struct is live
+/// attempting to register or unregister any dynamic metrics will block.
+/// If this is done on the same thread as is currently working with an instance
+/// of `Metrics` then it will cause a deadlock. If your application will be
+/// registering and unregistering dynamic metrics then you should avoid holding
+/// on to `Metrics` instances for long periods of time.
+///
+/// `Metrics` instances can be created via the [`metrics`] function.
+pub struct Metrics {
+    dyn_metrics: RwLockReadGuard<'static, dynmetrics::DynMetricsRegistry>,
+}
+
+impl Metrics {
+    /// A list containing all metrics that were registered via the [`metric`]
+    /// attribute macro.
+    pub fn static_metrics(&self) -> &'static [MetricEntry] {
+        &*crate::export::METRICS
+    }
+
+    /// A list containing all metrics that were dynamically registered.
+    pub fn dynamic_metrics(&self) -> &[MetricEntry] {
+        &self.dyn_metrics.metrics()
+    }
+
+    pub fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
+        self.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Metrics {
+    type Item = &'a MetricEntry;
+
+    type IntoIter =
+        std::iter::Chain<std::slice::Iter<'a, MetricEntry>, std::slice::Iter<'a, MetricEntry>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.static_metrics()
+            .iter()
+            .chain(self.dynamic_metrics().iter())
+    }
+}
