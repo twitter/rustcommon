@@ -71,7 +71,10 @@ use std::borrow::Cow;
 mod counter;
 mod gauge;
 
+pub mod dynmetrics;
+
 pub use crate::counter::Counter;
+pub use crate::dynmetrics::{DynBoxedMetric, DynPinnedMetric};
 pub use crate::gauge::Gauge;
 pub use rustcommon_metrics_derive::metric;
 
