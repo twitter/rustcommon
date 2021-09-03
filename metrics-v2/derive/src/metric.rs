@@ -100,10 +100,10 @@ pub(crate) fn metric(
 
         #[export::linkme::distributed_slice(#krate::export::METRICS)]
         #[linkme(crate = export::linkme)]
-        static __: #krate::MetricEntry = #krate::MetricEntry {
-            name: #name,
-            metric: &#static_name
-        };
+        static __: #krate::MetricEntry = #krate::MetricEntry::_new_const(
+            #krate::MetricWrapper(&#static_name),
+            #name
+        );
 
         #static_expr
     }};

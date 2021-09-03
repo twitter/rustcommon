@@ -66,6 +66,7 @@
 //! is registered via the [`metric`] attribute.
 
 use std::any::Any;
+use std::borrow::Cow;
 
 mod counter;
 mod gauge;
@@ -93,7 +94,7 @@ pub fn metrics() -> &'static [MetricEntry] {
 /// Global interface to a metric.
 ///
 /// Most use of metrics should use the directly declared constants.
-pub trait Metric: Sync {
+pub trait Metric: Send + Sync + 'static {
     /// Indicate whether this metric has been set up.
     ///
     /// Generally, if this returns `false` then the other methods on this
@@ -111,29 +112,56 @@ pub trait Metric: Sync {
 
 /// A statically declared metric entry.
 pub struct MetricEntry {
-    // These fields need to be public until it is possibe to create a const method with
-    // &'static dyn Metric as a parameter.
-    #[doc(hidden)]
-    pub metric: &'static dyn Metric,
-    #[doc(hidden)]
-    pub name: &'static str,
+    metric: MetricWrapper,
+    name: Cow<'static, str>,
 }
 
 impl MetricEntry {
+    #[doc(hidden)]
+    pub const fn _new_const(metric: MetricWrapper, name: &'static str) -> Self {
+        Self {
+            metric,
+            name: Cow::Borrowed(name),
+        }
+    }
+
+    /// Create a new metric entry with the provided metric and name.
+    pub fn new(metric: &'static dyn Metric, name: Cow<'static, str>) -> Self {
+        // SAFETY: The lifetimes here are static.
+        unsafe { Self::new_unchecked(metric, name) }
+    }
+
+    /// Create a new metric entry with the provided metric and name.
+    ///
+    /// # Safety
+    /// This method is only safe to call if
+    /// - `metric` points to a valid `dyn Metric` instance, and,
+    /// - the metric instance outlives this `MetricEntry`.
+    pub unsafe fn new_unchecked(metric: *const dyn Metric, name: Cow<'static, str>) -> Self {
+        Self {
+            metric: MetricWrapper(metric),
+            name,
+        }
+    }
+
     /// Get a reference to the metric that this entry corresponds to.
-    pub fn metric(&self) -> &'static dyn Metric {
-        self.metric
+    pub fn metric(&self) -> &dyn Metric {
+        unsafe { &*self.metric.0 }
     }
 
     /// Get the name of this metric.
-    pub fn name(&self) -> &'static str {
-        self.name
+    pub fn name(&self) -> &str {
+        &*self.name
     }
 }
+
+unsafe impl Send for MetricEntry {}
+unsafe impl Sync for MetricEntry {}
 
 impl std::ops::Deref for MetricEntry {
     type Target = dyn Metric;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         self.metric()
     }
@@ -147,3 +175,9 @@ impl std::fmt::Debug for MetricEntry {
             .finish()
     }
 }
+
+/// You can't use `dyn <trait>s` directly in const methods for now but a wrapper
+/// is fine. This wrapper is a work around to allow us to use const constructors
+/// for the MetricEntry struct.
+#[doc(hidden)]
+pub struct MetricWrapper(pub *const dyn Metric);
