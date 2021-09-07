@@ -1,10 +1,17 @@
-//! Methods and structs for workin with dynamically created and destroyed
+// Copyright 2021 Twitter, Inc.
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
+//! Methods and structs for working with dynamically created and destroyed
 //! metrics.
 //!
 //! Generally users should not need to use anything in this module with the
 //! exception of [`DynPinnedMetric`] and [`DynBoxedMetric`].
 
-use std::{borrow::Cow, marker::PhantomPinned, ops::Deref, pin::Pin};
+use std::borrow::Cow;
+use std::marker::PhantomPinned;
+use std::ops::Deref;
+use std::pin::Pin;
 
 use crate::{Metric, MetricEntry};
 

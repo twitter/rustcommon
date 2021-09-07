@@ -1,5 +1,10 @@
+// Copyright 2021 Twitter, Inc.
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 use parking_lot::{Mutex, MutexGuard};
-use std::{mem::ManuallyDrop, pin::Pin};
+use std::mem::ManuallyDrop;
+use std::pin::Pin;
 
 use rustcommon_metrics_v2::*;
 
