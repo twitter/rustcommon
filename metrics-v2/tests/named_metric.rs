@@ -9,7 +9,7 @@ static METRIC: Counter = Counter::new();
 
 #[test]
 fn metric_name_as_expected() {
-    let metrics = metrics();
+    let metrics = metrics().static_metrics();
     assert_eq!(metrics.len(), 1);
     assert_eq!(metrics[0].name(), "custom-name");
 }
