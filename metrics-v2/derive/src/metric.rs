@@ -105,8 +105,11 @@ pub(crate) fn metric(
         Some(krate) => krate.value.to_token_stream(),
         None => proc_macro_crate::crate_name("rustcommon-metrics-v2")
             .map(|krate| match krate {
-                FoundCrate::Name(name) => Ident::new(&name, Span::call_site()).to_token_stream(),
-                FoundCrate::Itself => quote! { crate },
+                FoundCrate::Name(name) => {
+                    assert_ne!(name, "");
+                    Ident::new(&name, Span::call_site()).to_token_stream()
+                }
+                FoundCrate::Itself => quote! { rustcommon_metrics_v2 },
             })
             .unwrap_or(quote! { rustcommon_metrics_v2 }),
     };
