@@ -4,6 +4,7 @@
 
 use proc_macro::TokenStream;
 
+mod args;
 mod metric;
 
 /// Declare a global metric that can be accessed via the `metrics` method.

@@ -2,8 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use std::borrow::Cow;
-
+use crate::args::ArgName;
 use proc_macro2::{Span, TokenStream};
 use proc_macro_crate::FoundCrate;
 use quote::{quote, ToTokens};
@@ -11,13 +10,13 @@ use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{parse_quote, Error, Expr, Ident, ItemStatic, Path, Token};
 
-struct SingleArg<T, I = Ident> {
-    ident: I,
+struct SingleArg<T> {
+    ident: ArgName,
     eq: Token![=],
     value: T,
 }
 
-impl<T: Parse, I: Parse> Parse for SingleArg<T, I> {
+impl<T: Parse> Parse for SingleArg<T> {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(Self {
             ident: input.parse()?,
@@ -27,7 +26,7 @@ impl<T: Parse, I: Parse> Parse for SingleArg<T, I> {
     }
 }
 
-impl<T: ToTokens, I: ToTokens> ToTokens for SingleArg<T, I> {
+impl<T: ToTokens> ToTokens for SingleArg<T> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.ident.to_tokens(tokens);
         self.eq.to_tokens(tokens);
@@ -38,7 +37,7 @@ impl<T: ToTokens, I: ToTokens> ToTokens for SingleArg<T, I> {
 #[derive(Default)]
 struct MetricArgs {
     name: Option<SingleArg<Expr>>,
-    krate: Option<SingleArg<Path, Token![crate]>>,
+    krate: Option<SingleArg<Path>>,
 }
 
 impl Parse for MetricArgs {
@@ -62,41 +61,29 @@ impl Parse for MetricArgs {
             }
             first = false;
 
-            let lookahead = input.lookahead1();
-            let (arg, arg_span): (Cow<str>, _) = if lookahead.peek(Ident) {
-                let ident: Ident = input.fork().parse()?;
-                (Cow::Owned(ident.to_string()), ident.span())
-            } else if lookahead.peek(Token![crate]) {
-                (
-                    Cow::Borrowed("crate"),
-                    input.fork().parse::<Token![crate]>()?.span(),
-                )
-            } else {
-                return Err(lookahead.error());
-            };
-
-            match &*arg {
+            let arg: ArgName = input.fork().parse()?;
+            match &*arg.to_string() {
                 "name" => {
-                    let name: SingleArg<Expr> = input.parse()?;
-                    if args.name.is_some() {
-                        return duplicate_arg_error(name.span(), &arg);
+                    let name = input.parse()?;
+                    match args.name {
+                        None => args.name = Some(name),
+                        Some(_) => return duplicate_arg_error(name.span(), &arg),
                     }
-                    args.name = Some(name);
                 }
                 "crate" => {
-                    let krate: SingleArg<Path, Token![crate]> = SingleArg {
+                    let krate = SingleArg {
                         ident: input.parse()?,
                         eq: input.parse()?,
                         value: Path::parse_mod_style(input)?,
                     };
-                    if args.krate.is_some() {
-                        return duplicate_arg_error(krate.span(), &arg);
+                    match args.krate {
+                        None => args.krate = Some(krate),
+                        Some(_) => return duplicate_arg_error(krate.span(), &arg),
                     }
-                    args.krate = Some(krate);
                 }
                 x => {
                     return Err(Error::new(
-                        arg_span,
+                        arg.span(),
                         format!("Unrecognized argument '{}'", x),
                     ))
                 }
