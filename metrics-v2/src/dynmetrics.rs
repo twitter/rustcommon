@@ -126,7 +126,7 @@ impl<M: Metric> DynPinnedMetric<M> {
         //  - MetricEntry::new_unchecked requires that the metric reference outlive
         //    created the MetricEntry instance.
         //
-        // Finally, register, will keep the MetricEntry instance in a global list until
+        // Finally, register will keep the MetricEntry instance in a global list until
         // the corresponding unregister call is made.
         //
         // Taking all of these together, we can guarantee that self.metric will not be
