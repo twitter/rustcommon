@@ -2,15 +2,16 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::args::ArgName;
 use proc_macro2::{Span, TokenStream};
 use proc_macro_crate::FoundCrate;
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
-use syn::{parse_quote, Error, Expr, Ident, ItemStatic, Token};
+use syn::{parse_quote, Error, Expr, Ident, ItemStatic, Path, Token};
 
 struct SingleArg<T> {
-    ident: Ident,
+    ident: ArgName,
     eq: Token![=],
     value: T,
 }
@@ -36,29 +37,53 @@ impl<T: ToTokens> ToTokens for SingleArg<T> {
 #[derive(Default)]
 struct MetricArgs {
     name: Option<SingleArg<Expr>>,
+    krate: Option<SingleArg<Path>>,
 }
 
 impl Parse for MetricArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut args = MetricArgs::default();
+        let mut first = true;
+
+        fn duplicate_arg_error(
+            span: Span,
+            arg: &impl std::fmt::Display,
+        ) -> syn::Result<MetricArgs> {
+            Err(Error::new(
+                span,
+                format!("Unexpected duplicate argument '{}'", arg),
+            ))
+        }
 
         while !input.is_empty() {
-            let name: Ident = input.fork().parse()?;
+            if !first {
+                let _: Token![,] = input.parse()?;
+            }
+            first = false;
 
-            match &*name.to_string() {
+            let arg: ArgName = input.fork().parse()?;
+            match &*arg.to_string() {
                 "name" => {
-                    let name: SingleArg<Expr> = input.parse()?;
-                    if args.name.is_some() {
-                        return Err(Error::new(
-                            name.span(),
-                            format!("Duplicate argument '{}'", name.ident),
-                        ));
+                    let name = input.parse()?;
+                    match args.name {
+                        None => args.name = Some(name),
+                        Some(_) => return duplicate_arg_error(name.span(), &arg),
                     }
-                    args.name = Some(name);
+                }
+                "crate" => {
+                    let krate = SingleArg {
+                        ident: input.parse()?,
+                        eq: input.parse()?,
+                        value: Path::parse_mod_style(input)?,
+                    };
+                    match args.krate {
+                        None => args.krate = Some(krate),
+                        Some(_) => return duplicate_arg_error(krate.span(), &arg),
+                    }
                 }
                 x => {
                     return Err(Error::new(
-                        name.span(),
+                        arg.span(),
                         format!("Unrecognized argument '{}'", x),
                     ))
                 }
@@ -76,12 +101,15 @@ pub(crate) fn metric(
     let mut item: ItemStatic = syn::parse(item_)?;
     let args: MetricArgs = syn::parse(attr_)?;
 
-    let krate: TokenStream = proc_macro_crate::crate_name("metrics_v2")
-        .map(|krate| match krate {
-            FoundCrate::Name(name) => Ident::new(&name, Span::call_site()).to_token_stream(),
-            FoundCrate::Itself => quote! { crate },
-        })
-        .unwrap_or(quote! { rustcommon_metrics_v2 });
+    let krate: TokenStream = match args.krate {
+        Some(krate) => krate.value.to_token_stream(),
+        None => proc_macro_crate::crate_name("rustcommon_metrics_v2")
+            .map(|krate| match krate {
+                FoundCrate::Name(name) => Ident::new(&name, Span::call_site()).to_token_stream(),
+                FoundCrate::Itself => quote! { crate },
+            })
+            .unwrap_or(quote! { rustcommon_metrics_v2 }),
+    };
 
     let name: TokenStream = match args.name {
         Some(name) => name.value.to_token_stream(),
@@ -94,11 +122,13 @@ pub(crate) fn metric(
     let static_name = &item.ident;
     let static_expr = &item.expr;
     let new_expr = parse_quote! {{
-        // Since the crate name starts with "rustc" we can't use it as part of
-        // an attribute. To work around that we need to use it here.
+        // Rustc reserves attributes that start with "rustc". Since rustcommon
+        // starts with "rustc" we can't use it directly within attributes. To
+        // work around this, we first import the exports submodule and then use
+        // that for the attributes.
         use #krate::export;
 
-        #[export::linkme::distributed_slice(#krate::export::METRICS)]
+        #[export::linkme::distributed_slice(export::METRICS)]
         #[linkme(crate = export::linkme)]
         static __: #krate::MetricEntry = #krate::MetricEntry::_new_const(
             #krate::MetricWrapper(&#static_name),
