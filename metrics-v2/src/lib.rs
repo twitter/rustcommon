@@ -73,6 +73,8 @@ use std::borrow::Cow;
 mod counter;
 mod gauge;
 
+extern crate self as rustcommon_metrics_v2;
+
 pub mod dynmetrics;
 
 pub use crate::counter::Counter;
