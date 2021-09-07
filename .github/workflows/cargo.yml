@@ -38,7 +38,7 @@ jobs:
         name: build
         with:
           command: test
-          args: ${{ env.CARGO_FLAGS }} --workspace --no-run
+          args: ${{ env.CARGO_FLAGS }} --workspace --tests --lib --bins --examples --no-run
       - uses: actions-rs/cargo@v1
         name: test
         with:
