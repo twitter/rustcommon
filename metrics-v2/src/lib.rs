@@ -72,6 +72,10 @@ use std::borrow::Cow;
 
 mod counter;
 mod gauge;
+mod lazy;
+
+#[cfg(feature = "heatmap")]
+mod heatmap;
 
 extern crate self as rustcommon_metrics_v2;
 
@@ -80,6 +84,11 @@ pub mod dynmetrics;
 pub use crate::counter::Counter;
 pub use crate::dynmetrics::{DynBoxedMetric, DynPinnedMetric};
 pub use crate::gauge::Gauge;
+pub use crate::lazy::Lazy;
+
+#[cfg(feature = "heatmap")]
+pub use crate::heatmap::Heatmap;
+
 pub use rustcommon_metrics_derive::metric;
 
 #[doc(hidden)]
@@ -99,7 +108,7 @@ pub trait Metric: Send + Sync + 'static {
     /// Generally, if this returns `false` then the other methods on this
     /// trait should return `None`.
     fn is_enabled(&self) -> bool {
-        true
+        self.as_any().is_some()
     }
 
     /// Get the current metric as an [`Any`] instance. This is meant to allow
