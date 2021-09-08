@@ -6,7 +6,7 @@ authors = ["Sean Lynch <seanl@twitter.com>"]
 license = "Apache-2.0"
 
 [features]
-# histogram = [ "rustcommon-histogram" ]
+histogram = [ "rustcommon-histogram", "rustcommon-atomics" ]
 
 [dependencies]
 linkme = "0.2.6"
