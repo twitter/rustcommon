@@ -74,6 +74,9 @@ mod counter;
 mod gauge;
 mod lazy;
 
+#[cfg(feature = "histogram")]
+mod histogram;
+
 extern crate self as rustcommon_metrics_v2;
 
 pub mod dynmetrics;
@@ -82,6 +85,9 @@ pub use crate::counter::Counter;
 pub use crate::dynmetrics::{DynBoxedMetric, DynPinnedMetric};
 pub use crate::gauge::Gauge;
 pub use crate::lazy::Lazy;
+
+#[cfg(feature = "histogram")]
+pub use crate::histogram::Histogram;
 
 pub use rustcommon_metrics_derive::metric;
 
