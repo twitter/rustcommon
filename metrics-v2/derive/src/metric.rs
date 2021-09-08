@@ -124,7 +124,9 @@ pub(crate) fn metric(
 
     let static_name = &item.ident;
     let static_expr = &item.expr;
-    let new_expr = parse_quote! {{
+    let static_type = &item.ty;
+
+    item.expr = Box::new(parse_quote! {{
         // Rustc reserves attributes that start with "rustc". Since rustcommon
         // starts with "rustc" we can't use it directly within attributes. To
         // work around this, we first import the exports submodule and then use
@@ -134,14 +136,13 @@ pub(crate) fn metric(
         #[export::linkme::distributed_slice(export::METRICS)]
         #[linkme(crate = export::linkme)]
         static __: #krate::MetricEntry = #krate::MetricEntry::_new_const(
-            #krate::MetricWrapper(&#static_name),
-            #name
+            #krate::MetricWrapper(&#static_name.metric),
+            #static_name.name()
         );
 
-        #static_expr
-    }};
-
-    item.expr = Box::new(new_expr);
+        #krate::MetricInstance::new(#static_expr, #name)
+    }});
+    item.ty = Box::new(parse_quote! { #krate::MetricInstance<#static_type> });
 
     Ok(quote! { #item })
 }
