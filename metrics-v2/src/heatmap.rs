@@ -4,11 +4,11 @@
 
 use crate::Metric;
 use rustcommon_atomics::AtomicU64;
-use rustcommon_histogram::AtomicHistogram;
+use rustcommon_heatmap::AtomicHeatmap;
 
-pub type Histogram = AtomicHistogram<u64, AtomicU64>;
+pub type Heatmap = AtomicHeatmap<u64, AtomicU64>;
 
-impl<V, C> Metric for AtomicHistogram<V, C>
+impl<V, C> Metric for AtomicHeatmap<V, C>
 where
     V: Send + Sync + 'static,
     C: Send + Sync + 'static,

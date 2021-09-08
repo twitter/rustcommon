@@ -17,6 +17,20 @@ use std::ops::{Deref, DerefMut};
 /// A value which is initialized on the first access.
 ///
 /// This type is thread-safe and can be used in statics.
+/// 
+/// # Example
+/// In this example, [`Heatmap`] does not have a const `new` function so it
+/// must be constructed using [`Lazy`].
+/// ```
+/// # #[cfg(feature = "heatmap")]
+/// # fn main() {
+/// # use rustcommon_metrics_v2::*;
+/// #[metric]
+/// static HEATMAP: Lazy<Heatmap> = Lazy::new(|| Heatmap::new(100, 2, Duration::from_secs(1)));
+/// # }
+/// ```
+/// 
+/// [`Heatmap`]: crate::Heatmap;
 pub struct Lazy<T, F = fn() -> T> {
     cell: OnceCell<T>,
     func: Cell<Option<F>>,
