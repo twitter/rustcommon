@@ -1,6 +1,10 @@
+// Copyright 2021 Twitter, Inc.
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 use crate::Metric;
 use once_cell::sync::OnceCell;
-use std::cell::{Cell, UnsafeCell};
+use std::cell::Cell;
 use std::ops::{Deref, DerefMut};
 
 // Note: This implementation is mostly copied from the Lazy implementation
