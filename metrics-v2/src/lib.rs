@@ -72,6 +72,7 @@ use std::borrow::Cow;
 
 mod counter;
 mod gauge;
+mod lazy;
 
 extern crate self as rustcommon_metrics_v2;
 
@@ -80,6 +81,8 @@ pub mod dynmetrics;
 pub use crate::counter::Counter;
 pub use crate::dynmetrics::{DynBoxedMetric, DynPinnedMetric};
 pub use crate::gauge::Gauge;
+pub use crate::lazy::Lazy;
+
 pub use rustcommon_metrics_derive::metric;
 
 #[doc(hidden)]
