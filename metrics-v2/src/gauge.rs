@@ -40,7 +40,7 @@ impl Gauge {
     }
 
     /// Increment the value of this gauge by 1.
-    /// 
+    ///
     /// Returns the old value of the gauge.
     #[inline]
     pub fn increment(&self) -> i64 {
@@ -48,7 +48,7 @@ impl Gauge {
     }
 
     /// Decrement the value of this gauge by 1.
-    /// 
+    ///
     /// Returns the old value of the gauge.
     #[inline]
     pub fn decrement(&self) -> i64 {
@@ -56,7 +56,7 @@ impl Gauge {
     }
 
     /// Increase the value of this gauge by `value`.
-    /// 
+    ///
     /// Returns the od value of the gauge.
     #[inline]
     pub fn add(&self, value: i64) -> i64 {
@@ -64,7 +64,7 @@ impl Gauge {
     }
 
     /// Decrease the value of this gauge by `value`.
-    /// 
+    ///
     /// Returns the od value of the gauge.
     #[inline]
     pub fn sub(&self, value: i64) -> i64 {
