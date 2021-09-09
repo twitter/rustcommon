@@ -39,24 +39,36 @@ impl Gauge {
         Self(AtomicI64::new(value))
     }
 
+    /// Increment the value of this gauge by 1.
+    /// 
+    /// Returns the old value of the gauge.
     #[inline]
-    pub fn increment(&self) {
-        self.add(1);
+    pub fn increment(&self) -> i64 {
+        self.add(1)
     }
 
+    /// Decrement the value of this gauge by 1.
+    /// 
+    /// Returns the old value of the gauge.
     #[inline]
-    pub fn decrement(&self) {
-        self.sub(1);
+    pub fn decrement(&self) -> i64 {
+        self.sub(1)
     }
 
+    /// Increase the value of this gauge by `value`.
+    /// 
+    /// Returns the od value of the gauge.
     #[inline]
-    pub fn add(&self, value: i64) {
-        self.0.fetch_add(value, Ordering::Relaxed);
+    pub fn add(&self, value: i64) -> i64 {
+        self.0.fetch_add(value, Ordering::Relaxed)
     }
 
+    /// Decrease the value of this gauge by `value`.
+    /// 
+    /// Returns the od value of the gauge.
     #[inline]
-    pub fn sub(&self, value: i64) {
-        self.0.fetch_sub(value, Ordering::Relaxed);
+    pub fn sub(&self, value: i64) -> i64 {
+        self.0.fetch_sub(value, Ordering::Relaxed)
     }
 
     #[inline]
