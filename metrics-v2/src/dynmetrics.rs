@@ -177,10 +177,24 @@ impl<M: Metric> DynBoxedMetric<M> {
     /// Create a new dynamic metric using the provided metric type with the
     /// provided `name`.
     pub fn new(metric: M, name: impl Into<Cow<'static, str>>) -> Self {
-        let metric = Box::pin(DynPinnedMetric::new(metric));
-        metric.as_ref().register(name.into());
+        let this = Self::unregistered(metric);
+        this.register(name.into());
+        this
+    }
 
-        Self { metric }
+    /// Create a new dynamic metric without registering it.
+    pub fn unregistered(metric: M) -> Self {
+        Self {
+            metric: Box::pin(DynPinnedMetric::new(metric)),
+        }
+    }
+
+    /// Register this metric in the global list of dynamic metrics with `name`.
+    ///
+    /// Calling this multiple times will result in the same metric being
+    /// registered multiple times under potentially different names.
+    pub fn register(&self, name: impl Into<Cow<'static, str>>) {
+        self.metric.as_ref().register(name.into())
     }
 }
 
