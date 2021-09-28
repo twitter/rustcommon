@@ -57,6 +57,8 @@ impl<T, F> Lazy<T, F> {
         this.cell.get()
     }
 
+    /// If this lazy has been initialized, then return a reference to the
+    /// contained value.
     pub fn get_mut(this: &mut Self) -> Option<&mut T> {
         this.cell.get_mut()
     }
@@ -122,19 +124,20 @@ pub struct Active<T, F = fn() -> T> {
 }
 
 impl<T, F> Active<T, F> {
+    /// Create a new lazy value with the given initializing function.
     pub const fn new(func: F) -> Self {
         Self {
             cell: Lazy::new(func),
         }
     }
 
-    /// If this lazy has been initialized, then return a reference to the
+    /// If this cell has been initialized, then return a reference to the
     /// contained value.
     pub fn get(this: &Self) -> Option<&T> {
         Lazy::get(&this.cell)
     }
 
-    /// If this lazy has been initialized, then return a reference to the
+    /// If this cell has been initialized, then return a reference to the
     /// contained value.
     pub fn get_mut(this: &mut Self) -> Option<&mut T> {
         Lazy::get_mut(&mut this.cell)
