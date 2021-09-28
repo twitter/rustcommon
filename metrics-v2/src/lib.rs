@@ -84,7 +84,7 @@ pub mod dynmetrics;
 pub use crate::counter::Counter;
 pub use crate::dynmetrics::{DynBoxedMetric, DynPinnedMetric};
 pub use crate::gauge::Gauge;
-pub use crate::lazy::{Relaxed, Lazy};
+pub use crate::lazy::{Lazy, Relaxed};
 
 #[cfg(feature = "heatmap")]
 pub use crate::heatmap::Heatmap;
