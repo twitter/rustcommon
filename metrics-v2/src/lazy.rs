@@ -56,6 +56,10 @@ impl<T, F> Lazy<T, F> {
     pub fn get(this: &Self) -> Option<&T> {
         this.cell.get()
     }
+
+    pub fn get_mut(this: &mut Self) -> Option<&mut T> {
+        this.cell.get_mut()
+    }
 }
 
 impl<T, F: FnOnce() -> T> Lazy<T, F> {
@@ -77,21 +81,21 @@ impl<T, F: FnOnce() -> T> Deref for Lazy<T, F> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        Lazy::force(self)
+        Self::force(self)
     }
 }
 
 impl<T, F: FnOnce() -> T> DerefMut for Lazy<T, F> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        Lazy::force(self);
+        Self::force(self);
         self.cell.get_mut().unwrap_or_else(|| unreachable!())
     }
 }
 
 impl<T: Default> Default for Lazy<T> {
     /// Create a new lazy value using `default` as the initializing function.
-    fn default() -> Lazy<T> {
-        Lazy::new(T::default)
+    fn default() -> Self {
+        Self::new(T::default)
     }
 }
 
@@ -105,5 +109,74 @@ impl<T: Metric, F: Send + 'static> Metric for Lazy<T, F> {
             Some(metric) => Some(metric),
             None => None,
         }
+    }
+}
+
+/// A value which is initialized on the first access.
+///
+/// The difference between [`Active`] type and [`Lazy`], however, is that it is
+/// also initialized if accessed via the global metrics array. This means that
+/// it will always show up in exported metrics whereas [`Lazy`] will not.
+pub struct Active<T, F = fn() -> T> {
+    cell: Lazy<T, F>,
+}
+
+impl<T, F> Active<T, F> {
+    pub const fn new(func: F) -> Self {
+        Self {
+            cell: Lazy::new(func),
+        }
+    }
+
+    /// If this lazy has been initialized, then return a reference to the
+    /// contained value.
+    pub fn get(this: &Self) -> Option<&T> {
+        Lazy::get(&this.cell)
+    }
+
+    /// If this lazy has been initialized, then return a reference to the
+    /// contained value.
+    pub fn get_mut(this: &mut Self) -> Option<&mut T> {
+        Lazy::get_mut(&mut this.cell)
+    }
+}
+
+impl<T, F: FnOnce() -> T> Active<T, F> {
+    /// Force the evaluation of this lazy value and return a reference to
+    /// the result. This is equivalent to the `Deref` impl.
+    pub fn force(this: &Self) -> &T {
+        Lazy::force(&this.cell)
+    }
+}
+
+impl<T, F: FnOnce() -> T> Deref for Active<T, F> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        Self::force(self)
+    }
+}
+
+impl<T, F: FnOnce() -> T> DerefMut for Active<T, F> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        Self::force(self);
+        Lazy::get_mut(&mut self.cell).unwrap_or_else(|| unreachable!())
+    }
+}
+
+impl<T: Default> Default for Active<T> {
+    /// Create a new lazy value using `default` as the initializing function.
+    fn default() -> Self {
+        Self::new(T::default)
+    }
+}
+
+impl<T, F> Metric for Active<T, F>
+where
+    T: Metric,
+    F: (FnOnce() -> T) + Send + 'static,
+{
+    fn as_any(&self) -> Option<&dyn std::any::Any> {
+        Some(Self::force(self))
     }
 }
