@@ -6,14 +6,14 @@ use crate::channel::Channel;
 use crate::entry::Entry;
 use crate::outputs::ApproxOutput;
 use crate::*;
-use core::hash::Hash;
-use core::hash::Hasher;
+
+use core::hash::{Hash, Hasher};
 
 use dashmap::DashMap;
 use rustcommon_atomics::*;
+use rustcommon_time::Instant;
 
 use std::collections::HashMap;
-use std::time::Instant;
 
 /// `Metrics` serves as a registry of outputs which are included in snapshots.
 /// In addition, it serves as the core storage of measurements and summary

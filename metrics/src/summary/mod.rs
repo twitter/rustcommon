@@ -7,11 +7,8 @@ use crate::*;
 use core::marker::PhantomData;
 
 use rustcommon_atomics::Atomic;
-use rustcommon_heatmap::AtomicHeatmap;
+use rustcommon_heatmap::{AtomicHeatmap, Duration, Instant};
 use rustcommon_streamstats::AtomicStreamstats;
-
-use core::time::Duration;
-use std::time::Instant;
 
 pub(crate) enum SummaryStruct<Value, Count>
 where

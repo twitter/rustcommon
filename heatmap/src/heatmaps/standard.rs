@@ -6,7 +6,7 @@ use crate::*;
 
 use rustcommon_histogram::{Counter, Histogram, Indexing};
 
-use std::time::{Duration, Instant};
+use rustcommon_time::{Duration, Instant};
 
 /// Heatmaps are datastructures which store counts for timestamped values over a
 /// configured time range with individual histograms arranged in a ring buffer.

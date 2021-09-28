@@ -18,7 +18,6 @@ use core::hash::Hash;
 use core::ops::Sub;
 use std::collections::HashMap;
 use std::convert::{From, TryInto};
-use std::time::{Duration, Instant};
 
 #[derive(Copy, Clone)]
 /// Used to configure various strategies for mapping values to colors
@@ -211,7 +210,7 @@ where
             }
         }
 
-        let offset = now_instant - begin_instant;
+        let offset = std::time::Duration::from_nanos((now_instant - begin_instant).as_nanos() as _);
         let offset = chrono::Duration::from_std(offset).unwrap();
 
         let begin_utc = now_datetime.checked_sub_signed(offset).unwrap();
@@ -219,10 +218,10 @@ where
 
         // add the timestamp labels along the left side
         for (y, slice) in heatmap.into_iter().enumerate() {
+            let duration =
+                std::time::Duration::from_nanos((slice.start() - begin_instant).as_nanos() as _);
             let slice_start_utc = begin_utc
-                .checked_add_signed(
-                    chrono::Duration::from_std(slice.start() - begin_instant).unwrap(),
-                )
+                .checked_add_signed(chrono::Duration::from_std(duration).unwrap())
                 .unwrap();
 
             if slice.start() - begin >= self.interval {

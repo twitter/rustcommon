@@ -20,11 +20,12 @@ pub use traits::{Count, Primitive, Statistic, Value};
 
 // Re-export atomic trait and types for convenience
 pub use rustcommon_atomics::{Atomic, AtomicU16, AtomicU32, AtomicU64, AtomicU8};
+// Re-export time types for convenience
+pub use rustcommon_time::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::{Duration, Instant};
 
     enum TestStat {
         Alpha,

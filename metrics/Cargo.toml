@@ -14,6 +14,7 @@ dashmap = "3.11.10"
 rustcommon-atomics = { path = "../atomics" }
 rustcommon-heatmap = { path = "../heatmap" }
 rustcommon-streamstats = { path = "../streamstats" }
+rustcommon-time = { path = "../time" }
 thiserror = "1.0.20"
 
 [dev-dependencies]

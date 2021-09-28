@@ -9,12 +9,11 @@ use crate::traits::*;
 use crate::MetricsError;
 use crate::Output;
 use crate::Summary;
+use rustcommon_time::Instant;
 
 use crossbeam::atomic::AtomicCell;
 use dashmap::DashSet;
 use rustcommon_atomics::{Atomic, AtomicBool, Ordering};
-
-use std::time::Instant;
 
 /// Internal type which stores fields necessary to track a corresponding
 /// statistic.

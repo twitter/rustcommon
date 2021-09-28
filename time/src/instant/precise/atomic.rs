@@ -24,6 +24,25 @@ pub struct AtomicInstant {
 }
 
 impl AtomicInstant {
+    /// Create a new `AtomicInstant` which represents the specified `Instant`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rustcommon_time::{AtomicInstant, Instant, Duration};
+    ///
+    /// // this is the same as `AtomicInstant::now()`
+    /// let now = AtomicInstant::new(Instant::now());
+    ///
+    /// // conveniently represent an `Instant` in the future
+    /// let future = AtomicInstant::new(Instant::now() + Duration::from_secs(60));
+    /// ```
+    pub fn new(instant: Instant) -> Self {
+        Self {
+            nanos: AtomicU64::new(instant.nanos),
+        }
+    }
+
     /// Returns an instant corresponding to "now".
     ///
     /// # Examples
@@ -267,6 +286,31 @@ impl AtomicInstant {
         {
             Ok(nanos) => Ok(Instant { nanos }),
             Err(nanos) => Err(Instant { nanos }),
+        }
+    }
+
+    /// Adds a `Duration` to the `AtomicInstant` and returns the previous value.
+    ///
+    /// `fetch_add` takes an `Ordering` argument which describes the memory
+    /// ordering of this operation. All ordering modes are possible. Note that
+    /// using `Acquire` makes the store part of this operation `Relaxed`, and
+    /// using `Release` makes the load part `Relaxed`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rustcommon_time::{AtomicInstant, Duration};
+    /// use core::sync::atomic::Ordering;
+    ///
+    /// let instant = AtomicInstant::now();
+    /// let duration = Duration::from_secs(10);
+    /// let previous = instant.fetch_add(duration, Ordering::Relaxed);
+    ///
+    /// assert_eq!(instant.load(Ordering::Relaxed), previous + duration);
+    /// ```
+    pub fn fetch_add(&self, duration: Duration, ordering: Ordering) -> Instant {
+        Instant {
+            nanos: self.nanos.fetch_add(duration.nanos, ordering),
         }
     }
 }
