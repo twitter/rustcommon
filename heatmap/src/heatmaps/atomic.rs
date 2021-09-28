@@ -4,11 +4,11 @@
 
 use crate::*;
 
-use crossbeam::atomic::AtomicCell;
 use rustcommon_atomics::*;
 use rustcommon_histogram::{AtomicCounter, AtomicHistogram, Counter, Indexing};
+use rustcommon_time::{AtomicInstant, Duration, Instant};
 
-use std::time::{Duration, Instant};
+// use std::time::{Duration, Instant};
 
 /// AtomicHeatmaps are concurrent datastructures which store counts for
 /// timestamped values over a configured time range with individual histograms
@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 pub struct AtomicHeatmap<Value, Count> {
     slices: Vec<AtomicHistogram<Value, Count>>,
     current: AtomicUsize,
-    next_tick: AtomicCell<Instant>,
+    next_tick: AtomicInstant,
     resolution: Duration,
     summary: AtomicHistogram<Value, Count>,
 }
@@ -49,10 +49,11 @@ where
             true_span += resolution;
         }
         slices.shrink_to_fit();
+        let next_tick = AtomicInstant::new(Instant::now() + resolution);
         Self {
             slices,
             current: AtomicUsize::new(0),
-            next_tick: AtomicCell::new(Instant::now() + resolution),
+            next_tick,
             resolution,
             summary: AtomicHistogram::new(max, precision),
         }
@@ -102,11 +103,11 @@ where
     /// values.
     fn tick(&self, time: Instant) {
         loop {
-            let next_tick = self.next_tick.load();
+            let next_tick = self.next_tick.load(Ordering::Relaxed);
             if time < next_tick {
                 return;
             } else {
-                self.next_tick.store(next_tick + self.resolution);
+                self.next_tick.fetch_add(self.resolution, Ordering::Relaxed);
                 self.current.fetch_add(1, Ordering::Relaxed);
                 if self.current.load(Ordering::Relaxed) >= self.slices.len() {
                     self.current.store(0, Ordering::Relaxed);
@@ -135,7 +136,7 @@ where
         let mut result = Heatmap {
             slices: Vec::with_capacity(self.slices.len()),
             current: self.current.load(Ordering::Relaxed),
-            next_tick: self.next_tick.load(),
+            next_tick: self.next_tick.load(Ordering::Relaxed),
             resolution: self.resolution,
             summary: self.summary.load(),
         };
@@ -158,9 +159,9 @@ mod tests {
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
         heatmap.increment(Instant::now(), 1, 1);
         assert_eq!(heatmap.percentile(0.0), Ok(1));
-        std::thread::sleep(Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(100));
         assert_eq!(heatmap.percentile(0.0), Ok(1));
-        std::thread::sleep(Duration::from_millis(2000));
+        std::thread::sleep(std::time::Duration::from_millis(2000));
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
 
         let heatmap = AtomicHeatmap::<u64, AtomicU64>::new(
@@ -172,9 +173,9 @@ mod tests {
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
         heatmap.increment(Instant::now(), 1, 1);
         assert_eq!(heatmap.percentile(0.0), Ok(1));
-        std::thread::sleep(Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(100));
         assert_eq!(heatmap.percentile(0.0), Ok(1));
-        std::thread::sleep(Duration::from_millis(2000));
+        std::thread::sleep(std::time::Duration::from_millis(2000));
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
     }
 }

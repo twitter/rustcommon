@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use rustcommon_histogram::Histogram;
-use std::time::Instant;
+use rustcommon_time::Instant;
 
 pub struct Window<Value, Count> {
     pub(crate) start: Instant,

@@ -4,10 +4,9 @@
 
 use rand::thread_rng;
 use rand_distr::*;
+use rustcommon_heatmap::*;
 use rustcommon_logger::*;
 use rustcommon_waterfall::*;
-use std::time::Duration;
-use std::time::Instant;
 
 fn main() {
     Logger::new()
@@ -52,7 +51,7 @@ pub fn simulate(shape: Shape) {
     let gamma = Gamma::new(2.0, 2.0).unwrap();
 
     let mut rng = thread_rng();
-    let start = std::time::Instant::now();
+    let start = Instant::now();
     loop {
         if start.elapsed() >= duration {
             break;

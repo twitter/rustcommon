@@ -25,7 +25,6 @@ use std::ops::{Deref, DerefMut};
 /// # #[cfg(feature = "heatmap")]
 /// # fn main() {
 /// # use rustcommon_metrics_v2::*;
-/// # use std::time::Duration;
 /// #[metric]
 /// static HEATMAP: Lazy<Heatmap> = Lazy::new(|| Heatmap::new(
 ///     100, 2, Duration::from_secs(30), Duration::from_secs(1)
