@@ -16,3 +16,4 @@ parking_lot = "0.11.2"
 rustcommon-metrics-derive = { path = "derive" }
 rustcommon-heatmap = { path = "../heatmap", optional = true }
 rustcommon-atomics = { path = "../atomics", optional = true }
+rustcommon-time = { path = "../time" }

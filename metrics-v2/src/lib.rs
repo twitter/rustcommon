@@ -91,6 +91,8 @@ pub use crate::heatmap::Heatmap;
 
 pub use rustcommon_metrics_derive::metric;
 
+pub use rustcommon_time::*;
+
 #[doc(hidden)]
 pub mod export {
     pub extern crate linkme;
