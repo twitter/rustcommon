@@ -116,14 +116,14 @@ impl<T: Metric, F: Send + 'static> Metric for Lazy<T, F> {
 
 /// A value which is initialized on the first access.
 ///
-/// The difference between [`Active`] type and [`Lazy`], however, is that it is
+/// The difference between [`Relaxed`] type and [`Lazy`], however, is that it is
 /// also initialized if accessed via the global metrics array. This means that
 /// it will always show up in exported metrics whereas [`Lazy`] will not.
-pub struct Active<T, F = fn() -> T> {
+pub struct Relaxed<T, F = fn() -> T> {
     cell: Lazy<T, F>,
 }
 
-impl<T, F> Active<T, F> {
+impl<T, F> Relaxed<T, F> {
     /// Create a new lazy value with the given initializing function.
     pub const fn new(func: F) -> Self {
         Self {
@@ -144,7 +144,7 @@ impl<T, F> Active<T, F> {
     }
 }
 
-impl<T, F: FnOnce() -> T> Active<T, F> {
+impl<T, F: FnOnce() -> T> Relaxed<T, F> {
     /// Force the evaluation of this lazy value and return a reference to
     /// the result. This is equivalent to the `Deref` impl.
     pub fn force(this: &Self) -> &T {
@@ -152,7 +152,7 @@ impl<T, F: FnOnce() -> T> Active<T, F> {
     }
 }
 
-impl<T, F: FnOnce() -> T> Deref for Active<T, F> {
+impl<T, F: FnOnce() -> T> Deref for Relaxed<T, F> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -160,21 +160,21 @@ impl<T, F: FnOnce() -> T> Deref for Active<T, F> {
     }
 }
 
-impl<T, F: FnOnce() -> T> DerefMut for Active<T, F> {
+impl<T, F: FnOnce() -> T> DerefMut for Relaxed<T, F> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         Self::force(self);
         Lazy::get_mut(&mut self.cell).unwrap_or_else(|| unreachable!())
     }
 }
 
-impl<T: Default> Default for Active<T> {
+impl<T: Default> Default for Relaxed<T> {
     /// Create a new lazy value using `default` as the initializing function.
     fn default() -> Self {
         Self::new(T::default)
     }
 }
 
-impl<T, F> Metric for Active<T, F>
+impl<T, F> Metric for Relaxed<T, F>
 where
     T: Metric,
     F: (FnOnce() -> T) + Send + 'static,
