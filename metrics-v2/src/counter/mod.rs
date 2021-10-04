@@ -6,6 +6,10 @@ use crate::Metric;
 use std::any::Any;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+mod thread_local;
+
+pub use thread_local::Counter as ThreadLocalCounter;
+
 /// A counter. Can be incremented or added to.
 ///
 /// In case of overflow the counter will wrap around. However, internally it

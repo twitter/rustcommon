@@ -66,6 +66,8 @@
 //! distributed slice containing a [`MetricEntry`] instance for each metric that
 //! is registered via the [`metric`] attribute.
 
+#![feature(const_fn_fn_ptr_basics)]
+
 use parking_lot::RwLockReadGuard;
 use std::any::Any;
 use std::borrow::Cow;
@@ -81,7 +83,7 @@ extern crate self as rustcommon_metrics_v2;
 
 pub mod dynmetrics;
 
-pub use crate::counter::Counter;
+pub use crate::counter::{Counter, ThreadLocalCounter};
 pub use crate::dynmetrics::{DynBoxedMetric, DynPinnedMetric};
 pub use crate::gauge::Gauge;
 pub use crate::lazy::{Lazy, Relaxed};
@@ -200,6 +202,21 @@ pub struct MetricWrapper(pub *const dyn Metric);
 pub fn metrics() -> Metrics {
     Metrics {
         dyn_metrics: crate::dynmetrics::get_registry(),
+    }
+}
+
+pub fn sync() {
+    for metric in &metrics() {
+        let any = match metric.as_any() {
+            Some(any) => any,
+            None => {
+                continue;
+            }
+        };
+
+        if let Some(counter) = any.downcast_ref::<ThreadLocalCounter>() {
+            counter.sync();
+        }
     }
 }
 

@@ -2,7 +2,10 @@
 name = "rustcommon-metrics-v2"
 version = "0.1.0"
 edition = "2018"
-authors = ["Sean Lynch <seanl@twitter.com>"]
+authors = [
+	"Sean Lynch <seanl@twitter.com>",
+	"Brian Martin <bmartin@twitter.com",
+]
 license = "Apache-2.0"
 
 [features]
@@ -11,6 +14,7 @@ heatmap = [ "rustcommon-heatmap", "rustcommon-atomics" ]
 [dependencies]
 linkme = "0.2.6"
 once_cell = "1.8.0"
+os-thread-local = "0.1.3"
 parking_lot = "0.11.2"
 
 rustcommon-metrics-derive = { path = "derive" }
