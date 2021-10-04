@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use os_thread_local::ThreadLocal;
-use core::cell::RefCell;
 use crate::lazy::Lazy;
 use crate::Metric;
+use core::cell::RefCell;
+use os_thread_local::ThreadLocal;
 use std::any::Any;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -41,7 +41,7 @@ impl Counter {
     pub const fn new() -> Self {
         Self {
             global: AtomicU64::new(0),
-            local: Lazy::new(|| { ThreadLocal::new(|| RefCell::new(0)) }),
+            local: Lazy::new(|| ThreadLocal::new(|| RefCell::new(0))),
         }
     }
 
@@ -77,7 +77,6 @@ impl Counter {
         self.add(1)
     }
 }
-
 
 impl Metric for Counter {
     fn as_any(&self) -> Option<&dyn Any> {
