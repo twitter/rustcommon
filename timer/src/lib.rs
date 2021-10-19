@@ -84,9 +84,9 @@ where
         let mut expired = Vec::with_capacity(self.buckets[self.tick].timers.len());
         let mut remaining = HashSet::new();
         for token in &self.buckets[self.tick].timers {
-            if self.timers[&token].remaining == 0 {
+            if self.timers[token].remaining == 0 {
                 expired.push(*token);
-                self.timers.remove(&token);
+                self.timers.remove(token);
             } else {
                 remaining.insert(*token);
                 self.timers.get_mut(token).unwrap().remaining -= 1;
@@ -194,7 +194,7 @@ where
                         tick -= self.buckets.len();
                     }
                     for timer in &self.buckets[tick].timers {
-                        if self.timers[&timer].remaining == remaining {
+                        if self.timers[timer].remaining == remaining {
                             return Some(offset + remaining * self.buckets.len());
                         }
                     }
