@@ -9,7 +9,7 @@ homepage = "https://github.com/twitter/rustcommon/waterfall"
 repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
-chrono = "0.4.15"
+chrono = { version = "0.4.15", default-features = false }
 dejavu = "2.37.0"
 image = "0.23.9"
 log = "0.4.8"

@@ -10,4 +10,4 @@ repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
 log = { version = "0.4.8", features = ["std"] }
-time = "0.1.42"
+rustcommon-time = { path = "../time" }

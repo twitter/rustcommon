@@ -1,6 +1,6 @@
 [package]
 name = "rustcommon-time"
-version = "0.0.6"
+version = "0.0.7"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
 description = "Library for getting current and recent timestamps"
@@ -9,7 +9,7 @@ repository = "https://github.com/twitter/rustcommon"
 license = "Apache-2.0"
 
 [dependencies]
-chrono = "0.4.19"
+chrono = { version = "0.4.19", default-features = false, features = ["std", "clock"] }
 libc = "0.2.86"
 
 [target.'cfg(windows)'.dependencies]

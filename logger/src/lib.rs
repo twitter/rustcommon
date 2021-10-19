@@ -3,9 +3,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 #![deny(clippy::all)]
+#![macro_use]
+extern crate log;
 
-pub extern crate log;
-extern crate time;
+use rustcommon_time::{now_local, SecondsFormat};
 
 #[macro_export]
 macro_rules! fatal {
@@ -77,14 +78,9 @@ impl log::Log for Logger {
             } else {
                 record.target().to_string()
             };
-            let ms = format!(
-                "{:03}",
-                (time::precise_time_ns() % 1_000_000_000) / 1_000_000
-            );
             println!(
-                "{}.{} {:<5} [{}] {}",
-                time::strftime("%Y-%m-%d %H:%M:%S", &time::now()).unwrap(),
-                ms,
+                "{} {:<5} [{}] {}",
+                now_local().to_rfc3339_opts(SecondsFormat::Millis, false),
                 record.level(),
                 target,
                 record.args()
