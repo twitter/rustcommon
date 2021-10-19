@@ -6,11 +6,11 @@
 
 #![deny(clippy::all)]
 
-use rustcommon_time::Instant;
-use rustcommon_time::Duration;
+use core::convert::TryFrom;
 use rustcommon_time::AtomicDuration;
 use rustcommon_time::AtomicInstant;
-use core::convert::TryFrom;
+use rustcommon_time::Duration;
+use rustcommon_time::Instant;
 
 use rand_distr::{Distribution, Normal, Uniform};
 use rustcommon_atomics::*;
@@ -103,7 +103,8 @@ impl Ratelimiter {
 
     /// Returns the current rate
     pub fn rate(&self) -> u64 {
-        SECOND * self.quantum.load(Ordering::Relaxed) / self.tick.load(Ordering::Relaxed).as_nanos() as u64
+        SECOND * self.quantum.load(Ordering::Relaxed)
+            / self.tick.load(Ordering::Relaxed).as_nanos() as u64
     }
 
     /// Changes the refill strategy
@@ -125,7 +126,12 @@ impl Ratelimiter {
             };
             if self
                 .next
-                .compare_exchange(next, next + Duration::from_nanos(tick), Ordering::SeqCst, Ordering::SeqCst)
+                .compare_exchange(
+                    next,
+                    next + Duration::from_nanos(tick),
+                    Ordering::SeqCst,
+                    Ordering::SeqCst,
+                )
                 .is_ok()
             {
                 let quantum = self.quantum.load(Ordering::Relaxed);

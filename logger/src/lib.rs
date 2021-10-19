@@ -3,7 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 #![deny(clippy::all)]
-
 #![macro_use]
 extern crate log;
 
