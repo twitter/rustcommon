@@ -6,6 +6,10 @@
 
 #![deny(clippy::all)]
 
+use rustcommon_time::Instant;
+use rustcommon_time::Duration;
+use rustcommon_time::AtomicDuration;
+use rustcommon_time::AtomicInstant;
 use core::convert::TryFrom;
 
 use rand_distr::{Distribution, Normal, Uniform};
@@ -17,8 +21,8 @@ pub struct Ratelimiter {
     capacity: AtomicU64,
     quantum: AtomicU64,
     strategy: AtomicUsize,
-    tick: AtomicU64,
-    next: AtomicU64,
+    tick: AtomicDuration,
+    next: AtomicInstant,
     normal: Normal<f64>,
     uniform: Uniform<f64>,
 }
@@ -81,8 +85,8 @@ impl Ratelimiter {
             capacity: AtomicU64::new(capacity),
             quantum: AtomicU64::new(quantum),
             strategy: AtomicUsize::new(Refill::Smooth as usize),
-            tick: AtomicU64::new(tick),
-            next: AtomicU64::new(time::precise_time_ns()),
+            tick: AtomicDuration::from_nanos(tick),
+            next: AtomicInstant::now(),
             normal: Normal::new(tick as f64, 2.0 * tick as f64).unwrap(),
             uniform: Uniform::new_inclusive(tick as f64 * 0.5, tick as f64 * 1.5),
         }
@@ -92,14 +96,14 @@ impl Ratelimiter {
     /// the next tick.
     pub fn set_rate(&self, rate: u64) {
         self.tick.store(
-            SECOND / (rate / self.quantum.load(Ordering::Relaxed)),
+            Duration::from_nanos(SECOND / (rate / self.quantum.load(Ordering::Relaxed))),
             Ordering::Relaxed,
         );
     }
 
     /// Returns the current rate
     pub fn rate(&self) -> u64 {
-        SECOND * self.quantum.load(Ordering::Relaxed) / self.tick.load(Ordering::Relaxed)
+        SECOND * self.quantum.load(Ordering::Relaxed) / self.tick.load(Ordering::Relaxed).as_nanos() as u64
     }
 
     /// Changes the refill strategy
@@ -109,19 +113,19 @@ impl Ratelimiter {
 
     // internal function to move the time forward
     fn tick(&self) {
-        let now = time::precise_time_ns();
+        let now = Instant::now();
         let next = self.next.load(Ordering::Relaxed);
         if now >= next {
             let strategy = Refill::try_from(self.strategy.load(Ordering::Relaxed));
             let tick = match strategy {
-                Ok(Refill::Smooth) => self.tick.load(Ordering::Relaxed),
+                Ok(Refill::Smooth) => self.tick.load(Ordering::Relaxed).as_nanos() as u64,
                 Ok(Refill::Uniform) => self.uniform.sample(&mut rand::thread_rng()) as u64,
                 Ok(Refill::Normal) => self.normal.sample(&mut rand::thread_rng()) as u64,
-                Err(_) => self.tick.load(Ordering::Relaxed),
+                Err(_) => self.tick.load(Ordering::Relaxed).as_nanos() as u64,
             };
             if self
                 .next
-                .compare_exchange(next, next + tick, Ordering::SeqCst, Ordering::SeqCst)
+                .compare_exchange(next, next + Duration::from_nanos(tick), Ordering::SeqCst, Ordering::SeqCst)
                 .is_ok()
             {
                 let quantum = self.quantum.load(Ordering::Relaxed);

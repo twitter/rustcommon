@@ -4,8 +4,10 @@
 
 #![deny(clippy::all)]
 
-pub extern crate log;
-extern crate time;
+#![macro_use]
+extern crate log;
+
+use rustcommon_time::now_local;
 
 #[macro_export]
 macro_rules! fatal {
@@ -83,7 +85,7 @@ impl log::Log for Logger {
             );
             println!(
                 "{}.{} {:<5} [{}] {}",
-                time::strftime("%Y-%m-%d %H:%M:%S", &time::now()).unwrap(),
+                time::strftime("%Y-%m-%d %H:%M:%S", now_local()).unwrap(),
                 ms,
                 record.level(),
                 target,

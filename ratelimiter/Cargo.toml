@@ -12,4 +12,4 @@ repository = "https://github.com/twitter/rustcommon"
 rand = "0.7.3"
 rand_distr = "0.2.2"
 rustcommon-atomics = { path = "../atomics" }
-time = "0.1.42"
+rustcommon-time = { path = "../time" }
