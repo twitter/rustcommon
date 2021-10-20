@@ -3,14 +3,15 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
+use time::OffsetDateTime;
 
 pub use std::time::SystemTime;
 
-pub use chrono::prelude::*;
-
+mod datetime;
 mod duration;
 mod instant;
 
+pub use datetime::*;
 pub use duration::*;
 pub use instant::*;
 
@@ -37,12 +38,6 @@ pub fn now_coarse() -> CoarseInstant {
     CLOCK.recent_coarse()
 }
 
-/// Refresh the clock and return the current datetime in the local timezone.
-pub fn now_local() -> DateTime<Local> {
-    CLOCK.refresh();
-    CLOCK.recent_local()
-}
-
 /// Refresh the clock and return the current system time.
 pub fn now_system() -> SystemTime {
     CLOCK.refresh();
@@ -55,8 +50,8 @@ pub fn now_unix() -> u32 {
     CLOCK.recent_unix()
 }
 
-/// Refresh the clock and return the current datetime in the UTC timezone.
-pub fn now_utc() -> DateTime<Utc> {
+/// Refresh the clock and return the current `DateTime` in the UTC timezone.
+pub fn now_utc() -> DateTime {
     CLOCK.refresh();
     CLOCK.recent_utc()
 }
@@ -71,11 +66,6 @@ pub fn recent_coarse() -> CoarseInstant {
     CLOCK.recent_coarse()
 }
 
-/// Returns a `DateTime<Local>` from a cached view of the clock.
-pub fn recent_local() -> DateTime<Local> {
-    CLOCK.recent_local()
-}
-
 /// Returns the system time by reaching a cached view of the clock.
 pub fn recent_system() -> SystemTime {
     CLOCK.recent_system()
@@ -86,8 +76,8 @@ pub fn recent_unix() -> u32 {
     CLOCK.recent_unix()
 }
 
-/// Returns a `DateTime<Utc>` from a cached view of the clock.
-pub fn recent_utc() -> DateTime<Utc> {
+/// Returns a `DateTime` in UTC from a cached view of the clock.
+pub fn recent_utc() -> DateTime {
     CLOCK.recent_utc()
 }
 
@@ -123,11 +113,6 @@ impl Clock {
         self.recent_coarse.load(Ordering::Relaxed)
     }
 
-    /// Return a cached Local DateTime
-    fn recent_local(&self) -> DateTime<Local> {
-        Local.timestamp(self.recent_unix().into(), 0)
-    }
-
     /// Return a cached SystemTime
     fn recent_system(&self) -> SystemTime {
         SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(self.recent_unix().into())
@@ -140,8 +125,12 @@ impl Clock {
     }
 
     /// Return a cached UTC DateTime
-    fn recent_utc(&self) -> DateTime<Utc> {
-        Utc.timestamp(self.recent_unix().into(), 0)
+    fn recent_utc(&self) -> DateTime {
+        // This unwrap is safe, because we use a 32bit number of seconds. Tests
+        // enforce the correctness of this below.
+        let recent = OffsetDateTime::from_unix_timestamp(self.recent_unix() as i64).unwrap()
+            + time::Duration::nanoseconds(0);
+        DateTime { inner: recent }
     }
 
     /// Refresh the cached time
