@@ -7,8 +7,8 @@
 mod palettes;
 
 pub use palettes::Palette;
+use rustcommon_time::now_utc;
 
-use chrono::Utc;
 use image::*;
 use palettes::*;
 use rustcommon_heatmap::*;
@@ -113,7 +113,7 @@ where
         u64: From<Count>,
         Count: From<u8>,
     {
-        let now_datetime = Utc::now();
+        let now_datetime = now_utc();
         let now_instant = Instant::now();
 
         let height = heatmap.windows();
@@ -211,21 +211,17 @@ where
         }
 
         let offset = std::time::Duration::from_nanos((now_instant - begin_instant).as_nanos() as _);
-        let offset = chrono::Duration::from_std(offset).unwrap();
 
-        let begin_utc = now_datetime.checked_sub_signed(offset).unwrap();
+        let begin_utc = now_datetime - offset;
         let mut begin = begin_instant;
 
         // add the timestamp labels along the left side
         for (y, slice) in heatmap.into_iter().enumerate() {
-            let duration =
-                std::time::Duration::from_nanos((slice.start() - begin_instant).as_nanos() as _);
-            let slice_start_utc = begin_utc
-                .checked_add_signed(chrono::Duration::from_std(duration).unwrap())
-                .unwrap();
+            let slice_start_utc =
+                begin_utc + Duration::from_nanos((slice.start() - begin_instant).as_nanos() as _);
 
             if slice.start() - begin >= self.interval {
-                let label = slice_start_utc.to_rfc3339().to_string();
+                let label = format!("{}", slice_start_utc);
                 render_text(&label, 25.0, 0, y + 2, &mut buf);
                 for x in 0..width {
                     buf.put_pixel(
