@@ -2,7 +2,7 @@ use criterion::Throughput;
 use criterion::{criterion_group, criterion_main, Criterion};
 use rustcommon_metrics::*;
 use std::sync::Arc;
-use std::time::Instant;
+use rustcommon_time::Instant;
 
 enum StatU8 {
     Alpha,
