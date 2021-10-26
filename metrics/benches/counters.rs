@@ -1,8 +1,8 @@
 use criterion::Throughput;
 use criterion::{criterion_group, criterion_main, Criterion};
 use rustcommon_metrics::*;
-use std::sync::Arc;
 use rustcommon_time::Instant;
+use std::sync::Arc;
 
 enum StatU8 {
     Alpha,
