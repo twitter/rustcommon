@@ -1,8 +1,7 @@
-use core::time::Duration;
 use criterion::Throughput;
 use criterion::{criterion_group, criterion_main, Criterion};
 use rustcommon_heatmap::*;
-use std::time::Instant;
+use rustcommon_time::{Duration, Instant};
 
 fn u64_u64(c: &mut Criterion) {
     let mut heatmap =
