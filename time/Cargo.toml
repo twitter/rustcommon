@@ -1,6 +1,6 @@
 [package]
 name = "rustcommon-time"
-version = "0.0.9"
+version = "0.0.10"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2018"
 description = "Library for getting current and recent timestamps"
