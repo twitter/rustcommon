@@ -71,9 +71,14 @@ pub fn recent_system() -> SystemTime {
     CLOCK.recent_system()
 }
 
-/// Returns the unix time by reading a cached view of the clock.
+/// Returns the unix time in seconds by reading a cached view of the clock.
 pub fn recent_unix() -> u32 {
     CLOCK.recent_unix()
+}
+
+/// Returns the unix time in nanoseconds by reading a cached view of the clock.
+pub fn recent_unix_precise() -> u64 {
+    CLOCK.recent_unix_precise()
 }
 
 /// Returns a `DateTime` in UTC from a cached view of the clock.
@@ -91,7 +96,7 @@ struct Clock {
     initialized: AtomicBool,
     recent_coarse: AtomicCoarseInstant,
     recent_precise: AtomicInstant,
-    recent_unix: AtomicU32,
+    recent_unix: AtomicU64,
 }
 
 impl Clock {
@@ -118,18 +123,27 @@ impl Clock {
         SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(self.recent_unix().into())
     }
 
-    /// Return a cached UNIX time
+    /// Return a cached UNIX time in seconds
     fn recent_unix(&self) -> u32 {
+        self.initialize();
+        (self.recent_unix.load(Ordering::Relaxed) / NANOS_PER_SEC) as u32
+    }
+
+    /// Return a cached UNIX time in nanoseconds
+    fn recent_unix_precise(&self) -> u64 {
         self.initialize();
         self.recent_unix.load(Ordering::Relaxed)
     }
 
     /// Return a cached UTC DateTime
     fn recent_utc(&self) -> DateTime {
-        // This unwrap is safe, because we use a 32bit number of seconds. Tests
+        // This unwrap is safe, because we use a ~35bits to hold seconds. Tests
         // enforce the correctness of this below.
-        let recent = OffsetDateTime::from_unix_timestamp(self.recent_unix() as i64).unwrap()
-            + time::Duration::nanoseconds(0);
+        let now = self.recent_unix_precise();
+        let seconds = now / NANOS_PER_SEC;
+        let nanos = now % NANOS_PER_SEC;
+        let recent = OffsetDateTime::from_unix_timestamp(seconds as i64).unwrap()
+            + time::Duration::nanoseconds(nanos as i64);
         DateTime { inner: recent }
     }
 
@@ -144,17 +158,17 @@ impl Clock {
 
         // special case initializing the recent unix time
         if self.initialized.load(Ordering::Relaxed) {
-            let last = self.recent_coarse.swap(coarse, Ordering::Relaxed);
-            if last < coarse {
-                let delta = (coarse - last).as_secs();
-                self.recent_unix.fetch_add(delta, Ordering::Relaxed);
+            let last = self.recent_precise.swap(precise, Ordering::Relaxed);
+            if last < precise {
+                let delta = (precise - last).as_nanos();
+                self.recent_unix.fetch_add(delta as u64, Ordering::Relaxed);
             }
         } else {
             self.recent_coarse.store(coarse, Ordering::Relaxed);
             let unix = SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .unwrap()
-                .as_secs() as u32;
+                .as_nanos() as u64;
             self.recent_unix.store(unix, Ordering::Relaxed);
         }
         self.initialized.store(true, Ordering::Relaxed);
@@ -171,7 +185,7 @@ impl Clock {
             recent_precise: AtomicInstant {
                 nanos: AtomicU64::new(0),
             },
-            recent_unix: AtomicU32::new(0),
+            recent_unix: AtomicU64::new(0),
         }
     }
 }
