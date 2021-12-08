@@ -156,7 +156,16 @@ impl Clock {
     fn refresh(&self) {
         match self.state.load(Ordering::Relaxed) {
             UNINITIALIZED => {
-                if self.state.compare_exchange(UNINITIALIZED, REFRESHING, Ordering::Relaxed, Ordering::Relaxed).is_ok() {
+                if self
+                    .state
+                    .compare_exchange(
+                        UNINITIALIZED,
+                        REFRESHING,
+                        Ordering::Relaxed,
+                        Ordering::Relaxed,
+                    )
+                    .is_ok()
+                {
                     // get the current precise time and cache it
                     let precise = Instant::now();
                     self.recent_precise.store(precise, Ordering::Release);
@@ -166,7 +175,7 @@ impl Clock {
                         secs: (precise.nanos / NANOS_PER_SEC) as u32,
                     };
                     self.recent_coarse.store(coarse, Ordering::Release);
-                    
+
                     // get the current unix time from the system and store it
                     let unix = SystemTime::now()
                         .duration_since(SystemTime::UNIX_EPOCH)
@@ -182,13 +191,25 @@ impl Clock {
                 while self.state.load(Ordering::Relaxed) != INITIALIZED {}
             }
             INITIALIZED => {
-                if self.state.compare_exchange(INITIALIZED, REFRESHING, Ordering::Relaxed, Ordering::Relaxed).is_ok() {
+                if self
+                    .state
+                    .compare_exchange(
+                        INITIALIZED,
+                        REFRESHING,
+                        Ordering::Relaxed,
+                        Ordering::Relaxed,
+                    )
+                    .is_ok()
+                {
                     // get the current precise time
                     let precise = Instant::now();
 
                     // increment unix time by elapsed time in nanoseconds between
                     // refreshes
-                    self.recent_unix.fetch_add((precise - recent_precise()).as_nanos() as u64, Ordering::Relaxed);
+                    self.recent_unix.fetch_add(
+                        (precise - recent_precise()).as_nanos() as u64,
+                        Ordering::Relaxed,
+                    );
 
                     // set coarse time to precise time converted to seconds
                     let coarse = CoarseInstant {
@@ -285,7 +306,10 @@ mod tests {
         let current_precise = recent_precise();
         let current_unix = recent_unix_precise();
 
-        assert_eq!((current_precise - previous_precise).as_nanos() as u64, current_unix - previous_unix);
+        assert_eq!(
+            (current_precise - previous_precise).as_nanos() as u64,
+            current_unix - previous_unix
+        );
         assert!(current_unix - previous_unix > 50_000_000);
         assert!(current_unix - previous_unix < 100_000_000);
     }
