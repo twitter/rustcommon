@@ -2,7 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
+use core::sync::atomic::AtomicUsize;
+use core::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 use time::OffsetDateTime;
 
 pub use std::time::SystemTime;
@@ -20,6 +21,10 @@ const MICROS_PER_SEC: u64 = 1_000_000;
 const NANOS_PER_SEC: u64 = 1_000_000_000;
 const NANOS_PER_MILLI: u64 = 1_000_000;
 const NANOS_PER_MICRO: u64 = 1_000;
+
+const UNINITIALIZED: usize = 0;
+const INITIALIZED: usize = 1;
+const REFRESHING: usize = 2;
 
 // We initialize the clock for the static lifetime.
 static CLOCK: Clock = Clock::new();
@@ -93,7 +98,7 @@ pub fn refresh_clock() {
 
 // Clock provides functionality to get current and recent times
 struct Clock {
-    initialized: AtomicBool,
+    state: AtomicUsize,
     recent_coarse: AtomicCoarseInstant,
     recent_precise: AtomicInstant,
     recent_unix: AtomicU64,
@@ -101,7 +106,7 @@ struct Clock {
 
 impl Clock {
     fn initialize(&self) {
-        if !self.initialized.load(Ordering::Relaxed) {
+        if self.state.load(Ordering::Relaxed) == UNINITIALIZED {
             self.refresh();
         }
     }
@@ -149,36 +154,95 @@ impl Clock {
 
     /// Refresh the cached time
     fn refresh(&self) {
-        let precise = Instant::now();
-        let coarse = CoarseInstant {
-            secs: (precise.nanos / NANOS_PER_SEC) as u32,
-        };
+        match self.state.load(Ordering::Relaxed) {
+            UNINITIALIZED => {
+                if self
+                    .state
+                    .compare_exchange(
+                        UNINITIALIZED,
+                        REFRESHING,
+                        Ordering::Relaxed,
+                        Ordering::Relaxed,
+                    )
+                    .is_ok()
+                {
+                    // get the current precise time and cache it
+                    let precise = Instant::now();
+                    self.recent_precise.store(precise, Ordering::Release);
 
-        self.recent_precise.store(precise, Ordering::Relaxed);
+                    // set the coarse time by converting the precise time
+                    let coarse = CoarseInstant {
+                        secs: (precise.nanos / NANOS_PER_SEC) as u32,
+                    };
+                    self.recent_coarse.store(coarse, Ordering::Release);
 
-        // special case initializing the recent unix time
-        if self.initialized.load(Ordering::Relaxed) {
-            let last = self.recent_precise.swap(precise, Ordering::Relaxed);
-            if last < precise {
-                let delta = (precise - last).as_nanos();
-                self.recent_unix.fetch_add(delta as u64, Ordering::Relaxed);
+                    // get the current unix time from the system and store it
+                    let unix = SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap()
+                        .as_nanos() as u64;
+                    self.recent_unix.store(unix, Ordering::Release);
+
+                    // finalize initialization
+                    self.state.store(INITIALIZED, Ordering::Release);
+                }
+                // if we raced, we should block until the other thread completes
+                // initialization
+                while self.state.load(Ordering::Relaxed) != INITIALIZED {}
             }
-        } else {
-            self.recent_coarse.store(coarse, Ordering::Relaxed);
-            let unix = SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos() as u64;
-            self.recent_unix.store(unix, Ordering::Relaxed);
+            INITIALIZED => {
+                if self
+                    .state
+                    .compare_exchange(
+                        INITIALIZED,
+                        REFRESHING,
+                        Ordering::Relaxed,
+                        Ordering::Relaxed,
+                    )
+                    .is_ok()
+                {
+                    // get the current precise time
+                    let precise = Instant::now();
+
+                    // increment unix time by elapsed time in nanoseconds between
+                    // refreshes
+                    self.recent_unix.fetch_add(
+                        (precise - recent_precise()).as_nanos() as u64,
+                        Ordering::Relaxed,
+                    );
+
+                    // set coarse time to precise time converted to seconds
+                    let coarse = CoarseInstant {
+                        secs: (precise.nanos / NANOS_PER_SEC) as u32,
+                    };
+                    self.recent_coarse.store(coarse, Ordering::Relaxed);
+
+                    // set precise time
+                    self.recent_precise.store(precise, Ordering::Release);
+
+                    // finalize refresh
+                    self.state.store(INITIALIZED, Ordering::Relaxed);
+                }
+                // if we raced, we should block until the other thread completes
+                // initialization
+                while self.state.load(Ordering::Relaxed) != INITIALIZED {}
+            }
+            REFRESHING => {
+                // if we raced, we should block until the other thread completes
+                // initialization
+                while self.state.load(Ordering::Relaxed) != INITIALIZED {}
+            }
+            _ => {
+                unreachable!()
+            }
         }
-        self.initialized.store(true, Ordering::Relaxed);
     }
 }
 
 impl Clock {
     const fn new() -> Self {
         Clock {
-            initialized: AtomicBool::new(false),
+            state: AtomicUsize::new(UNINITIALIZED),
             recent_coarse: AtomicCoarseInstant {
                 secs: AtomicU32::new(0),
             },
@@ -231,5 +295,22 @@ mod tests {
         let t1_c = Instant::recent();
         assert!((t1 - t0).as_secs_f64() >= 1.0);
         assert!((t1_c - t0_c).as_secs() >= 1);
+    }
+
+    #[test]
+    fn cached_time() {
+        let previous_precise = recent_precise();
+        let previous_unix = recent_unix_precise();
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        refresh_clock();
+        let current_precise = recent_precise();
+        let current_unix = recent_unix_precise();
+
+        assert_eq!(
+            (current_precise - previous_precise).as_nanos() as u64,
+            current_unix - previous_unix
+        );
+        assert!(current_unix - previous_unix > 50_000_000);
+        assert!(current_unix - previous_unix < 100_000_000);
     }
 }
