@@ -311,6 +311,6 @@ mod tests {
             current_unix - previous_unix
         );
         assert!(current_unix - previous_unix > 50_000_000);
-        assert!(current_unix - previous_unix < 100_000_000);
+        assert!(current_unix - previous_unix < 500_000_000);
     }
 }
