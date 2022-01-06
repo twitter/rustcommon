@@ -131,7 +131,7 @@ where
     pub fn record_bucket(
         &self,
         statistic: &'a (dyn Statistic<Value, Count> + 'a),
-        time: Instant,
+        time: Instant<Nanoseconds<u64>>,
         value: <Value as Atomic>::Primitive,
         count: <Count as Atomic>::Primitive,
     ) -> Result<(), MetricsError> {
@@ -154,7 +154,7 @@ where
     pub fn record_counter(
         &self,
         statistic: &'a (dyn Statistic<Value, Count> + 'a),
-        time: Instant,
+        time: Instant<Nanoseconds<u64>>,
         value: <Value as Atomic>::Primitive,
     ) -> Result<(), MetricsError> {
         if statistic.source() == Source::Counter {
@@ -198,7 +198,7 @@ where
     pub fn record_gauge(
         &self,
         statistic: &'a (dyn Statistic<Value, Count> + 'a),
-        time: Instant,
+        time: Instant<Nanoseconds<u64>>,
         value: <Value as Atomic>::Primitive,
     ) -> Result<(), MetricsError> {
         if statistic.source() == Source::Gauge {

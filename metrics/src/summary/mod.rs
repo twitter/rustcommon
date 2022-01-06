@@ -32,7 +32,7 @@ where
 {
     pub fn increment(
         &self,
-        time: Instant,
+        time: Instant<Nanoseconds<u64>>,
         value: <Value as Atomic>::Primitive,
         count: <Count as Atomic>::Primitive,
     ) {
@@ -55,8 +55,8 @@ where
     pub fn heatmap(
         max: <Value as Atomic>::Primitive,
         precision: u8,
-        span: Duration,
-        resolution: Duration,
+        span: Duration<Nanoseconds<u64>>,
+        resolution: Duration<Nanoseconds<u64>>,
     ) -> Self {
         Self::Heatmap(AtomicHeatmap::new(max, precision, span, resolution))
     }
@@ -72,7 +72,7 @@ where
     <Value as Atomic>::Primitive: Primitive,
     u64: From<<Value as Atomic>::Primitive>,
 {
-    Heatmap(<Value as Atomic>::Primitive, u8, Duration, Duration),
+    Heatmap(<Value as Atomic>::Primitive, u8, Duration<Nanoseconds<u64>>, Duration<Nanoseconds<u64>>),
     Stream(usize),
 }
 
@@ -99,8 +99,8 @@ where
     pub fn heatmap(
         max: <Value as Atomic>::Primitive,
         precision: u8,
-        span: Duration,
-        resolution: Duration,
+        span: Duration<Nanoseconds<u64>>,
+        resolution: Duration<Nanoseconds<u64>>,
     ) -> Summary<Value, Count> {
         Self {
             inner: SummaryType::Heatmap(max, precision, span, resolution),

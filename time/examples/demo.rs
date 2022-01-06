@@ -5,18 +5,22 @@
 use rustcommon_time::*;
 
 pub fn main() {
-    println!("precise: {:?}", recent_precise());
-    println!("coarse: {:?}", recent_coarse());
-    println!("system: {:?}", recent_system());
-    println!("unix coarse: {:?}", recent_unix());
-    println!("unix precise: {:?}", recent_unix_precise());
-    println!("utc: {}", recent_utc());
+    println!("precise: {:?}", Instant::<Nanoseconds<u64>>::recent());
+    println!("coarse: {:?}", Instant::<Seconds<u32>>::recent());
+    println!(
+        "unix precise: {:?}",
+        UnixInstant::<Nanoseconds<u64>>::recent()
+    );
+    println!("unix coarse: {:?}", UnixInstant::<Seconds<u32>>::recent());
+    println!("utc: {}", DateTime::recent());
     std::thread::sleep(core::time::Duration::from_millis(50));
     refresh_clock();
-    println!("precise: {:?}", recent_precise());
-    println!("coarse: {:?}", recent_coarse());
-    println!("system: {:?}", recent_system());
-    println!("unix coarse: {:?}", recent_unix());
-    println!("unix precise: {:?}", recent_unix_precise());
-    println!("utc: {}", recent_utc());
+    println!("precise: {:?}", Instant::<Nanoseconds<u64>>::recent());
+    println!("coarse: {:?}", Instant::<Seconds<u32>>::recent());
+    println!(
+        "unix precise: {:?}",
+        UnixInstant::<Nanoseconds<u64>>::recent()
+    );
+    println!("unix coarse: {:?}", UnixInstant::<Seconds<u32>>::recent());
+    println!("utc: {}", DateTime::recent());
 }

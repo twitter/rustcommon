@@ -7,7 +7,7 @@
 mod palettes;
 
 pub use palettes::Palette;
-use rustcommon_time::now_utc;
+use rustcommon_time::{DateTime, Duration};
 
 use image::*;
 use palettes::*;
@@ -32,7 +32,7 @@ pub struct WaterfallBuilder<Value> {
     output: String,
     labels: HashMap<Value, String>,
     palette: Palette,
-    interval: Duration,
+    interval: Duration<Nanoseconds<u64>>,
     scale: Scale,
     smooth: Option<f32>,
 }
@@ -47,7 +47,7 @@ where
             output: target.to_string(),
             labels: HashMap::new(),
             palette: Palette::Classic,
-            interval: Duration::new(60, 0),
+            interval: Duration::<Nanoseconds<u64>>::from_secs(60),
             scale: Scale::Linear,
             smooth: None,
         }
@@ -113,8 +113,8 @@ where
         u64: From<Count>,
         Count: From<u8>,
     {
-        let now_datetime = now_utc();
-        let now_instant = Instant::now();
+        let now_datetime = DateTime::now();
+        let now_instant = Instant::<Nanoseconds<u64>>::now();
 
         let height = heatmap.windows();
         let width = heatmap.buckets();
@@ -218,7 +218,7 @@ where
         // add the timestamp labels along the left side
         for (y, slice) in heatmap.into_iter().enumerate() {
             let slice_start_utc =
-                begin_utc + Duration::from_nanos((slice.start() - begin_instant).as_nanos() as _);
+                begin_utc + std::time::Duration::from_nanos((slice.start() - begin_instant).as_nanos() as _);
 
             if slice.start() - begin >= self.interval {
                 let label = format!("{}", slice_start_utc);

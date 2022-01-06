@@ -6,7 +6,7 @@
 #![macro_use]
 extern crate log;
 
-use rustcommon_time::{now_utc, SecondsFormat};
+use rustcommon_time::{DateTime, SecondsFormat};
 
 #[macro_export]
 macro_rules! fatal {
@@ -80,7 +80,7 @@ impl log::Log for Logger {
             };
             println!(
                 "{} {:<5} [{}] {}",
-                now_utc().to_rfc3339_opts(SecondsFormat::Millis, false),
+                DateTime::now().to_rfc3339_opts(SecondsFormat::Millis, false),
                 record.level(),
                 target,
                 record.args()

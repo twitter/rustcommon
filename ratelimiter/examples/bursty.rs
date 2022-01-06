@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use rustcommon_ratelimiter::{Ratelimiter, Refill};
-use rustcommon_time::{now_utc, SecondsFormat};
+use rustcommon_time::{DateTime, SecondsFormat};
 
 fn main() {
     for strategy in &[Refill::Normal, Refill::Uniform] {
@@ -14,7 +14,7 @@ fn main() {
             limiter.wait();
             println!(
                 "{}: T -{}",
-                now_utc().to_rfc3339_opts(SecondsFormat::Millis, false),
+                DateTime::now().to_rfc3339_opts(SecondsFormat::Millis, false),
                 10 - i
             );
         }

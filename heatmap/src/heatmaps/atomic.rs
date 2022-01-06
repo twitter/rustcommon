@@ -2,13 +2,14 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::*;
+use crate::HeatmapError;
+use crate::Heatmap;
+use core::sync::atomic::AtomicU64;
+use core::sync::atomic::AtomicUsize;
 
-use rustcommon_atomics::*;
+use rustcommon_atomics::{Atomic, Ordering};
 use rustcommon_histogram::{AtomicCounter, AtomicHistogram, Counter, Indexing};
-use rustcommon_time::{AtomicInstant, Duration, Instant};
-
-// use std::time::{Duration, Instant};
+use rustcommon_time::*;
 
 /// AtomicHeatmaps are concurrent datastructures which store counts for
 /// timestamped values over a configured time range with individual histograms
@@ -19,8 +20,8 @@ use rustcommon_time::{AtomicInstant, Duration, Instant};
 pub struct AtomicHeatmap<Value, Count> {
     slices: Vec<AtomicHistogram<Value, Count>>,
     current: AtomicUsize,
-    next_tick: AtomicInstant,
-    resolution: Duration,
+    next_tick: Instant<Nanoseconds<AtomicU64>>,
+    resolution: Duration<Nanoseconds<u64>>,
     summary: AtomicHistogram<Value, Count>,
 }
 
@@ -41,15 +42,16 @@ where
     /// be slightly longer than the requested span. Smaller durations for the
     /// resolution cause more memory to be used, but a smaller batches of
     /// samples to age out at each time step.
-    pub fn new(max: Value, precision: u8, span: Duration, resolution: Duration) -> Self {
+    pub fn new(max: Value, precision: u8, span: Duration<Nanoseconds<u64>>, resolution: Duration<Nanoseconds<u64>>) -> Self {
         let mut slices = Vec::new();
-        let mut true_span = Duration::new(0, 0);
+        let mut true_span = Duration::<Nanoseconds<u64>>::from_nanos(0);
         while true_span < span {
             slices.push(AtomicHistogram::new(max, precision));
             true_span += resolution;
         }
         slices.shrink_to_fit();
-        let next_tick = AtomicInstant::new(Instant::now() + resolution);
+        let next_tick = Instant::<Nanoseconds<AtomicU64>>::now();
+        next_tick.fetch_add(resolution, Ordering::Relaxed);
         Self {
             slices,
             current: AtomicUsize::new(0),
@@ -71,7 +73,7 @@ where
     }
 
     /// Increment a time-value pair by a specified count
-    pub fn increment(&self, time: Instant, value: Value, count: <Count as Atomic>::Primitive) {
+    pub fn increment(&self, time: Instant<Nanoseconds<u64>>, value: Value, count: <Count as Atomic>::Primitive) {
         self.tick(time);
         if let Some(slice) = self.slices.get(self.current.load(Ordering::Relaxed)) {
             slice.increment(value, count);
@@ -93,7 +95,7 @@ where
     /// threads are not writing into the heatmap while this function is
     /// in-progress.
     pub fn percentile(&self, percentile: f64) -> Result<Value, HeatmapError> {
-        self.tick(Instant::now());
+        self.tick(Instant::<Nanoseconds<u64>>::now());
         self.summary
             .percentile(percentile)
             .map_err(|e| HeatmapError::from(e))
@@ -101,7 +103,7 @@ where
 
     // Internal function which handles reuse of older windows to store newer
     /// values.
-    fn tick(&self, time: Instant) {
+    fn tick(&self, time: Instant<Nanoseconds<u64>>) {
         loop {
             let next_tick = self.next_tick.load(Ordering::Relaxed);
             if time < next_tick {
@@ -150,14 +152,16 @@ where
 
 #[cfg(test)]
 mod tests {
+    use rustcommon_atomics::AtomicU64;
+
     use super::*;
 
     #[test]
     fn age_out() {
         let mut heatmap =
-            Heatmap::<u64, u64>::new(1_000_000, 2, Duration::new(1, 0), Duration::from_millis(1));
+            Heatmap::<u64, u64>::new(1_000_000, 2, Duration::<Nanoseconds<u64>>::from_secs(1), Duration::<Nanoseconds<u64>>::from_millis(1));
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
-        heatmap.increment(Instant::now(), 1, 1);
+        heatmap.increment(Instant::<Nanoseconds<u64>>::now(), 1, 1);
         assert_eq!(heatmap.percentile(0.0), Ok(1));
         std::thread::sleep(std::time::Duration::from_millis(100));
         assert_eq!(heatmap.percentile(0.0), Ok(1));
@@ -167,11 +171,11 @@ mod tests {
         let heatmap = AtomicHeatmap::<u64, AtomicU64>::new(
             1_000_000,
             2,
-            Duration::new(1, 0),
-            Duration::from_millis(1),
+            Duration::<Nanoseconds<u64>>::from_secs(1),
+            Duration::<Nanoseconds<u64>>::from_millis(1),
         );
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
-        heatmap.increment(Instant::now(), 1, 1);
+        heatmap.increment(Instant::<Nanoseconds<u64>>::now(), 1, 1);
         assert_eq!(heatmap.percentile(0.0), Ok(1));
         std::thread::sleep(std::time::Duration::from_millis(100));
         assert_eq!(heatmap.percentile(0.0), Ok(1));

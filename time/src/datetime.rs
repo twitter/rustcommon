@@ -2,11 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::Duration;
-use core::fmt::Display;
-use core::fmt::Formatter;
-use core::ops::Add;
-use core::ops::Sub;
+use crate::*;
+
 use time::OffsetDateTime;
 
 pub enum SecondsFormat {
@@ -17,11 +14,36 @@ pub enum SecondsFormat {
 }
 
 #[derive(Copy, Clone)]
+/// Represents a fixed moment in time in a format that has a human
+/// representation. This time is based off of an estimation of Unix Time taken
+/// from the `UnixInstant` type. This means that `DateTime`s will have a strict
+/// ordering that matches real time ordering, but the accuracy of the real value
+/// will depend on the phase and frequency accuracy of the system clock.
 pub struct DateTime {
     pub(crate) inner: OffsetDateTime,
 }
 
 impl DateTime {
+    pub fn now() -> Self {
+        let now = UnixInstant::<Nanoseconds<u64>>::now();
+        let seconds = now.inner.inner / NANOS_PER_SEC;
+        let nanoseconds = now.inner.inner % NANOS_PER_SEC;
+        DateTime {
+            inner: OffsetDateTime::from_unix_timestamp(seconds as i64).unwrap()
+                + time::Duration::nanoseconds(nanoseconds as i64),
+        }
+    }
+
+    pub fn recent() -> Self {
+        let recent = UnixInstant::<Nanoseconds<u64>>::recent();
+        let seconds = recent.inner.inner / NANOS_PER_SEC;
+        let nanoseconds = recent.inner.inner % NANOS_PER_SEC;
+        DateTime {
+            inner: OffsetDateTime::from_unix_timestamp(seconds as i64).unwrap()
+                + time::Duration::nanoseconds(nanoseconds as i64),
+        }
+    }
+
     pub fn to_rfc3339_opts(&self, seconds_format: SecondsFormat, use_z: bool) -> String {
         let date = self.inner.date();
         let time = self.inner.time();
@@ -53,25 +75,7 @@ impl DateTime {
     }
 }
 
-impl Add<Duration> for DateTime {
-    type Output = DateTime;
-    fn add(self, rhs: Duration) -> <Self as std::ops::Add<Duration>>::Output {
-        DateTime {
-            inner: self.inner + core::time::Duration::from_nanos(rhs.as_nanos() as u64),
-        }
-    }
-}
-
-impl Sub<Duration> for DateTime {
-    type Output = DateTime;
-    fn sub(self, rhs: Duration) -> <Self as std::ops::Sub<Duration>>::Output {
-        DateTime {
-            inner: self.inner - core::time::Duration::from_nanos(rhs.as_nanos() as u64),
-        }
-    }
-}
-
-impl Add<core::time::Duration> for DateTime {
+impl core::ops::Add<core::time::Duration> for DateTime {
     type Output = DateTime;
     fn add(
         self,
@@ -83,7 +87,7 @@ impl Add<core::time::Duration> for DateTime {
     }
 }
 
-impl Sub<core::time::Duration> for DateTime {
+impl core::ops::Sub<core::time::Duration> for DateTime {
     type Output = DateTime;
     fn sub(
         self,
@@ -95,8 +99,8 @@ impl Sub<core::time::Duration> for DateTime {
     }
 }
 
-impl Display for DateTime {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), core::fmt::Error> {
+impl core::fmt::Display for DateTime {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> Result<(), core::fmt::Error> {
         let date = self.inner.date();
         let time = self.inner.time();
 
