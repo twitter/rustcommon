@@ -67,7 +67,7 @@ macro_rules! atomic_arithmetic {
                 }
             }
         }
-    }
+    };
 }
 
 #[macro_export]

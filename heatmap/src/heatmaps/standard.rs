@@ -37,7 +37,12 @@ where
     /// be slightly longer than the requested span. Smaller durations for the
     /// resolution cause more memory to be used, but a smaller batches of
     /// samples to age out at each time step.
-    pub fn new(max: Value, precision: u8, span: Duration<Nanoseconds<u64>>, resolution: Duration<Nanoseconds<u64>>) -> Self {
+    pub fn new(
+        max: Value,
+        precision: u8,
+        span: Duration<Nanoseconds<u64>>,
+        resolution: Duration<Nanoseconds<u64>>,
+    ) -> Self {
         let mut slices = Vec::new();
         let mut true_span = Duration::<Nanoseconds<u64>>::from_nanos(0);
         while true_span < span {

@@ -71,7 +71,11 @@ where
 
     /// Updates a counter to a new value if the reading is newer than the stored
     /// reading.
-    pub fn record_counter(&self, time: Instant<Nanoseconds<u64>>, value: <Value as Atomic>::Primitive) {
+    pub fn record_counter(
+        &self,
+        time: Instant<Nanoseconds<u64>>,
+        value: <Value as Atomic>::Primitive,
+    ) {
         let t0 = self.refreshed.load();
         if time <= t0 {
             return;
@@ -106,7 +110,11 @@ where
     }
 
     /// Updates a gauge reading if the new value is newer than the stored value.
-    pub fn record_gauge(&self, time: Instant<Nanoseconds<u64>>, value: <Value as Atomic>::Primitive) {
+    pub fn record_gauge(
+        &self,
+        time: Instant<Nanoseconds<u64>>,
+        value: <Value as Atomic>::Primitive,
+    ) {
         {
             let t0 = self.refreshed.load();
             if time <= t0 {

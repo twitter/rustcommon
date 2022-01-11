@@ -20,8 +20,12 @@ mod tests {
 
     #[test]
     fn age_out() {
-        let mut heatmap =
-            Heatmap::<u64, u64>::new(1_000_000, 2, Duration::<Nanoseconds<u64>>::from_secs(1), Duration::<Nanoseconds<u64>>::from_millis(1));
+        let mut heatmap = Heatmap::<u64, u64>::new(
+            1_000_000,
+            2,
+            Duration::<Nanoseconds<u64>>::from_secs(1),
+            Duration::<Nanoseconds<u64>>::from_millis(1),
+        );
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
         heatmap.increment(Instant::<Nanoseconds<u64>>::now(), 1, 1);
         assert_eq!(heatmap.percentile(0.0), Ok(1));

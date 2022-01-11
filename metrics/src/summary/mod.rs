@@ -72,7 +72,12 @@ where
     <Value as Atomic>::Primitive: Primitive,
     u64: From<<Value as Atomic>::Primitive>,
 {
-    Heatmap(<Value as Atomic>::Primitive, u8, Duration<Nanoseconds<u64>>, Duration<Nanoseconds<u64>>),
+    Heatmap(
+        <Value as Atomic>::Primitive,
+        u8,
+        Duration<Nanoseconds<u64>>,
+        Duration<Nanoseconds<u64>>,
+    ),
     Stream(usize),
 }
 

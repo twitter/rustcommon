@@ -41,8 +41,12 @@ pub fn simulate(shape: Shape) {
     info!("Simulating for {:?} distribution", shape);
     let duration = Duration::<Nanoseconds<u64>>::from_secs(120);
 
-    let mut heatmap =
-        rustcommon_heatmap::Heatmap::<u64, u64>::new(1_000_000, 3, duration, Duration::<Nanoseconds<u64>>::from_secs(1));
+    let mut heatmap = rustcommon_heatmap::Heatmap::<u64, u64>::new(
+        1_000_000,
+        3,
+        duration,
+        Duration::<Nanoseconds<u64>>::from_secs(1),
+    );
 
     let cauchy = Cauchy::new(500_000.0, 2_000.00).unwrap();
     let normal = Normal::new(200_000.0, 100_000.0).unwrap();

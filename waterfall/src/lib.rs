@@ -217,8 +217,8 @@ where
 
         // add the timestamp labels along the left side
         for (y, slice) in heatmap.into_iter().enumerate() {
-            let slice_start_utc =
-                begin_utc + std::time::Duration::from_nanos((slice.start() - begin_instant).as_nanos() as _);
+            let slice_start_utc = begin_utc
+                + std::time::Duration::from_nanos((slice.start() - begin_instant).as_nanos() as _);
 
             if slice.start() - begin >= self.interval {
                 let label = format!("{}", slice_start_utc);

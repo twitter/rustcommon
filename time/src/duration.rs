@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICEN
 
-use core::ops::AddAssign;
 use crate::*;
+use core::ops::AddAssign;
 
 #[repr(transparent)]
 pub struct Duration<T> {
@@ -39,13 +39,19 @@ where
     }
 }
 
-impl<T> AddAssign for Duration<T> where T: AddAssign {
+impl<T> AddAssign for Duration<T>
+where
+    T: AddAssign,
+{
     fn add_assign(&mut self, other: Self) {
         self.inner += other.inner;
     }
 }
 
-impl<T> Clone for Duration<T> where T: Clone {
+impl<T> Clone for Duration<T>
+where
+    T: Clone,
+{
     fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
@@ -53,7 +59,7 @@ impl<T> Clone for Duration<T> where T: Clone {
     }
 }
 
-impl<T> Copy for Duration<T> where T: Copy { }
+impl<T> Copy for Duration<T> where T: Copy {}
 
 impl Duration<Seconds<u32>> {
     pub const fn from_secs(seconds: u32) -> Self {
@@ -97,19 +103,31 @@ impl Duration<Nanoseconds<u64>> {
 
     pub fn from_micros(microseconds: u64) -> Self {
         Self {
-            inner: Nanoseconds { inner: microseconds.checked_mul(1_000).expect("the specified duration could not be represented with this type") },
+            inner: Nanoseconds {
+                inner: microseconds
+                    .checked_mul(1_000)
+                    .expect("the specified duration could not be represented with this type"),
+            },
         }
     }
 
     pub fn from_millis(milliseconds: u64) -> Self {
         Self {
-            inner: Nanoseconds { inner: milliseconds.checked_mul(1_000_000).expect("the specified duration could not be represented with this type") },
+            inner: Nanoseconds {
+                inner: milliseconds
+                    .checked_mul(1_000_000)
+                    .expect("the specified duration could not be represented with this type"),
+            },
         }
     }
 
     pub fn from_secs(seconds: u64) -> Self {
         Self {
-            inner: Nanoseconds { inner: seconds.checked_mul(1_000_000_000).expect("the specified duration could not be represented with this type") },
+            inner: Nanoseconds {
+                inner: seconds
+                    .checked_mul(1_000_000_000)
+                    .expect("the specified duration could not be represented with this type"),
+            },
         }
     }
 
@@ -131,7 +149,9 @@ impl Duration<Nanoseconds<u64>> {
 
     pub fn mul_f64(self, rhs: f64) -> Self {
         Self {
-            inner: Nanoseconds { inner: (self.inner.inner as f64 * rhs) as u64 }
+            inner: Nanoseconds {
+                inner: (self.inner.inner as f64 * rhs) as u64,
+            },
         }
     }
 }

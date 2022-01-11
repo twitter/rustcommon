@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::HeatmapError;
 use crate::Heatmap;
+use crate::HeatmapError;
 use core::sync::atomic::AtomicU64;
 use core::sync::atomic::AtomicUsize;
 
@@ -42,7 +42,12 @@ where
     /// be slightly longer than the requested span. Smaller durations for the
     /// resolution cause more memory to be used, but a smaller batches of
     /// samples to age out at each time step.
-    pub fn new(max: Value, precision: u8, span: Duration<Nanoseconds<u64>>, resolution: Duration<Nanoseconds<u64>>) -> Self {
+    pub fn new(
+        max: Value,
+        precision: u8,
+        span: Duration<Nanoseconds<u64>>,
+        resolution: Duration<Nanoseconds<u64>>,
+    ) -> Self {
         let mut slices = Vec::new();
         let mut true_span = Duration::<Nanoseconds<u64>>::from_nanos(0);
         while true_span < span {
@@ -73,7 +78,12 @@ where
     }
 
     /// Increment a time-value pair by a specified count
-    pub fn increment(&self, time: Instant<Nanoseconds<u64>>, value: Value, count: <Count as Atomic>::Primitive) {
+    pub fn increment(
+        &self,
+        time: Instant<Nanoseconds<u64>>,
+        value: Value,
+        count: <Count as Atomic>::Primitive,
+    ) {
         self.tick(time);
         if let Some(slice) = self.slices.get(self.current.load(Ordering::Relaxed)) {
             slice.increment(value, count);
@@ -158,8 +168,12 @@ mod tests {
 
     #[test]
     fn age_out() {
-        let mut heatmap =
-            Heatmap::<u64, u64>::new(1_000_000, 2, Duration::<Nanoseconds<u64>>::from_secs(1), Duration::<Nanoseconds<u64>>::from_millis(1));
+        let mut heatmap = Heatmap::<u64, u64>::new(
+            1_000_000,
+            2,
+            Duration::<Nanoseconds<u64>>::from_secs(1),
+            Duration::<Nanoseconds<u64>>::from_millis(1),
+        );
         assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
         heatmap.increment(Instant::<Nanoseconds<u64>>::now(), 1, 1);
         assert_eq!(heatmap.percentile(0.0), Ok(1));
