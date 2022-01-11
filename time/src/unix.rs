@@ -80,10 +80,8 @@ impl UnixInstant<Seconds<u32>> {
             libc::clock_gettime(libc::CLOCK_REALTIME, &mut ts);
         }
 
-        let coarse = ts.tv_sec as u32;
-
         UnixInstant {
-            inner: Seconds { inner: coarse },
+            inner: Seconds::from(ts),
         }
     }
 
@@ -114,10 +112,8 @@ impl UnixInstant<Nanoseconds<u64>> {
             libc::clock_gettime(libc::CLOCK_REALTIME, &mut ts);
         }
 
-        let precise = ts.tv_sec as u64 * NANOS_PER_SEC + ts.tv_nsec as u64;
-
         UnixInstant {
-            inner: Nanoseconds { inner: precise },
+            inner: Nanoseconds::from(ts),
         }
     }
 
