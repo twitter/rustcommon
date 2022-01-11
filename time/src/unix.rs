@@ -4,15 +4,13 @@
 
 use crate::*;
 
-/// An estimate of Unix Time based on applying a fixed offset to the `Instant`
-/// type. Unlike `std::time::SystemTime` this type is guaranteed to be
-/// monotonically non-decreasing.
+/// An instant in wall-clock time. The internal representation is a duration
+/// since the Unix Epoch. Opaque and only useful with other `UnixInstant`s and
+/// the `Duration` types.
 ///
-/// It is important to note that while `UnixInstant`s will have ordering
-/// matching real time ordering, they are not guaranteed to be phase accurate
-/// or steady. This means that if the system clock is set wrong and/or ticking
-/// at an unusual rate, that comparisons to external `UnixInstant`s are not
-/// guaranteed to be correct through the life of the program.
+/// It is important to note that the underlying clock is not guaranteed to be
+/// steady or monotonically non-decreasing. It is subject to both phase and
+/// frequency corrections.
 #[repr(transparent)]
 pub struct UnixInstant<T> {
     pub(crate) inner: T,
@@ -79,10 +77,10 @@ impl UnixInstant<Seconds<u32>> {
             tv_nsec: 0,
         };
         unsafe {
-            libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut ts);
+            libc::clock_gettime(libc::CLOCK_REALTIME, &mut ts);
         }
 
-        let coarse = ts.tv_sec as u32 + CLOCK.coarse_offset.load(Ordering::Relaxed).inner.inner;
+        let coarse = ts.tv_sec as u32;
 
         UnixInstant {
             inner: Seconds { inner: coarse },
@@ -91,11 +89,7 @@ impl UnixInstant<Seconds<u32>> {
 
     pub fn recent() -> Self {
         CLOCK.initialize();
-        let recent = CLOCK.coarse.load(Ordering::Relaxed).inner.inner
-            + CLOCK.coarse_offset.load(Ordering::Relaxed).inner.inner;
-        UnixInstant {
-            inner: Seconds { inner: recent },
-        }
+        CLOCK.coarse_unix.load(Ordering::Relaxed)
     }
 }
 
@@ -117,11 +111,10 @@ impl UnixInstant<Nanoseconds<u64>> {
             tv_nsec: 0,
         };
         unsafe {
-            libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut ts);
+            libc::clock_gettime(libc::CLOCK_REALTIME, &mut ts);
         }
 
-        let precise = ts.tv_sec as u64 * NANOS_PER_SEC
-            + CLOCK.precise_offset.load(Ordering::Relaxed).inner.inner;
+        let precise = ts.tv_sec as u64 * NANOS_PER_SEC + ts.tv_nsec as u64;
 
         UnixInstant {
             inner: Nanoseconds { inner: precise },
@@ -130,11 +123,7 @@ impl UnixInstant<Nanoseconds<u64>> {
 
     pub fn recent() -> Self {
         CLOCK.initialize();
-        let recent = CLOCK.precise.load(Ordering::Relaxed).inner.inner
-            + CLOCK.precise_offset.load(Ordering::Relaxed).inner.inner;
-        UnixInstant {
-            inner: Nanoseconds { inner: recent },
-        }
+        CLOCK.precise_unix.load(Ordering::Relaxed)
     }
 }
 

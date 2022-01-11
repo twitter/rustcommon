@@ -15,10 +15,11 @@ pub enum SecondsFormat {
 
 #[derive(Copy, Clone)]
 /// Represents a fixed moment in time in a format that has a human
-/// representation. This time is based off of an estimation of Unix Time taken
-/// from the `UnixInstant` type. This means that `DateTime`s will have a strict
-/// ordering that matches real time ordering, but the accuracy of the real value
-/// will depend on the phase and frequency accuracy of the system clock.
+/// representation.
+///
+/// It is important to note that the underlying clock is subject to phase and
+/// frequency adjustments. This means that it is not guaranteed to be stable or
+/// monotonically non-decreasing.
 pub struct DateTime {
     pub(crate) inner: OffsetDateTime,
 }

@@ -4,11 +4,12 @@
 
 use crate::*;
 
-/// The measurement of a monotonically nondecreasing clock. Opaque and only
-/// useful with the `Duration` types.
+/// The measurement of a monotonically nondecreasing clock. The internal
+/// representation is the duration since an arbitrary epoch. Opaque and only
+/// useful with other `Instant`s and the `Duration` types.
 ///
 /// It is important to note that the underlying clock is not guaranteed to be
-/// steady.
+/// steady. It is subject only to frequency corrections.
 #[repr(transparent)]
 pub struct Instant<T> {
     pub(crate) inner: T,

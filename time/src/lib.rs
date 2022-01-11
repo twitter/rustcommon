@@ -38,8 +38,8 @@ struct Clock {
     state: AtomicUsize,
     coarse: Instant<Seconds<AtomicU32>>,
     precise: Instant<Nanoseconds<AtomicU64>>,
-    coarse_offset: Duration<Seconds<AtomicU32>>,
-    precise_offset: Duration<Nanoseconds<AtomicU64>>,
+    coarse_unix: UnixInstant<Seconds<AtomicU32>>,
+    precise_unix: UnixInstant<Nanoseconds<AtomicU64>>,
 }
 
 impl Clock {
@@ -60,11 +60,17 @@ impl Clock {
                 },
             },
 
-            // offset between the monotonic clock and coarse unix time (s)
-            coarse_offset: Duration::<Seconds<AtomicU32>>::from_secs(0),
-
-            // offset between the monotonic clock and precise unix time (ns)
-            precise_offset: Duration::<Nanoseconds<AtomicU64>>::from_nanos(0),
+            // store a monotonic clock reading
+            coarse_unix: UnixInstant {
+                inner: Seconds {
+                    inner: AtomicU32::new(0),
+                },
+            },
+            precise_unix: UnixInstant {
+                inner: Nanoseconds {
+                    inner: AtomicU64::new(0),
+                },
+            },
         }
     }
 
@@ -115,14 +121,16 @@ impl Clock {
                     unsafe {
                         libc::clock_gettime(libc::CLOCK_REALTIME, &mut ts);
                     }
-                    self.coarse_offset.store(
-                        Duration::<Seconds<u32>>::from_secs(ts.tv_sec as u32),
+                    self.coarse_unix.store(
+                        UnixInstant {
+                            inner: Seconds::from(ts),
+                        },
                         Ordering::Release,
                     );
-                    self.precise_offset.store(
-                        Duration::<Nanoseconds<u64>>::from_nanos(
-                            ts.tv_sec as u64 * NANOS_PER_SEC + ts.tv_nsec as u64,
-                        ),
+                    self.precise_unix.store(
+                        UnixInstant {
+                            inner: Nanoseconds::from(ts),
+                        },
                         Ordering::Release,
                     );
 
@@ -169,6 +177,29 @@ impl Clock {
                             Ordering::Release,
                         );
                     }
+
+                    // update unix time
+                    let mut ts = libc::timespec {
+                        tv_sec: 0,
+                        tv_nsec: 0,
+                    };
+                    unsafe {
+                        libc::clock_gettime(libc::CLOCK_REALTIME, &mut ts);
+                    }
+
+                    // unconditionally set unix time, which may move backwards
+                    self.coarse_unix.store(
+                        UnixInstant {
+                            inner: Seconds::from(ts),
+                        },
+                        Ordering::Release,
+                    );
+                    self.precise_unix.store(
+                        UnixInstant {
+                            inner: Nanoseconds::from(ts),
+                        },
+                        Ordering::Release,
+                    );
 
                     // finalize refresh
                     self.state.store(INITIALIZED, Ordering::Relaxed);
