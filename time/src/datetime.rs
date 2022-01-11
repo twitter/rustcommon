@@ -24,25 +24,24 @@ pub struct DateTime {
     pub(crate) inner: OffsetDateTime,
 }
 
-impl DateTime {
-    pub fn now() -> Self {
-        let now = UnixInstant::<Nanoseconds<u64>>::now();
-        let seconds = now.inner.inner / NANOS_PER_SEC;
-        let nanoseconds = now.inner.inner % NANOS_PER_SEC;
+impl From<UnixInstant<Nanoseconds<u64>>> for DateTime {
+    fn from(other: UnixInstant<Nanoseconds<u64>>) -> Self {
+        let seconds = other.inner.inner / NANOS_PER_SEC;
+        let nanoseconds = other.inner.inner % NANOS_PER_SEC;
         DateTime {
             inner: OffsetDateTime::from_unix_timestamp(seconds as i64).unwrap()
                 + time::Duration::nanoseconds(nanoseconds as i64),
         }
     }
+}
+
+impl DateTime {
+    pub fn now() -> Self {
+        Self::from(UnixInstant::<Nanoseconds<u64>>::now())
+    }
 
     pub fn recent() -> Self {
-        let recent = UnixInstant::<Nanoseconds<u64>>::recent();
-        let seconds = recent.inner.inner / NANOS_PER_SEC;
-        let nanoseconds = recent.inner.inner % NANOS_PER_SEC;
-        DateTime {
-            inner: OffsetDateTime::from_unix_timestamp(seconds as i64).unwrap()
-                + time::Duration::nanoseconds(nanoseconds as i64),
-        }
+        Self::from(UnixInstant::<Nanoseconds<u64>>::recent())
     }
 
     pub fn to_rfc3339_opts(&self, seconds_format: SecondsFormat, use_z: bool) -> String {
