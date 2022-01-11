@@ -7,13 +7,10 @@
 #![deny(clippy::all)]
 
 use core::convert::TryFrom;
-use rustcommon_time::AtomicDuration;
-use rustcommon_time::AtomicInstant;
-use rustcommon_time::Duration;
-use rustcommon_time::Instant;
+use core::sync::atomic::*;
+use rustcommon_time::*;
 
 use rand_distr::{Distribution, Normal, Uniform};
-use rustcommon_atomics::*;
 
 /// A token bucket ratelimiter
 pub struct Ratelimiter {
@@ -21,8 +18,8 @@ pub struct Ratelimiter {
     capacity: AtomicU64,
     quantum: AtomicU64,
     strategy: AtomicUsize,
-    tick: AtomicDuration,
-    next: AtomicInstant,
+    tick: Duration<Nanoseconds<AtomicU64>>,
+    next: Instant<Nanoseconds<AtomicU64>>,
     normal: Normal<f64>,
     uniform: Uniform<f64>,
 }
@@ -85,8 +82,8 @@ impl Ratelimiter {
             capacity: AtomicU64::new(capacity),
             quantum: AtomicU64::new(quantum),
             strategy: AtomicUsize::new(Refill::Smooth as usize),
-            tick: AtomicDuration::from_nanos(tick),
-            next: AtomicInstant::now(),
+            tick: Duration::<Nanoseconds<AtomicU64>>::from_nanos(tick),
+            next: Instant::<Nanoseconds<AtomicU64>>::now(),
             normal: Normal::new(tick as f64, 2.0 * tick as f64).unwrap(),
             uniform: Uniform::new_inclusive(tick as f64 * 0.5, tick as f64 * 1.5),
         }
@@ -96,7 +93,9 @@ impl Ratelimiter {
     /// the next tick.
     pub fn set_rate(&self, rate: u64) {
         self.tick.store(
-            Duration::from_nanos(SECOND / (rate / self.quantum.load(Ordering::Relaxed))),
+            Duration::<Nanoseconds<u64>>::from_nanos(
+                SECOND / (rate / self.quantum.load(Ordering::Relaxed)),
+            ),
             Ordering::Relaxed,
         );
     }
@@ -114,7 +113,7 @@ impl Ratelimiter {
 
     // internal function to move the time forward
     fn tick(&self) {
-        let now = Instant::now();
+        let now = Instant::<Nanoseconds<u64>>::now();
         let next = self.next.load(Ordering::Relaxed);
         if now >= next {
             let strategy = Refill::try_from(self.strategy.load(Ordering::Relaxed));
@@ -128,7 +127,7 @@ impl Ratelimiter {
                 .next
                 .compare_exchange(
                     next,
-                    next + Duration::from_nanos(tick),
+                    next + Duration::<Nanoseconds<u64>>::from_nanos(tick),
                     Ordering::SeqCst,
                     Ordering::SeqCst,
                 )
@@ -165,15 +164,24 @@ impl Ratelimiter {
     /// ```
     pub fn try_wait(&self) -> Result<(), std::io::Error> {
         self.tick();
-        if self.available.load(Ordering::Relaxed) > 0 {
-            self.available.fetch_saturating_sub(1, Ordering::Relaxed);
-            Ok(())
-        } else {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::WouldBlock,
-                "no tokens in bucket",
-            ))
+        let mut current = self.available.load(Ordering::Relaxed);
+        while current > 0 {
+            match self.available.compare_exchange(
+                current,
+                current - 1,
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            ) {
+                Ok(_) => return Ok(()),
+                Err(v) => {
+                    current = v;
+                }
+            }
         }
+        Err(std::io::Error::new(
+            std::io::ErrorKind::WouldBlock,
+            "no tokens in bucket",
+        ))
     }
 
     /// Blocking wait implemented as a busy loop. Returns only after a token is

@@ -9,7 +9,7 @@ use crate::traits::*;
 use crate::MetricsError;
 use crate::Output;
 use crate::Summary;
-use rustcommon_time::Instant;
+use rustcommon_time::*;
 
 use crossbeam::atomic::AtomicCell;
 use dashmap::DashSet;
@@ -25,7 +25,7 @@ where
     <Count as Atomic>::Primitive: Primitive,
     u64: From<<Value as Atomic>::Primitive> + From<<Count as Atomic>::Primitive>,
 {
-    refreshed: AtomicCell<Instant>,
+    refreshed: AtomicCell<Instant<Nanoseconds<u64>>>,
     statistic: Entry<Value, Count>,
     empty: AtomicBool,
     reading: Value,
@@ -48,7 +48,7 @@ where
             empty: AtomicBool::new(true),
             statistic: Entry::from(statistic),
             reading: Default::default(),
-            refreshed: AtomicCell::new(Instant::now()),
+            refreshed: AtomicCell::new(Instant::<Nanoseconds<u64>>::now()),
             summary,
             outputs: Default::default(),
         }
@@ -57,7 +57,7 @@ where
     /// Records a bucket value + count pair into the summary.
     pub fn record_bucket(
         &self,
-        time: Instant,
+        time: Instant<Nanoseconds<u64>>,
         value: <Value as Atomic>::Primitive,
         count: <Count as Atomic>::Primitive,
     ) -> Result<(), MetricsError> {
@@ -71,7 +71,11 @@ where
 
     /// Updates a counter to a new value if the reading is newer than the stored
     /// reading.
-    pub fn record_counter(&self, time: Instant, value: <Value as Atomic>::Primitive) {
+    pub fn record_counter(
+        &self,
+        time: Instant<Nanoseconds<u64>>,
+        value: <Value as Atomic>::Primitive,
+    ) {
         let t0 = self.refreshed.load();
         if time <= t0 {
             return;
@@ -106,7 +110,11 @@ where
     }
 
     /// Updates a gauge reading if the new value is newer than the stored value.
-    pub fn record_gauge(&self, time: Instant, value: <Value as Atomic>::Primitive) {
+    pub fn record_gauge(
+        &self,
+        time: Instant<Nanoseconds<u64>>,
+        value: <Value as Atomic>::Primitive,
+    ) {
         {
             let t0 = self.refreshed.load();
             if time <= t0 {

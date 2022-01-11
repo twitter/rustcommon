@@ -5,8 +5,7 @@
 use crate::*;
 
 use rustcommon_histogram::{Counter, Histogram, Indexing};
-
-use rustcommon_time::{Duration, Instant};
+use rustcommon_time::*;
 
 /// Heatmaps are datastructures which store counts for timestamped values over a
 /// configured time range with individual histograms arranged in a ring buffer.
@@ -17,8 +16,8 @@ use rustcommon_time::{Duration, Instant};
 pub struct Heatmap<Value, Count> {
     pub(crate) slices: Vec<Histogram<Value, Count>>,
     pub(crate) current: usize,
-    pub(crate) next_tick: Instant,
-    pub(crate) resolution: Duration,
+    pub(crate) next_tick: Instant<Nanoseconds<u64>>,
+    pub(crate) resolution: Duration<Nanoseconds<u64>>,
     pub(crate) summary: Histogram<Value, Count>,
 }
 
@@ -38,9 +37,14 @@ where
     /// be slightly longer than the requested span. Smaller durations for the
     /// resolution cause more memory to be used, but a smaller batches of
     /// samples to age out at each time step.
-    pub fn new(max: Value, precision: u8, span: Duration, resolution: Duration) -> Self {
+    pub fn new(
+        max: Value,
+        precision: u8,
+        span: Duration<Nanoseconds<u64>>,
+        resolution: Duration<Nanoseconds<u64>>,
+    ) -> Self {
         let mut slices = Vec::new();
-        let mut true_span = Duration::new(0, 0);
+        let mut true_span = Duration::<Nanoseconds<u64>>::from_nanos(0);
         while true_span < span {
             slices.push(Histogram::new(max, precision));
             true_span += resolution;
@@ -48,7 +52,7 @@ where
         Self {
             slices,
             current: 0,
-            next_tick: Instant::now() + resolution,
+            next_tick: Instant::<Nanoseconds<u64>>::now() + resolution,
             resolution,
             summary: Histogram::new(max, precision),
         }
@@ -66,7 +70,7 @@ where
     }
 
     /// Increment a time-value pair by a specified count
-    pub fn increment(&mut self, time: Instant, value: Value, count: Count) {
+    pub fn increment(&mut self, time: Instant<Nanoseconds<u64>>, value: Value, count: Count) {
         self.tick(time);
         if let Some(slice) = self.slices.get_mut(self.current) {
             slice.increment(value, count);
@@ -83,7 +87,7 @@ where
     /// the 100th percentile depending on the timing of calls to this function
     /// and the distribution of your data.
     pub fn percentile(&mut self, percentile: f64) -> Result<Value, HeatmapError> {
-        self.tick(Instant::now());
+        self.tick(Instant::<Nanoseconds<u64>>::now());
         self.summary
             .percentile(percentile)
             .map_err(|e| HeatmapError::from(e))
@@ -91,7 +95,7 @@ where
 
     /// Internal function which handles reuse of older windows to store newer
     /// values.
-    fn tick(&mut self, time: Instant) {
+    fn tick(&mut self, time: Instant<Nanoseconds<u64>>) {
         while time >= self.next_tick {
             self.current += 1;
             if self.current >= self.slices.len() {

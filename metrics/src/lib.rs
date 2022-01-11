@@ -57,10 +57,10 @@ mod tests {
         metrics.register(&TestStat::Alpha);
         assert!(metrics.reading(&TestStat::Alpha).is_err());
         metrics
-            .record_counter(&TestStat::Alpha, Instant::now(), 0)
+            .record_counter(&TestStat::Alpha, Instant::<Nanoseconds<u64>>::now(), 0)
             .expect("failed to record counter");
         assert_eq!(metrics.reading(&TestStat::Alpha), Ok(0));
-        let now = Instant::now();
+        let now = Instant::<Nanoseconds<u64>>::now();
         metrics
             .record_counter(&TestStat::Alpha, now, 0)
             .expect("failed to record counter");
@@ -79,7 +79,7 @@ mod tests {
         metrics.register(&TestStat::Alpha);
         assert!(metrics.snapshot().is_empty());
         metrics.add_output(&TestStat::Alpha, Output::Reading);
-        let _ = metrics.record_counter(&TestStat::Alpha, Instant::now(), 1);
+        let _ = metrics.record_counter(&TestStat::Alpha, Instant::<Nanoseconds<u64>>::now(), 1);
         assert_eq!(metrics.snapshot().len(), 1);
         assert_eq!(metrics.reading(&TestStat::Alpha), Ok(1));
     }
@@ -88,7 +88,7 @@ mod tests {
     fn absolute_counter() {
         let metrics = Metrics::<AtomicU64, AtomicU64>::new();
         metrics.register(&TestStat::Alpha);
-        let start = Instant::now();
+        let start = Instant::<Nanoseconds<u64>>::now();
         assert!(metrics.reading(&TestStat::Alpha).is_err());
         metrics.record_counter(&TestStat::Alpha, start, 0).unwrap();
         assert_eq!(metrics.reading(&TestStat::Alpha), Ok(0));
