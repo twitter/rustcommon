@@ -94,7 +94,7 @@ where
         &self,
         percentile: f64,
     ) -> Result<<T as Atomic>::Primitive, StreamstatsError> {
-        if percentile < 0.0 || percentile > 100.0 {
+        if !(0.0..=100.0).contains(&percentile) {
             return Err(StreamstatsError::InvalidPercentile);
         }
         let sorted_len = { self.sorted.read().unwrap().len() };
@@ -178,12 +178,16 @@ where
     }
 
     fn values(&self) -> usize {
-        if self.current < self.oldest {
-            (self.current + self.buffer.len()) - self.oldest
-        } else if self.current == self.oldest {
-            0
-        } else {
-            self.current - self.oldest
+        match self.current.cmp(&self.oldest) {
+            std::cmp::Ordering::Less => {
+                (self.current + self.buffer.len()) - self.oldest
+            }
+            std::cmp::Ordering::Equal => {
+                0
+            }
+            std::cmp::Ordering::Greater => {
+                self.current - self.oldest
+            }
         }
     }
 
@@ -191,10 +195,10 @@ where
     /// if the value is outside of the histogram range or if the histogram is
     /// empty. Percentile must be within the range 0.0 to 100.0
     pub fn percentile(&mut self, percentile: f64) -> Result<T, StreamstatsError> {
-        if percentile < 0.0 || percentile > 100.0 {
+        if !(0.0..=100.0).contains(&percentile) {
             return Err(StreamstatsError::InvalidPercentile);
         }
-        if self.sorted.len() == 0 {
+        if self.sorted.is_empty() {
             let values = self.values();
             if values == 0 {
                 return Err(StreamstatsError::Empty);

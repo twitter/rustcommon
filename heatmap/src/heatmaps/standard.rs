@@ -90,7 +90,7 @@ where
         self.tick(Instant::<Nanoseconds<u64>>::now());
         self.summary
             .percentile(percentile)
-            .map_err(|e| HeatmapError::from(e))
+            .map_err(HeatmapError::from)
     }
 
     /// Internal function which handles reuse of older windows to store newer

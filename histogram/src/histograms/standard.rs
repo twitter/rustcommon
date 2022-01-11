@@ -82,7 +82,7 @@ where
     /// if the value is outside of the histogram range or if the histogram is
     /// empty. Percentile must be within the range 0.0 to 100.0
     pub fn percentile(&self, percentile: f64) -> Result<Value, HistogramError> {
-        if percentile < 0.0 || percentile > 100.0 {
+        if !(0.0..=100.0).contains(&percentile) {
             return Err(HistogramError::InvalidPercentile);
         }
         let mut total = 0_u64;
