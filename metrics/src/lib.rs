@@ -62,12 +62,12 @@ mod tests {
         assert_eq!(metrics.reading(&TestStat::Alpha), Ok(0));
         let now = Instant::<Nanoseconds<u64>>::now();
         metrics
-            .record_counter(&TestStat::Alpha, now, 0)
+            .record_counter(&TestStat::Alpha, now + Duration::from_millis(500), 0)
             .expect("failed to record counter");
         assert_eq!(metrics.reading(&TestStat::Alpha), Ok(0));
         assert_eq!(metrics.percentile(&TestStat::Alpha, 0.0), Ok(0));
         metrics
-            .record_counter(&TestStat::Alpha, now + Duration::from_millis(1000), 1)
+            .record_counter(&TestStat::Alpha, now + Duration::from_millis(1500), 1)
             .expect("failed to record counter");
         assert_eq!(metrics.reading(&TestStat::Alpha), Ok(1));
         assert_eq!(metrics.percentile(&TestStat::Alpha, 100.0), Ok(1));
