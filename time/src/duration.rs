@@ -81,6 +81,14 @@ impl Duration<Seconds<u32>> {
     }
 }
 
+impl core::fmt::Debug for Duration<Seconds<u32>> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Duration<Seconds<u32>>")
+            .field("secs", &self.inner.inner)
+            .finish()
+    }
+}
+
 impl Duration<Seconds<AtomicU32>> {
     pub const fn from_secs(seconds: u32) -> Self {
         Self {
@@ -153,6 +161,14 @@ impl Duration<Nanoseconds<u64>> {
                 inner: (self.inner.inner as f64 * rhs) as u64,
             },
         }
+    }
+}
+
+impl core::fmt::Debug for Duration<Nanoseconds<u64>> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Duration<Nanoseconds<u64>>")
+            .field("nanos", &self.inner.inner)
+            .finish()
     }
 }
 
