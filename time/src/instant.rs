@@ -123,7 +123,7 @@ impl Instant<Nanoseconds<u64>> {
         }
 
         Self {
-            inner: Nanoseconds::from(ts)
+            inner: Nanoseconds::from(ts),
         }
     }
 
