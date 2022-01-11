@@ -89,6 +89,12 @@ impl UnixInstant<Seconds<u32>> {
         CLOCK.initialize();
         CLOCK.coarse_unix.load(Ordering::Relaxed)
     }
+
+    pub fn from_secs(secs: u32) -> Self {
+        UnixInstant {
+            inner: Seconds { inner: secs },
+        }
+    }
 }
 
 impl core::fmt::Debug for UnixInstant<Seconds<u32>> {
@@ -120,6 +126,12 @@ impl UnixInstant<Nanoseconds<u64>> {
     pub fn recent() -> Self {
         CLOCK.initialize();
         CLOCK.precise_unix.load(Ordering::Relaxed)
+    }
+
+    pub fn from_nanos(nanos: u64) -> Self {
+        UnixInstant {
+            inner: Nanoseconds { inner: nanos },
+        }
     }
 }
 
