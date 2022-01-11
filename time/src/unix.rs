@@ -13,13 +13,6 @@ use crate::*;
 /// or steady. This means that if the system clock is set wrong and/or ticking
 /// at an unusual rate, that comparisons to external `UnixInstant`s are not
 /// guaranteed to be correct through the life of the program.
-///
-/// This type is useful for when strict ordering of instants are required, and
-/// it can be assumed that the system clock is relatively accurate and
-/// well-disciplined. For example, this can be used to represent timestamps
-/// which may be persisted across runs of a program. Using these instants across
-/// multiple machines may result in unexpected results depending on the relative
-/// phase and frequency accuracy of all clocks in the ensemble.
 #[repr(transparent)]
 pub struct UnixInstant<T> {
     pub(crate) inner: T,
