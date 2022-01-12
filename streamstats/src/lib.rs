@@ -179,15 +179,9 @@ where
 
     fn values(&self) -> usize {
         match self.current.cmp(&self.oldest) {
-            std::cmp::Ordering::Less => {
-                (self.current + self.buffer.len()) - self.oldest
-            }
-            std::cmp::Ordering::Equal => {
-                0
-            }
-            std::cmp::Ordering::Greater => {
-                self.current - self.oldest
-            }
+            std::cmp::Ordering::Less => (self.current + self.buffer.len()) - self.oldest,
+            std::cmp::Ordering::Equal => 0,
+            std::cmp::Ordering::Greater => self.current - self.oldest,
         }
     }
 
