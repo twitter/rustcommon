@@ -20,6 +20,8 @@ pub use units::*;
 pub use unix::*;
 
 pub(crate) const NANOS_PER_SEC: u64 = 1_000_000_000;
+pub(crate) const NANOS_PER_MILLI: u64 = 1_000_000;
+pub(crate) const NANOS_PER_MICRO: u64 = 1_000;
 
 const UNINITIALIZED: usize = 0;
 const INITIALIZED: usize = 1;
