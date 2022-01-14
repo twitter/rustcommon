@@ -1,25 +1,19 @@
 [package]
 name = "rustcommon-metrics"
-version = "2.0.0-alpha.0"
-authors = ["Brian Martin <bmartin@twitter.com>"]
+version = "0.1.0"
 edition = "2018"
-description = "Rich metrics library"
-homepage = "https://github.com/twitter/rustcommon/metrics"
-repository = "https://github.com/twitter/rustcommon"
+authors = ["Sean Lynch <seanl@twitter.com>"]
 license = "Apache-2.0"
 
+[features]
+heatmap = [ "rustcommon-heatmap", "rustcommon-atomics" ]
+
 [dependencies]
-crossbeam = "0.8.0"
-dashmap = "3.11.10"
-rustcommon-atomics = { path = "../atomics" }
-rustcommon-heatmap = { path = "../heatmap" }
-rustcommon-streamstats = { path = "../streamstats" }
+linkme = "0.2.9"
+once_cell = "1.9.0"
+parking_lot = "0.11.2"
+
+rustcommon-metrics-derive = { path = "derive" }
+rustcommon-heatmap = { path = "../heatmap", optional = true }
+rustcommon-atomics = { path = "../atomics", optional = true }
 rustcommon-time = { path = "../time" }
-thiserror = "1.0.20"
-
-[dev-dependencies]
-criterion = "0.3"
-
-[[bench]]
-name = "counters"
-harness = false
