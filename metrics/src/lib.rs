@@ -14,7 +14,7 @@
 //!
 //! ```
 //! # // This should remain in sync with the example below.
-//! use rustcommon_metrics_v2::*;
+//! use rustcommon_metrics::*;
 //! /// A counter metric named "<crate name>::COUNTER_A"
 //! #[metric]
 //! static COUNTER_A: Counter = Counter::new();
@@ -42,7 +42,7 @@
 //! Suppose we have the metrics declared in the example above.
 //! ```
 //! # // This should remain in sync with the example above.
-//! # use rustcommon_metrics_v2::*;
+//! # use rustcommon_metrics::*;
 //! # /// A counter metric named "<crate name>::COUNTER_A"
 //! # #[metric]
 //! # static COUNTER_A: Counter = Counter::new();
@@ -77,7 +77,7 @@ mod lazy;
 #[cfg(feature = "heatmap")]
 mod heatmap;
 
-extern crate self as rustcommon_metrics_v2;
+extern crate self as rustcommon_metrics;
 
 pub mod dynmetrics;
 
