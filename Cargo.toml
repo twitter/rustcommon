@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "atomics",
-    "buffer",
     "fastmetrics",
     "heatmap",
     "histogram",
