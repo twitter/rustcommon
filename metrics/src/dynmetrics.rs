@@ -82,7 +82,7 @@ pub fn unregister(metric: *const dyn Metric) {
 ///
 /// # Example
 /// ```
-/// # use rustcommon_metrics_v2::*;
+/// # use rustcommon_metrics::*;
 /// # use std::pin::Pin;
 /// let my_dyn_metric = DynPinnedMetric::new(Counter::new());
 /// // Normally you would use some utility to do this. (e.g. pin-utils)
@@ -163,7 +163,7 @@ impl<M: Metric> Deref for DynPinnedMetric<M> {
 ///
 /// # Example
 /// ```
-/// # use rustcommon_metrics_v2::*;
+/// # use rustcommon_metrics::*;
 /// let my_gauge = DynBoxedMetric::new(Gauge::new(), "my.dynamic.gauge");
 ///
 /// let metrics = metrics();

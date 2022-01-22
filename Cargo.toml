@@ -1,13 +1,11 @@
 [workspace]
 members = [
     "atomics",
-    "fastmetrics",
     "heatmap",
     "histogram",
     "logger",
     "metrics",
-    "metrics-v2",
-    "metrics-v2/derive",
+    "metrics/derive",
     "ratelimiter",
     "streamstats",
     "time",

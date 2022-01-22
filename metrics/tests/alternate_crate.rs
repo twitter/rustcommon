@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 mod bonus {
-    pub use rustcommon_metrics_v2::*;
+    pub use rustcommon_metrics::*;
 }
 
 use bonus::Counter;

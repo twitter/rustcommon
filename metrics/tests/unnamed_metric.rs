@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use rustcommon_metrics_v2::*;
+use rustcommon_metrics::*;
 
 #[metric]
 static TEST_METRIC: Counter = Counter::new();
