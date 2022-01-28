@@ -2,7 +2,7 @@
 name = "rustcommon-ratelimiter"
 version = "1.1.0"
 authors = ["Brian Martin <bmartin@twitter.com>"]
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0"
 description = "Token bucket ratelimiter"
 homepage = "https://github.com/twitter/rustcommon/ratelimiter"

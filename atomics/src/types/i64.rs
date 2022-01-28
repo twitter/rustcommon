@@ -84,7 +84,6 @@ impl<'de> Visitor<'de> for AtomicI64Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i64::try_from(value) {
             Ok(Self::Value::new(value))
         } else {

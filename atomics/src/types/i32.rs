@@ -56,7 +56,6 @@ impl<'de> Visitor<'de> for AtomicI32Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i32::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -82,7 +81,6 @@ impl<'de> Visitor<'de> for AtomicI32Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i32::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -94,7 +92,6 @@ impl<'de> Visitor<'de> for AtomicI32Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i32::try_from(value) {
             Ok(Self::Value::new(value))
         } else {

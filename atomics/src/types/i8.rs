@@ -42,7 +42,6 @@ impl<'de> Visitor<'de> for AtomicI8Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i8::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -54,7 +53,6 @@ impl<'de> Visitor<'de> for AtomicI8Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i8::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -66,7 +64,6 @@ impl<'de> Visitor<'de> for AtomicI8Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i8::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -78,7 +75,6 @@ impl<'de> Visitor<'de> for AtomicI8Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i8::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -90,7 +86,6 @@ impl<'de> Visitor<'de> for AtomicI8Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i8::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -102,7 +97,6 @@ impl<'de> Visitor<'de> for AtomicI8Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i8::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -114,7 +108,6 @@ impl<'de> Visitor<'de> for AtomicI8Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = i8::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
