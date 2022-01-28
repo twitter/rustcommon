@@ -6,8 +6,12 @@ type Instant = rustcommon_time::Instant<Nanoseconds<u64>>;
 type Duration = rustcommon_time::Duration<Nanoseconds<u64>>;
 
 fn u64_u64(c: &mut Criterion) {
-    let mut heatmap =
-        Heatmap::<u64, u64>::new(1_000_000, 2, Duration::from_secs(1), Duration::from_millis(1));
+    let mut heatmap = Heatmap::<u64, u64>::new(
+        1_000_000,
+        2,
+        Duration::from_secs(1),
+        Duration::from_millis(1),
+    );
 
     let mut group = c.benchmark_group("Heatmap/u64/u64");
 

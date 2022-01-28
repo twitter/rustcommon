@@ -153,7 +153,12 @@ mod tests {
     fn compare_exchange() {
         let atomic = AtomicF64::new(0.0);
         assert_eq!(
-            atomic.compare_exchange(0.0, std::f64::consts::PI, Ordering::SeqCst, Ordering::SeqCst),
+            atomic.compare_exchange(
+                0.0,
+                std::f64::consts::PI,
+                Ordering::SeqCst,
+                Ordering::SeqCst
+            ),
             Ok(0.0)
         );
         assert_eq!(
@@ -167,7 +172,12 @@ mod tests {
         let atomic = AtomicF64::new(0.0);
         loop {
             if atomic
-                .compare_exchange(0.0, std::f64::consts::PI, Ordering::SeqCst, Ordering::SeqCst)
+                .compare_exchange(
+                    0.0,
+                    std::f64::consts::PI,
+                    Ordering::SeqCst,
+                    Ordering::SeqCst,
+                )
                 .is_ok()
             {
                 break;
