@@ -35,7 +35,6 @@ impl<'de> Visitor<'de> for AtomicU16Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = u16::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -47,7 +46,6 @@ impl<'de> Visitor<'de> for AtomicU16Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = u16::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -59,7 +57,6 @@ impl<'de> Visitor<'de> for AtomicU16Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = u16::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -71,7 +68,6 @@ impl<'de> Visitor<'de> for AtomicU16Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = u16::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -97,7 +93,6 @@ impl<'de> Visitor<'de> for AtomicU16Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = u16::try_from(value) {
             Ok(Self::Value::new(value))
         } else {
@@ -109,7 +104,6 @@ impl<'de> Visitor<'de> for AtomicU16Visitor {
     where
         E: serde::de::Error,
     {
-        use std::convert::TryFrom;
         if let Ok(value) = u16::try_from(value) {
             Ok(Self::Value::new(value))
         } else {

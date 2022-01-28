@@ -2,7 +2,7 @@
 name = "rustcommon-waterfall"
 version = "1.0.0"
 authors = ["Brian Martin <bmartin@twitter.com>"]
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0"
 description = "Generates waterfalls from heatmaps"
 homepage = "https://github.com/twitter/rustcommon/waterfall"
