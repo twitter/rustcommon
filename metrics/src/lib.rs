@@ -124,14 +124,20 @@ pub trait Metric: Send + Sync + 'static {
 pub struct MetricEntry {
     metric: MetricWrapper,
     name: Cow<'static, str>,
+    description: Cow<'static, str>,
 }
 
 impl MetricEntry {
     #[doc(hidden)]
-    pub const fn _new_const(metric: MetricWrapper, name: &'static str) -> Self {
+    pub const fn _new_const(
+        metric: MetricWrapper,
+        name: &'static str,
+        description: &'static str,
+    ) -> Self {
         Self {
             metric,
             name: Cow::Borrowed(name),
+            description: Cow::Borrowed(description),
         }
     }
 
@@ -151,6 +157,7 @@ impl MetricEntry {
         Self {
             metric: MetricWrapper(metric),
             name,
+            description: Cow::Borrowed("TODO"), //TODO
         }
     }
 
@@ -162,6 +169,11 @@ impl MetricEntry {
     /// Get the name of this metric.
     pub fn name(&self) -> &str {
         &*self.name
+    }
+
+    /// Get the description of this metric.
+    pub fn description(&self) -> &str {
+        &*self.description
     }
 }
 
@@ -257,17 +269,27 @@ pub struct MetricInstance<M> {
     #[doc(hidden)]
     pub metric: M,
     name: &'static str,
+    description: &'static str,
 }
 
 impl<M> MetricInstance<M> {
     #[doc(hidden)]
-    pub const fn new(metric: M, name: &'static str) -> Self {
-        Self { metric, name }
+    pub const fn new(metric: M, name: &'static str, description: &'static str) -> Self {
+        Self {
+            metric,
+            name,
+            description,
+        }
     }
 
     /// Get the name of this metric.
     pub const fn name(&self) -> &'static str {
         self.name
+    }
+
+    /// Get the description of this metric.
+    pub const fn description(&self) -> &'static str {
+        self.description
     }
 }
 
