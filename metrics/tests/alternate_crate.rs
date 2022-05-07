@@ -8,7 +8,7 @@ mod bonus {
 
 use bonus::Counter;
 
-#[bonus::metric(name = "test", description = "foobar", crate = crate::bonus)]
+#[bonus::metric(name = "test", crate = crate::bonus)]
 static METRIC: Counter = Counter::new();
 
 macro_rules! metric_in_macro {
