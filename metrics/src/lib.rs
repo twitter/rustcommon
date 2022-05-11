@@ -124,7 +124,7 @@ pub trait Metric: Send + Sync + 'static {
 pub struct MetricEntry {
     metric: MetricWrapper,
     name: Cow<'static, str>,
-    description: Cow<'static, str>,
+    description: Option<&'static str>,
 }
 
 impl MetricEntry {
@@ -134,10 +134,15 @@ impl MetricEntry {
         name: &'static str,
         description: &'static str,
     ) -> Self {
+        let description = if description.is_empty() {
+            None
+        } else {
+            Some(description)
+        };
         Self {
             metric,
             name: Cow::Borrowed(name),
-            description: Cow::Borrowed(description),
+            description,
         }
     }
 
@@ -157,7 +162,7 @@ impl MetricEntry {
         Self {
             metric: MetricWrapper(metric),
             name,
-            description: Cow::Borrowed("TODO"), //TODO
+            description: None,
         }
     }
 
@@ -172,8 +177,8 @@ impl MetricEntry {
     }
 
     /// Get the description of this metric.
-    pub fn description(&self) -> &str {
-        &*self.description
+    pub fn description(&self) -> Option<&str> {
+        self.description
     }
 }
 
@@ -269,12 +274,17 @@ pub struct MetricInstance<M> {
     #[doc(hidden)]
     pub metric: M,
     name: &'static str,
-    description: &'static str,
+    description: Option<&'static str>,
 }
 
 impl<M> MetricInstance<M> {
     #[doc(hidden)]
     pub const fn new(metric: M, name: &'static str, description: &'static str) -> Self {
+        let description = if description.is_empty() {
+            None
+        } else {
+            Some(description)
+        };
         Self {
             metric,
             name,
@@ -288,7 +298,7 @@ impl<M> MetricInstance<M> {
     }
 
     /// Get the description of this metric.
-    pub const fn description(&self) -> &'static str {
+    pub const fn description(&self) -> Option<&'static str> {
         self.description
     }
 }
