@@ -37,6 +37,7 @@ impl<T: ToTokens> ToTokens for SingleArg<T> {
 #[derive(Default)]
 struct MetricArgs {
     name: Option<SingleArg<Expr>>,
+    description: Option<SingleArg<Expr>>,
     krate: Option<SingleArg<Path>>,
 }
 
@@ -68,6 +69,14 @@ impl Parse for MetricArgs {
                     match args.name {
                         None => args.name = Some(name),
                         Some(_) => return duplicate_arg_error(name.span(), &arg),
+                    }
+                }
+
+                "description" => {
+                    let description = input.parse()?;
+                    match args.description {
+                        None => args.description = Some(description),
+                        Some(_) => return duplicate_arg_error(description.span(), &arg),
                     }
                 }
                 "crate" => {
@@ -122,6 +131,13 @@ pub(crate) fn metric(
         }
     };
 
+    let description: TokenStream = match args.description {
+        Some(description) => description.value.to_token_stream(),
+        None => {
+            quote! {""}
+        }
+    };
+
     let static_name = &item.ident;
     let static_expr = &item.expr;
     let static_type = &item.ty;
@@ -137,10 +153,11 @@ pub(crate) fn metric(
         #[linkme(crate = export::linkme)]
         static __: #krate::MetricEntry = #krate::MetricEntry::_new_const(
             #krate::MetricWrapper(&#static_name.metric),
-            #static_name.name()
+            #static_name.name(),
+            #description
         );
 
-        #krate::MetricInstance::new(#static_expr, #name)
+        #krate::MetricInstance::new(#static_expr, #name, #description)
     }});
     item.ty = Box::new(parse_quote! { #krate::MetricInstance<#static_type> });
 
