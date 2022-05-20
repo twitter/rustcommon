@@ -1,12 +1,124 @@
-// Copyright 2019-2020 Twitter, Inc.
+// Copyright 2021 Twitter, Inc.
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-#![deny(clippy::all)]
-#![macro_use]
-extern crate log;
+//! This crate provides an asynchronous logging backend that can direct logs to
+//! one or more outputs.
+//!
+//! The core of this crate is the `AsyncLog` type, which is constructed using a
+//! builder that is specific to your logging needs. After building the
+//! `AsyncLog`, it can be registered as the global logger using the `start`
+//! method. You will be left with a `Box<dyn Drain>` which should be
+//! periodically flushed outside of any critical path. For example, in an admin
+//! thread or dedicated logging thread.
+//!
+//! For logging to a single file, the `LogBuilder` type can be used to construct
+//! an `AsyncLog` which has low overhead, but directs log messages to a single
+//! `Output`.
+//!
+//! A `SamplingLogBuilder` can be used to construct an `AsyncLog` which will
+//! filter the log messages using sampling before directing the log messages to
+//! a single `Output`.
+//!
+//! A `MultiLogBuilder` can be used to construct an `AsyncLog` which routes log
+//! messages based on the `target` metadata of the log `Record`. If there is an
+//! `AsyncLog` registered for that specific `target`, then the log message will
+//! be routed to that instance of `AsyncLog`. Log messages that do not match any
+//! specific target will be routed to the default `AsyncLog` that has been added
+//! to the `MultiLogBuilder`. If there is no default, messages that do not match
+//! any specific target will be simply dropped.
+//!
+//! This combination of logging types allows us to compose a logging backend
+//! which meets the application's needs. For example, you can use a local log
+//! macro to set the target to some specific category and log those messages to
+//! a file, while letting all other log messages pass to standard out. This
+//! could allow splitting command/access/audit logs from the normal logging.
 
-use rustcommon_time::{DateTime, SecondsFormat};
+pub use log::*;
+
+mod format;
+mod multi;
+mod nop;
+mod outputs;
+mod sampling;
+mod single;
+mod traits;
+
+pub use format::*;
+pub use multi::*;
+pub use nop::*;
+pub use outputs::*;
+pub use sampling::*;
+pub use single::*;
+pub use traits::*;
+
+use rustcommon_metrics::{metric, Counter, Gauge};
+use rustcommon_time::DateTime;
+// use config::{DebugConfig, KlogConfig};
+use mpmc::Queue;
+
+pub(crate) type LogBuffer = Vec<u8>;
+
+#[metric(name = "log_create")]
+static LOG_CREATE: Counter = Counter::new();
+
+#[metric(name = "log_create_ex")]
+static LOG_CREATE_EX: Counter = Counter::new();
+
+#[metric(name = "log_destroy")]
+static LOG_DESTROY: Counter = Counter::new();
+
+#[metric(name = "log_curr")]
+static LOG_CURR: Gauge = Gauge::new();
+
+#[metric(name = "log_open")]
+static LOG_OPEN: Counter = Counter::new();
+
+#[metric(name = "log_open_ex")]
+static LOG_OPEN_EX:  Counter = Counter::new();
+
+#[metric(name = "log_write")]
+static LOG_WRITE:  Counter = Counter::new();
+
+#[metric(name = "log_write_byte")]
+static LOG_WRITE_BYTE: Counter = Counter::new();
+
+#[metric(name = "log_write_ex")]
+static LOG_WRITE_EX: Counter = Counter::new();
+
+#[metric(name = "log_skip")]
+static LOG_SKIP: Counter = Counter::new();
+
+#[metric(name = "log_drop")]
+static LOG_DROP: Counter = Counter::new();
+
+#[metric(name = "log_drop_byte")]
+static LOG_DROP_BYTE: Counter = Counter::new();
+
+#[metric(name = "log_flush")]
+static LOG_FLUSH: Counter = Counter::new();
+
+#[metric(name = "log_flush_ex")]
+static LOG_FLUSH_EX: Counter = Counter::new();
+
+/// A type which implements an asynchronous logging backend.
+pub struct AsyncLog {
+    pub(crate) logger: Box<dyn Log>,
+    pub(crate) drain: Box<dyn Drain>,
+    pub(crate) level_filter: LevelFilter,
+}
+
+impl AsyncLog {
+    /// Register the logger and return a type which implements `Drain`. It is
+    /// up to the user to periodically call flush on the resulting drain.
+    pub fn start(self) -> Box<dyn Drain> {
+        let level_filter = self.level_filter;
+        log::set_boxed_logger(self.logger)
+            .map(|()| log::set_max_level(level_filter))
+            .expect("failed to start logger");
+        self.drain
+    }
+}
 
 #[macro_export]
 macro_rules! fatal {
@@ -22,71 +134,4 @@ macro_rules! fatal {
         error!($fmt, $($arg)*);
         std::process::exit(1);
         );
-}
-
-pub use log::*;
-
-pub struct Logger {
-    label: Option<&'static str>,
-    level: Level,
-}
-
-impl Logger {
-    pub fn new() -> Self {
-        Logger {
-            label: None,
-            level: Level::Info,
-        }
-    }
-
-    pub fn init(self) -> Result<(), SetLoggerError> {
-        let level = self.level;
-        log::set_boxed_logger(Box::new(self)).map(|()| log::set_max_level(level.to_level_filter()))
-    }
-
-    pub fn label(mut self, label: &'static str) -> Self {
-        self.label = Some(label);
-        self
-    }
-
-    pub fn level(mut self, level: Level) -> Self {
-        self.level = level;
-        self
-    }
-}
-
-impl Default for Logger {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl log::Log for Logger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= self.level
-    }
-
-    fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-            let target = if let Some(label) = self.label {
-                match log::max_level() {
-                    LevelFilter::Debug | LevelFilter::Trace => {
-                        format!("{}::{}", label, record.target())
-                    }
-                    _ => label.to_string(),
-                }
-            } else {
-                record.target().to_string()
-            };
-            println!(
-                "{} {:<5} [{}] {}",
-                DateTime::now().to_rfc3339_opts(SecondsFormat::Millis, false),
-                record.level(),
-                target,
-                record.args()
-            );
-        }
-    }
-
-    fn flush(&self) {}
 }
