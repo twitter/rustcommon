@@ -1,6 +1,6 @@
 [package]
 name = "rustcommon-timer"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -9,4 +9,4 @@ homepage = "https://github.com/twitter/rustcommon/timer"
 repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
-log = "0.4.8"
+log = "0.4.17"

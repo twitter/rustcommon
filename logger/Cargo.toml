@@ -1,6 +1,6 @@
 [package]
 name = "rustcommon-logger"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -9,5 +9,5 @@ homepage = "https://github.com/twitter/rustcommon/logger"
 repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
-log = { version = "0.4.8", features = ["std"] }
+log = { version = "0.4.17", features = ["std"] }
 rustcommon-time = { path = "../time" }
