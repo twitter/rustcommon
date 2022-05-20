@@ -144,10 +144,7 @@ macro_rules! instant {
 
             pub fn duration_since(&self, earlier: Self) -> Duration<$unit> {
                 Duration {
-                    inner: self
-                        .inner
-                        .checked_sub(earlier.inner)
-                        .expect("supplied instant is later than self"),
+                    inner: self.inner.saturating_sub(earlier.inner),
                 }
             }
 
