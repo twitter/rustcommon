@@ -1,6 +1,6 @@
 [package]
 name = "rustcommon-atomics"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -9,7 +9,7 @@ homepage = "https://github.com/twitter/rustcommon/atomics"
 repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
-serde = { version = "1.0.110", optional = true }
+serde = { version = "1.0.137", optional = true }
 
 [features]
 default = ["serde"]

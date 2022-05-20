@@ -1,6 +1,6 @@
 [package]
 name = "rustcommon-ratelimiter"
-version = "1.1.0"
+version = "1.1.1"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -9,6 +9,6 @@ homepage = "https://github.com/twitter/rustcommon/ratelimiter"
 repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
-rand = "0.7.3"
-rand_distr = "0.2.2"
+rand = "0.8.5"
+rand_distr = "0.4.3"
 rustcommon-time = { path = "../time" }
