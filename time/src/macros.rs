@@ -144,9 +144,7 @@ macro_rules! instant {
 
             pub fn duration_since(&self, earlier: Self) -> Duration<$unit> {
                 Duration {
-                    inner: self
-                        .inner
-                        .saturating_sub(earlier.inner),
+                    inner: self.inner.saturating_sub(earlier.inner),
                 }
             }
 
