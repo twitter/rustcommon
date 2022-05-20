@@ -54,7 +54,6 @@ pub use traits::*;
 
 use rustcommon_metrics::{metric, Counter, Gauge};
 use rustcommon_time::DateTime;
-// use config::{DebugConfig, KlogConfig};
 use mpmc::Queue;
 
 pub(crate) type LogBuffer = Vec<u8>;
