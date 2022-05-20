@@ -146,8 +146,7 @@ macro_rules! instant {
                 Duration {
                     inner: self
                         .inner
-                        .checked_sub(earlier.inner)
-                        .expect("supplied instant is later than self"),
+                        .saturating_sub(earlier.inner),
                 }
             }
 
