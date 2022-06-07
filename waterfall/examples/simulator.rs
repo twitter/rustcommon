@@ -9,11 +9,17 @@ use rustcommon_logger::*;
 use rustcommon_waterfall::*;
 
 fn main() {
-    Logger::new()
-        .label("simulator")
-        .level(Level::Debug)
-        .init()
-        .expect("Failed to initialize logger");
+    let log = LogBuilder::new()
+        .output(Box::new(Stdout::new()))
+        .build()
+        .expect("failed to initialize log");
+
+    let mut drain = log.start();
+
+    std::thread::spawn(move || loop {
+        let _ = drain.flush();
+        std::thread::sleep(core::time::Duration::from_millis(100));
+    });
 
     info!("Welcome to the simulator!");
 
