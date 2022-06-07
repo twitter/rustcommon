@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use core::time::Duration;
-use logger::*;
+use rustcommon_logger::*;
 
 macro_rules! command {
     ($($arg:tt)*) => (
