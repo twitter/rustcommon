@@ -64,10 +64,7 @@ pub(crate) type LogBuffer = Vec<u8>;
 
 use rustcommon_metrics::{Counter, Gauge};
 
-#[metric(
-    name = "log_create",
-    description = "logging targets initialized"
-)]
+#[metric(name = "log_create", description = "logging targets initialized")]
 pub static LOG_CREATE: Counter = Counter::new();
 #[metric(
     name = "log_create_ex",
@@ -75,16 +72,10 @@ pub static LOG_CREATE: Counter = Counter::new();
 )]
 pub static LOG_CREATE_EX: Counter = Counter::new();
 
-#[metric(
-    name = "log_destroy",
-    description = "logging targets destroyed"
-)]
+#[metric(name = "log_destroy", description = "logging targets destroyed")]
 pub static LOG_DESTROY: Counter = Counter::new();
 
-#[metric(
-    name = "log_curr",
-    description = "current number of logging targets"
-)]
+#[metric(name = "log_curr", description = "current number of logging targets")]
 pub static LOG_CURR: Gauge = Gauge::new();
 
 #[metric(
