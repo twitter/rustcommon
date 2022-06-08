@@ -52,27 +52,54 @@ pub use sampling::*;
 pub use single::*;
 pub use traits::*;
 
-use rustcommon_time::DateTime;
 use mpmc::Queue;
+use rustcommon_time::DateTime;
 
 pub(crate) type LogBuffer = Vec<u8>;
 
 use rustcommon_metrics::*;
 
 counter!(LOG_CREATE, "logging targets initialized");
-counter!(LOG_CREATE_EX, "number of exceptions while initializing logging targets");
+counter!(
+    LOG_CREATE_EX,
+    "number of exceptions while initializing logging targets"
+);
 counter!(LOG_DESTROY, "logging targets destroyed");
 gauge!(LOG_CURR, "current number of logging targets");
-counter!(LOG_OPEN, "number of logging destinations which have been opened");
-counter!(LOG_OPEN_EX, "number of exceptions while opening logging destinations");
+counter!(
+    LOG_OPEN,
+    "number of logging destinations which have been opened"
+);
+counter!(
+    LOG_OPEN_EX,
+    "number of exceptions while opening logging destinations"
+);
 counter!(LOG_WRITE, "number of writes to all loging destinations");
-counter!(LOG_WRITE_BYTE, "number of bytes written to all logging destinations");
-counter!(LOG_WRITE_EX, "number of exceptions while writing to logging destinations");
-counter!(LOG_SKIP, "number of log messages skipped due to sampling policy");
-counter!(LOG_DROP, "number of log messages dropped due to full queues");
+counter!(
+    LOG_WRITE_BYTE,
+    "number of bytes written to all logging destinations"
+);
+counter!(
+    LOG_WRITE_EX,
+    "number of exceptions while writing to logging destinations"
+);
+counter!(
+    LOG_SKIP,
+    "number of log messages skipped due to sampling policy"
+);
+counter!(
+    LOG_DROP,
+    "number of log messages dropped due to full queues"
+);
 counter!(LOG_DROP_BYTE, "number of bytes dropped due to full queues");
-counter!(LOG_FLUSH, "number of times logging destinations have been flushed");
-counter!(LOG_FLUSH_EX, "number of exceptions while flushing logging destinations");
+counter!(
+    LOG_FLUSH,
+    "number of times logging destinations have been flushed"
+);
+counter!(
+    LOG_FLUSH_EX,
+    "number of exceptions while flushing logging destinations"
+);
 
 /// A type which implements an asynchronous logging backend.
 pub struct AsyncLog {
