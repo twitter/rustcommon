@@ -133,7 +133,7 @@ pub static LOG_DROP_BYTE: Counter = Counter::new();
 pub static LOG_FLUSH: Counter = Counter::new();
 
 #[metric(
-    name = "log_flush",
+    name = "log_flush_ex",
     description = "number of exceptions while flushing logging destinations"
 )]
 pub static LOG_FLUSH_EX: Counter = Counter::new();
