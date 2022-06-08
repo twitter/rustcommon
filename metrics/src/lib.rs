@@ -89,7 +89,7 @@ pub use crate::lazy::{Lazy, Relaxed};
 #[cfg(feature = "heatmap")]
 pub use crate::heatmap::Heatmap;
 
-pub use rustcommon_metrics_derive::metric;
+pub use rustcommon_metrics_derive::{metric, to_lowercase};
 
 pub use rustcommon_time::*;
 
@@ -99,6 +99,74 @@ pub mod export {
 
     #[linkme::distributed_slice]
     pub static METRICS: [crate::MetricEntry] = [..];
+}
+
+#[macro_export]
+#[rustfmt::skip]
+macro_rules! counter {
+    ($name:ident) => {
+        #[metric(
+            name = to_lowercase!($name)
+        )]
+        pub static $name: Counter = Counter::new();
+    };
+    ($name:ident, $description:tt) => {
+        #[metric(
+            name = to_lowercase!($name),
+            description = $description
+        )]
+        pub static $name: Counter = Counter::new();
+    };
+}
+
+#[macro_export]
+#[rustfmt::skip]
+macro_rules! gauge {
+    ($name:ident) => {
+        #[metric(
+            name = to_lowercase!($name)
+        )]
+        pub static $name: Gauge = Gauge::new();
+    };
+    ($name:ident, $description:tt) => {
+        #[metric(
+            name = to_lowercase!($name),
+            description = $description
+        )]
+        pub static $name: Gauge = Gauge::new();
+    };
+}
+
+#[macro_export]
+#[rustfmt::skip]
+macro_rules! heatmap {
+    ($name:ident, $max:expr) => {
+        #[metric(
+            name = to_lowercase!($name)
+        )]
+        pub static $name: Relaxed<Heatmap> = Relaxed::new(|| {
+            Heatmap::new(
+                $max as _,
+                3,
+                PreciseDuration::from_secs(60),
+                PreciseDuration::from_secs(1),
+            )
+        });
+    };
+    ($name:ident, $max:expr, $description:tt) => {
+        #[metric(
+            name = to_lowercase!($name),
+            description = $description
+        )]
+        pub static $name: Relaxed<Heatmap> = Relaxed::new(|| {
+            Heatmap::new(
+                $max as _,
+                3,
+                PreciseDuration::from_secs(60),
+                PreciseDuration::from_secs(1),
+            )
+        });
+    };
 }
 
 /// Global interface to a metric.
