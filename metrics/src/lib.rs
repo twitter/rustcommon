@@ -106,13 +106,13 @@ pub mod export {
 macro_rules! counter {
     ($name:ident) => {
         #[metric(
-            name = to_lowercase!($name)
+            name = rustcommon_metrics::to_lowercase!($name)
         )]
         pub static $name: Counter = Counter::new();
     };
     ($name:ident, $description:tt) => {
         #[metric(
-            name = to_lowercase!($name),
+            name = rustcommon_metrics::to_lowercase!($name),
             description = $description
         )]
         pub static $name: Counter = Counter::new();
@@ -124,13 +124,13 @@ macro_rules! counter {
 macro_rules! gauge {
     ($name:ident) => {
         #[metric(
-            name = to_lowercase!($name)
+            name = rustcommon_metrics::to_lowercase!($name)
         )]
         pub static $name: Gauge = Gauge::new();
     };
     ($name:ident, $description:tt) => {
         #[metric(
-            name = to_lowercase!($name),
+            name = rustcommon_metrics::to_lowercase!($name),
             description = $description
         )]
         pub static $name: Gauge = Gauge::new();
@@ -142,28 +142,28 @@ macro_rules! gauge {
 macro_rules! heatmap {
     ($name:ident, $max:expr) => {
         #[metric(
-            name = to_lowercase!($name)
+            name = rustcommon_metrics::to_lowercase!($name)
         )]
         pub static $name: Relaxed<Heatmap> = Relaxed::new(|| {
             Heatmap::new(
                 $max as _,
                 3,
-                PreciseDuration::from_secs(60),
-                PreciseDuration::from_secs(1),
+                rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(60),
+                rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(1),
             )
         });
     };
     ($name:ident, $max:expr, $description:tt) => {
         #[metric(
-            name = to_lowercase!($name),
+            name = rustcommon_metrics::to_lowercase!($name),
             description = $description
         )]
         pub static $name: Relaxed<Heatmap> = Relaxed::new(|| {
             Heatmap::new(
                 $max as _,
                 3,
-                PreciseDuration::from_secs(60),
-                PreciseDuration::from_secs(1),
+                rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(60),
+                rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(1),
             )
         });
     };
