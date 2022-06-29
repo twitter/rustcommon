@@ -37,6 +37,7 @@ impl<T: ToTokens> ToTokens for SingleArg<T> {
 #[derive(Default)]
 struct MetricArgs {
     name: Option<SingleArg<Expr>>,
+    namespace: Option<SingleArg<Expr>>,
     description: Option<SingleArg<Expr>>,
     krate: Option<SingleArg<Path>>,
 }
@@ -71,7 +72,13 @@ impl Parse for MetricArgs {
                         Some(_) => return duplicate_arg_error(name.span(), &arg),
                     }
                 }
-
+                "namespace" => {
+                    let namespace = input.parse()?;
+                    match args.namespace {
+                        None => args.namespace = Some(namespace),
+                        Some(_) => return duplicate_arg_error(namespace.span(), &arg),
+                    }
+                }
                 "description" => {
                     let description = input.parse()?;
                     match args.description {
@@ -131,6 +138,13 @@ pub(crate) fn metric(
         }
     };
 
+    let namespace: TokenStream = match args.namespace {
+        Some(namespace) => namespace.value.to_token_stream(),
+        None => {
+            quote! {""}
+        }
+    };
+
     let description: TokenStream = match args.description {
         Some(description) => description.value.to_token_stream(),
         None => {
@@ -154,6 +168,7 @@ pub(crate) fn metric(
         static __: #krate::MetricEntry = #krate::MetricEntry::_new_const(
             #krate::MetricWrapper(&#static_name.metric),
             #static_name.name(),
+            #namespace,
             #description
         );
 

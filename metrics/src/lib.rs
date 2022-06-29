@@ -192,6 +192,7 @@ pub trait Metric: Send + Sync + 'static {
 pub struct MetricEntry {
     metric: MetricWrapper,
     name: Cow<'static, str>,
+    namespace: Option<&'static str>,
     description: Option<&'static str>,
 }
 
@@ -200,8 +201,14 @@ impl MetricEntry {
     pub const fn _new_const(
         metric: MetricWrapper,
         name: &'static str,
+        namespace: &'static str,
         description: &'static str,
     ) -> Self {
+        let namespace = if namespace.is_empty() {
+            None
+        } else {
+            Some(namespace)
+        };
         let description = if description.is_empty() {
             None
         } else {
@@ -210,6 +217,7 @@ impl MetricEntry {
         Self {
             metric,
             name: Cow::Borrowed(name),
+            namespace,
             description,
         }
     }
@@ -230,6 +238,7 @@ impl MetricEntry {
         Self {
             metric: MetricWrapper(metric),
             name,
+            namespace: None,
             description: None,
         }
     }
@@ -242,6 +251,11 @@ impl MetricEntry {
     /// Get the name of this metric.
     pub fn name(&self) -> &str {
         &*self.name
+    }
+
+    /// Get the namespace of this metric.
+    pub fn namespace(&self) -> Option<&str> {
+        self.namespace
     }
 
     /// Get the description of this metric.
