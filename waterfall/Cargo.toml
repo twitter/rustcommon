@@ -1,6 +1,6 @@
 [package]
 name = "rustcommon-waterfall"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -10,7 +10,7 @@ repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
 dejavu = "2.37.0"
-image = "0.24.2"
+image = "0.24.3"
 log = "0.4.17"
 rustcommon-heatmap = { path = "../heatmap" }
 rustcommon-histogram = { path = "../histogram" }

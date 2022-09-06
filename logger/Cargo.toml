@@ -1,14 +1,13 @@
 [package]
 name = "rustcommon-logger"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ahash = "0.7.4"
+ahash = "0.8.0"
 rustcommon-metrics = { path = "../metrics" }
 rustcommon-time = { path = "../time" }
-# config = { path = "../config" }
-log = { version = "0.4.14", features = ["std"] }
+log = { version = "0.4.17", features = ["std"] }
 mpmc = "0.1.6"
