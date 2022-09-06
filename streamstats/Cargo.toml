@@ -1,6 +1,6 @@
 [package]
 name = "rustcommon-streamstats"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -10,4 +10,4 @@ repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
 rustcommon-atomics = { path = "../atomics" }
-thiserror = "1.0.31"
+thiserror = "1.0.34"

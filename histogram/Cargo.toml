@@ -1,6 +1,6 @@
 [package]
 name = "rustcommon-histogram"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Brian Martin <bmartin@twitter.com>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -10,10 +10,10 @@ repository = "https://github.com/twitter/rustcommon"
 
 [dependencies]
 rustcommon-atomics = { path = "../atomics" }
-thiserror = "1.0.31"
+thiserror = "1.0.34"
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.3.6"
 
 [[bench]]
 name = "standard"
