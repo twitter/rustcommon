@@ -72,10 +72,8 @@ use std::borrow::Cow;
 
 mod counter;
 mod gauge;
-mod lazy;
-
-// #[cfg(feature = "heatmap")]
 mod heatmap;
+mod lazy;
 
 extern crate self as rustcommon_metrics;
 
