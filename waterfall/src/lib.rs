@@ -7,17 +7,15 @@
 mod palettes;
 
 pub use palettes::Palette;
-use rustcommon_time::{DateTime, Duration};
+use rustcommon_time::DateTime;
 
+use heatmap::*;
 use image::*;
 use palettes::*;
-use rustcommon_heatmap::*;
 use rusttype::{point, Font, PositionedGlyph, Scale as TypeScale};
 
-use core::hash::Hash;
-use core::ops::Sub;
 use std::collections::HashMap;
-use std::convert::{From, TryInto};
+use std::convert::TryInto;
 
 #[derive(Copy, Clone)]
 /// Used to configure various strategies for mapping values to colors
@@ -28,33 +26,29 @@ pub enum Scale {
     Logarithmic,
 }
 
-pub struct WaterfallBuilder<Value> {
+pub struct WaterfallBuilder {
     output: String,
-    labels: HashMap<Value, String>,
+    labels: HashMap<u64, String>,
     palette: Palette,
-    interval: Duration<Nanoseconds<u64>>,
+    interval: Duration,
     scale: Scale,
     smooth: Option<f32>,
 }
 
-impl<Value> WaterfallBuilder<Value>
-where
-    Value: Eq + Hash,
-    u64: From<Value>,
-{
+impl WaterfallBuilder {
     pub fn new(target: &str) -> Self {
         Self {
             output: target.to_string(),
             labels: HashMap::new(),
             palette: Palette::Classic,
-            interval: Duration::<Nanoseconds<u64>>::from_secs(60),
+            interval: Duration::from_secs(60),
             scale: Scale::Linear,
             smooth: None,
         }
     }
 
     /// Adds a label to the horizontal axis at the specified value
-    pub fn label(mut self, value: Value, label: &str) -> Self {
+    pub fn label(mut self, value: u64, label: &str) -> Self {
         self.labels.insert(value, label.to_string());
         self
     }
@@ -86,17 +80,11 @@ where
     }
 
     // find the bucket with the highest weight
-    fn max_weight<Count>(&self, heatmap: &rustcommon_heatmap::Heatmap<Value, Count>) -> f64
-    where
-        Count: rustcommon_heatmap::Counter + PartialOrd + Indexing,
-        Value: rustcommon_heatmap::Indexing + Sub<Output = Value> + Default + PartialOrd,
-        u64: From<Count>,
-        Count: From<u8>,
-    {
+    fn max_weight(&self, heatmap: &heatmap::Heatmap) -> f64 {
         let mut max_weight = 0.0;
         for slice in heatmap {
             for b in slice.histogram() {
-                let weight = self.weight(u64::from(b.count()), u64::from(b.width()));
+                let weight = self.weight(b.count().into(), b.high() - b.low() + 1);
                 if weight > max_weight {
                     max_weight = weight;
                 }
@@ -106,15 +94,9 @@ where
     }
 
     /// Generate the waterfall from the provided heatmap
-    pub fn build<Count>(self, heatmap: &rustcommon_heatmap::Heatmap<Value, Count>)
-    where
-        Count: rustcommon_heatmap::Counter + PartialOrd + Indexing,
-        Value: rustcommon_heatmap::Indexing + Sub<Output = Value> + Default + PartialOrd,
-        u64: From<Count>,
-        Count: From<u8>,
-    {
+    pub fn build(self, heatmap: &heatmap::Heatmap) {
         let now_datetime = DateTime::now();
-        let now_instant = Instant::<Nanoseconds<u64>>::now();
+        let now_instant = Instant::now();
 
         let height = heatmap.windows();
         let width = heatmap.buckets();
@@ -133,7 +115,7 @@ where
 
         let mut labels = HashMap::new();
         for (k, v) in &self.labels {
-            labels.insert(u64::from(*k), v);
+            labels.insert(*k, v);
         }
 
         let mut label_keys: Vec<u64> = labels.keys().cloned().collect();
@@ -147,7 +129,7 @@ where
             // build grayscale buffer
             for (y, slice) in heatmap.into_iter().enumerate() {
                 for (x, b) in slice.histogram().into_iter().enumerate() {
-                    let weight = self.weight(u64::from(b.count()), u64::from(b.width()));
+                    let weight = self.weight(b.count().into(), b.high() - b.low() + 1);
                     let scaled_weight = weight / max_weight;
                     let index = (scaled_weight * (colors.len() - 1) as f64).round() as u8;
                     buf.put_pixel(
@@ -173,7 +155,7 @@ where
             // set the pixels in the buffer
             for (y, slice) in heatmap.into_iter().enumerate() {
                 for (x, b) in slice.histogram().into_iter().enumerate() {
-                    let weight = self.weight(u64::from(b.count()), u64::from(b.width()));
+                    let weight = self.weight(b.count().into(), b.high() - b.low() + 1);
                     let scaled_weight = weight / max_weight;
                     let index = (scaled_weight * (colors.len() - 1) as f64).round() as usize;
                     let color = colors[index];
@@ -190,7 +172,7 @@ where
         if !label_keys.is_empty() {
             let slice = heatmap.into_iter().next().unwrap();
             for (x, bucket) in slice.histogram().into_iter().enumerate() {
-                let value = u64::from(bucket.value());
+                let value = bucket.high();
                 if value >= label_keys[l] {
                     if let Some(label) = labels.get(&label_keys[l]) {
                         render_text(label, 25.0, x, 0, &mut buf);

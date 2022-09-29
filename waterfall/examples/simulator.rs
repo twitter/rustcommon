@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use heatmap::*;
 use rand::thread_rng;
 use rand_distr::*;
-use rustcommon_heatmap::*;
 use rustcommon_logger::*;
 use rustcommon_waterfall::*;
 
@@ -45,14 +45,16 @@ pub enum Shape {
 
 pub fn simulate(shape: Shape) {
     info!("Simulating for {:?} distribution", shape);
-    let duration = Duration::<Nanoseconds<u64>>::from_secs(120);
+    let duration = Duration::from_secs(120);
 
-    let mut heatmap = rustcommon_heatmap::Heatmap::<u64, u64>::new(
-        1_000_000,
-        3,
-        duration,
-        Duration::<Nanoseconds<u64>>::from_secs(1),
-    );
+    let heatmap = Heatmap::new(
+        0,
+        10,
+        20,
+        Duration::from_secs(120),
+        Duration::from_millis(250),
+    )
+    .unwrap();
 
     let cauchy = Cauchy::new(500_000.0, 2_000.00).unwrap();
     let normal = Normal::new(200_000.0, 100_000.0).unwrap();
@@ -61,7 +63,7 @@ pub fn simulate(shape: Shape) {
     let gamma = Gamma::new(2.0, 2.0).unwrap();
 
     let mut rng = thread_rng();
-    let start = Instant::<Nanoseconds<u64>>::now();
+    let start = Instant::now();
     loop {
         if start.elapsed() >= duration {
             break;
@@ -75,7 +77,7 @@ pub fn simulate(shape: Shape) {
         };
         let value = value.floor() as u64;
         if value != 0 {
-            heatmap.increment(Instant::<Nanoseconds<u64>>::now(), value, 1);
+            heatmap.increment(Instant::now(), value, 1);
         }
     }
 

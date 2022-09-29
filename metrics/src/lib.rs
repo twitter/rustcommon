@@ -72,10 +72,8 @@ use std::borrow::Cow;
 
 mod counter;
 mod gauge;
-mod lazy;
-
-#[cfg(feature = "heatmap")]
 mod heatmap;
+mod lazy;
 
 extern crate self as rustcommon_metrics;
 
@@ -84,13 +82,10 @@ pub mod dynmetrics;
 pub use crate::counter::Counter;
 pub use crate::dynmetrics::{DynBoxedMetric, DynPinnedMetric};
 pub use crate::gauge::Gauge;
+pub use crate::heatmap::Heatmap;
 pub use crate::lazy::{Lazy, Relaxed};
 
-#[cfg(feature = "heatmap")]
-pub use crate::heatmap::Heatmap;
-
 pub use rustcommon_metrics_derive::{metric, to_lowercase};
-
 pub use rustcommon_time::*;
 
 #[doc(hidden)]

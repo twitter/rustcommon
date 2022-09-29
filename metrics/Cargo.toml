@@ -5,15 +5,11 @@ edition = "2021"
 authors = ["Sean Lynch <seanl@twitter.com>"]
 license = "Apache-2.0"
 
-[features]
-heatmap = [ "rustcommon-heatmap", "rustcommon-atomics" ]
-
 [dependencies]
 linkme = "0.3.3"
 once_cell = "1.14.0"
 parking_lot = "0.12.1"
 
 rustcommon-metrics-derive = { path = "derive" }
-rustcommon-heatmap = { path = "../heatmap", optional = true }
-rustcommon-atomics = { path = "../atomics", optional = true }
+heatmap = { path = "../heatmap" }
 rustcommon-time = { path = "../time" }
