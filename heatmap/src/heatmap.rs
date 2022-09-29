@@ -212,7 +212,7 @@ impl Heatmap {
                 }
                 let current = self.current.load(Ordering::Relaxed);
                 if let Some(slice) = self.slices.get(current) {
-                    let _ = self.summary.sub_assign(slice);
+                    let _ = self.summary.subtract(slice);
                     slice.clear();
                 }
             }

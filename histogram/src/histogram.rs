@@ -305,10 +305,11 @@ impl Histogram {
         Ok(result)
     }
 
-    /// Adds the other `Histogram` to this `Histogram`. Returns an error if
-    /// there are differences in the configurations of both `Histogram`s.
+    /// Merges counts from the other `Histogram` into this `Histogram`. Returns
+    /// an error if there are differences in the configurations of both
+    /// `Histogram`s.
     #[allow(clippy::result_unit_err)]
-    pub fn add_assign(&self, other: &Self) -> Result<(), Error> {
+    pub fn merge(&self, other: &Self) -> Result<(), Error> {
         // make sure they match
         if self.m != other.m || self.r != other.r || self.n != other.n {
             return Err(Error::IncompatibleHistogram);
@@ -328,7 +329,7 @@ impl Histogram {
 
     /// Subtracts the other `Histogram` from this `Histogram`. Returns an error
     /// if there are differences in the configurations of both `Histogram`s.
-    pub fn sub_assign(&self, other: &Self) -> Result<(), Error> {
+    pub fn subtract(&self, other: &Self) -> Result<(), Error> {
         // make sure they match
         if self.m != other.m || self.r != other.r || self.n != other.n {
             return Err(Error::IncompatibleHistogram);
