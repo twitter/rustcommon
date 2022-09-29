@@ -8,8 +8,6 @@ use rand_distr::*;
 use rustcommon_logger::*;
 use rustcommon_waterfall::*;
 
-type Duration = rustcommon_time::Duration<Nanoseconds<u64>>;
-
 fn main() {
     let log = LogBuilder::new()
         .output(Box::new(Stdout::new()))
@@ -64,7 +62,7 @@ pub fn simulate(shape: Shape) {
     let gamma = Gamma::new(2.0, 2.0).unwrap();
 
     let mut rng = thread_rng();
-    let start = Instant::<Nanoseconds<u64>>::now();
+    let start = Instant::now();
     loop {
         if start.elapsed() >= duration {
             break;
@@ -78,7 +76,7 @@ pub fn simulate(shape: Shape) {
         };
         let value = value.floor() as u64;
         if value != 0 {
-            heatmap.increment(Instant::<Nanoseconds<u64>>::now(), value, 1);
+            heatmap.increment(Instant::now(), value, 1);
         }
     }
 
