@@ -104,16 +104,8 @@ impl Histogram {
         }
 
         let M = 1 << m;
-        let R = if r == 64 {
-            u64::MAX
-        } else {
-            (1 << r) - 1
-        };
-        let N = if n == 64 {
-            u64::MAX
-        } else {
-            (1 << n) - 1
-        };
+        let R = if r == 64 { u64::MAX } else { (1 << r) - 1 };
+        let N = if n == 64 { u64::MAX } else { (1 << n) - 1 };
         let G: u64 = 1 << (r - m - 1);
 
         let n_buckets = (n - r + 2) as u64 * G;
