@@ -2,16 +2,16 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use rustcommon_histogram::Histogram;
+use histogram::Histogram;
 use rustcommon_time::*;
 
-pub struct Window<Value, Count> {
+pub struct Window<'a> {
     pub(crate) start: Instant<Nanoseconds<u64>>,
     pub(crate) stop: Instant<Nanoseconds<u64>>,
-    pub(crate) histogram: Histogram<Value, Count>,
+    pub(crate) histogram: &'a Histogram,
 }
 
-impl<Value, Count> Window<Value, Count> {
+impl<'a> Window<'a> {
     pub fn start(&self) -> Instant<Nanoseconds<u64>> {
         self.start
     }
@@ -20,7 +20,7 @@ impl<Value, Count> Window<Value, Count> {
         self.stop
     }
 
-    pub fn histogram(&self) -> &Histogram<Value, Count> {
+    pub fn histogram(&self) -> &Histogram {
         &self.histogram
     }
 }

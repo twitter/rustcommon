@@ -3,16 +3,20 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 mod error;
-mod heatmaps;
+mod heatmap;
 mod window;
 
-pub use error::HeatmapError;
-pub use heatmaps::{AtomicHeatmap, Heatmap};
+use core::sync::atomic::AtomicU64;
+use rustcommon_time::Nanoseconds;
+
+pub use self::heatmap::Heatmap;
+pub use error::Error;
 pub use window::Window;
 
-pub use rustcommon_atomics::{Atomic, AtomicU16, AtomicU32, AtomicU64, AtomicU8};
-pub use rustcommon_histogram::{AtomicCounter, Counter, Indexing};
-pub use rustcommon_time::*;
+pub type Instant = rustcommon_time::Instant<Nanoseconds<u64>>;
+pub type Duration = rustcommon_time::Duration<Nanoseconds<u64>>;
+
+type AtomicInstant = rustcommon_time::Instant<Nanoseconds<AtomicU64>>;
 
 #[cfg(test)]
 mod tests {
@@ -20,32 +24,13 @@ mod tests {
 
     #[test]
     fn age_out() {
-        let mut heatmap = Heatmap::<u64, u64>::new(
-            1_000_000,
-            2,
-            Duration::<Nanoseconds<u64>>::from_secs(1),
-            Duration::<Nanoseconds<u64>>::from_millis(1),
-        );
-        assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
-        heatmap.increment(Instant::<Nanoseconds<u64>>::now(), 1, 1);
-        assert_eq!(heatmap.percentile(0.0), Ok(1));
+        let heatmap = Heatmap::new(0, 4, 20, Duration::from_secs(1), Duration::from_millis(1));
+        assert_eq!(heatmap.percentile(0.0).map(|v| v.high()), Err(Error::Empty));
+        heatmap.increment(Instant::now(), 1, 1);
+        assert_eq!(heatmap.percentile(0.0).map(|v| v.high()), Ok(1));
         std::thread::sleep(std::time::Duration::from_millis(100));
-        assert_eq!(heatmap.percentile(0.0), Ok(1));
+        assert_eq!(heatmap.percentile(0.0).map(|v| v.high()), Ok(1));
         std::thread::sleep(std::time::Duration::from_millis(2000));
-        assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
-
-        let heatmap = AtomicHeatmap::<u64, AtomicU64>::new(
-            1_000_000,
-            2,
-            Duration::<Nanoseconds<u64>>::from_secs(1),
-            Duration::<Nanoseconds<u64>>::from_millis(1),
-        );
-        assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
-        heatmap.increment(Instant::<Nanoseconds<u64>>::now(), 1, 1);
-        assert_eq!(heatmap.percentile(0.0), Ok(1));
-        std::thread::sleep(std::time::Duration::from_millis(100));
-        assert_eq!(heatmap.percentile(0.0), Ok(1));
-        std::thread::sleep(std::time::Duration::from_millis(2000));
-        assert_eq!(heatmap.percentile(0.0), Err(HeatmapError::Empty));
+        assert_eq!(heatmap.percentile(0.0).map(|v| v.high()), Err(Error::Empty));
     }
 }

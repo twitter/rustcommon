@@ -1,37 +1,58 @@
-// Copyright 2020 Twitter, Inc.
+// Copyright 2022 Twitter, Inc.
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
 mod bucket;
-mod counter;
 mod error;
-mod histograms;
-mod indexing;
+mod histogram;
+mod percentile;
 
-pub use bucket::*;
-pub use counter::*;
-pub use error::*;
-pub use histograms::*;
-pub use indexing::*;
-
-pub use rustcommon_atomics::{Atomic, AtomicU16, AtomicU32, AtomicU64, AtomicU8};
+pub use self::histogram::{Builder, Histogram};
+pub use bucket::Bucket;
+pub use error::Error;
+pub use percentile::Percentile;
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
+    use super::*;
 
     #[test]
-    fn build() {
-        let h = Histogram::<u8, u8>::new(255, 3);
-        assert_eq!(h.percentile(0.0), Err(HistogramError::Empty));
+    // run some test cases for various histogram sizes
+    fn num_buckets() {
+        let histogram = Histogram::new(0, 2, 10);
+        assert_eq!(histogram.buckets(), 20);
 
-        let mut h = Histogram::<u16, u8>::new(10000, 3);
-        assert_eq!(h.percentile(0.0), Err(HistogramError::Empty));
-        h.increment(1, 1);
-        assert_eq!(h.percentile(0.0), Ok(1));
-        assert_eq!(h.percentile(100.0), Ok(1));
-        h.increment(65535, 1);
-        assert_eq!(h.percentile(0.0), Ok(1));
-        assert_eq!(h.percentile(100.0), Err(HistogramError::OutOfRange));
+        let histogram = Histogram::new(0, 10, 20);
+        assert_eq!(histogram.buckets(), 6144);
+
+        let histogram = Histogram::new(0, 10, 30);
+        assert_eq!(histogram.buckets(), 11264);
+
+        let histogram = Histogram::new(1, 10, 20);
+        assert_eq!(histogram.buckets(), 3072);
+
+        let histogram = Histogram::new(0, 9, 20);
+        assert_eq!(histogram.buckets(), 3328);
+    }
+
+    #[test]
+    fn percentiles() {
+        let histogram = Histogram::new(0, 2, 10);
+
+        for v in 1..1024 {
+            // println!("v: {}", v);
+            assert!(histogram.increment(v, 1).is_ok());
+            // assert_eq!(histogram.percentile(100.0).map(|b| b.high()), Ok(v));
+        }
+
+        for bucket in &histogram {
+            println!(
+                "bucket: {}-{} : {}",
+                bucket.low(),
+                bucket.high(),
+                bucket.count()
+            );
+        }
+        // panic!("at the disco");
     }
 }

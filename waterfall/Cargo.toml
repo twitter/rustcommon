@@ -12,8 +12,8 @@ repository = "https://github.com/twitter/rustcommon"
 dejavu = "2.37.0"
 image = "0.24.3"
 log = "0.4.17"
-rustcommon-heatmap = { path = "../heatmap" }
-rustcommon-histogram = { path = "../histogram" }
+heatmap = { path = "../heatmap" }
+histogram = { path = "../histogram" }
 rustcommon-time = { path = "../time" }
 rusttype = "0.9.2"
 

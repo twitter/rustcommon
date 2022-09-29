@@ -1,24 +1,16 @@
 [package]
-name = "rustcommon-histogram"
-version = "1.0.2"
-authors = ["Brian Martin <bmartin@twitter.com>"]
+name = "histogram"
+version = "0.0.0"
 edition = "2021"
-license = "Apache-2.0"
-description = "Histograms with summary metrics and precision guarantees"
-homepage = "https://github.com/twitter/rustcommon/histogram"
-repository = "https://github.com/twitter/rustcommon"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rustcommon-atomics = { path = "../atomics" }
 thiserror = "1.0.34"
 
 [dev-dependencies]
 criterion = "0.3.6"
 
 [[bench]]
-name = "standard"
-harness = false
-
-[[bench]]
-name = "atomic"
+name = "bench"
 harness = false

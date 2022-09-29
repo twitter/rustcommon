@@ -74,7 +74,7 @@ mod counter;
 mod gauge;
 mod lazy;
 
-#[cfg(feature = "heatmap")]
+// #[cfg(feature = "heatmap")]
 mod heatmap;
 
 extern crate self as rustcommon_metrics;
@@ -86,7 +86,7 @@ pub use crate::dynmetrics::{DynBoxedMetric, DynPinnedMetric};
 pub use crate::gauge::Gauge;
 pub use crate::lazy::{Lazy, Relaxed};
 
-#[cfg(feature = "heatmap")]
+// #[cfg(feature = "heatmap")]
 pub use crate::heatmap::Heatmap;
 
 pub use rustcommon_metrics_derive::{metric, to_lowercase};

@@ -2,11 +2,13 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use heatmap::*;
 use rand::thread_rng;
 use rand_distr::*;
-use rustcommon_heatmap::*;
 use rustcommon_logger::*;
 use rustcommon_waterfall::*;
+
+type Duration = rustcommon_time::Duration<Nanoseconds<u64>>;
 
 fn main() {
     let log = LogBuilder::new()
@@ -45,13 +47,14 @@ pub enum Shape {
 
 pub fn simulate(shape: Shape) {
     info!("Simulating for {:?} distribution", shape);
-    let duration = Duration::<Nanoseconds<u64>>::from_secs(120);
+    let duration = Duration::from_secs(120);
 
-    let mut heatmap = rustcommon_heatmap::Heatmap::<u64, u64>::new(
-        1_000_000,
-        3,
-        duration,
-        Duration::<Nanoseconds<u64>>::from_secs(1),
+    let heatmap = Heatmap::new(
+        0,
+        10,
+        20,
+        Duration::from_secs(120),
+        Duration::from_millis(250),
     );
 
     let cauchy = Cauchy::new(500_000.0, 2_000.00).unwrap();
