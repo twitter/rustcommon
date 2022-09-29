@@ -16,4 +16,7 @@ pub enum Error {
     #[error("value out of range")]
     /// The provided value is outside of the storable range.
     OutOfRange,
+    #[error("incompatible histogram")]
+    /// The operation requires histograms with the same parameters.
+    IncompatibleHistogram,
 }

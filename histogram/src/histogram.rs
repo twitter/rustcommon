@@ -157,7 +157,6 @@ impl Histogram {
     /// Note: if you are reporting on multiple percentiles, it is more efficient
     /// to use the `percentiles` function to retrieve multiple percentiles in a
     /// single call.
-    #[allow(clippy::result_unit_err)]
     pub fn percentile(&self, percentile: f64) -> Result<Bucket, Error> {
         if !(0.0..=100.0).contains(&percentile) {
             return Err(Error::InvalidPercentile);
@@ -281,10 +280,10 @@ impl Histogram {
     /// Adds the other `Histogram` to this `Histogram`. Returns an error if
     /// there are differences in the configurations of both `Histogram`s.
     #[allow(clippy::result_unit_err)]
-    pub fn add_assign(&self, other: &Self) -> Result<(), ()> {
+    pub fn add_assign(&self, other: &Self) -> Result<(), Error> {
         // make sure they match
         if self.m != other.m || self.r != other.r || self.n != other.n {
-            return Err(());
+            return Err(Error::IncompatibleHistogram);
         }
 
         for (idx, value) in other
@@ -301,11 +300,10 @@ impl Histogram {
 
     /// Subtracts the other `Histogram` from this `Histogram`. Returns an error
     /// if there are differences in the configurations of both `Histogram`s.
-    #[allow(clippy::result_unit_err)]
-    pub fn sub_assign(&self, other: &Self) -> Result<(), ()> {
+    pub fn sub_assign(&self, other: &Self) -> Result<(), Error> {
         // make sure they match
         if self.m != other.m || self.r != other.r || self.n != other.n {
-            return Err(());
+            return Err(Error::IncompatibleHistogram);
         }
 
         for (idx, value) in other
