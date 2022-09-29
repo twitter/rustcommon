@@ -3,10 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::Metric;
-// use rustcommon_atomics::AtomicU64;
-// use rustcommon_heatmap::AtomicHeatmap;
-
-// pub type Heatmap = AtomicHeatmap<u64, AtomicU64>;
 
 pub use heatmap::Heatmap;
 
