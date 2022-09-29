@@ -8,12 +8,16 @@ use core::sync::atomic::*;
 
 use histogram::{Bucket, Histogram};
 
-/// AtomicHeatmaps are concurrent datastructures which store counts for
-/// timestamped values over a configured time range with individual histograms
-/// arranged in a ring buffer. Increments occur in the most recent slice in the
-/// buffer, unless they are newer than that slice may hold. When this happens,
-/// old slices are cleared and reused. This configuration results in a fully
-/// pre-allocated datastructure with concurrent read-write access.
+/// A `Heatmap` stores counts for timestamped values over a configured span of
+/// time.
+///
+/// Internally, it is represented as a ring buffer of histograms with one
+/// additional histogram to track all counts within the span of time. Old
+/// histograms age-out as time moves forward and they are subtracted from the
+/// summary histogram at that point.
+///
+/// This acts as a moving histogram, such that requesting a percentile returns
+/// a percentile from across the configured span of time.
 pub struct Heatmap {
     slices: Vec<Histogram>,
     current: AtomicUsize,
@@ -22,17 +26,94 @@ pub struct Heatmap {
     summary: Histogram,
 }
 
+/// A `Builder` allows for constructing a `Heatmap` with the desired
+/// configuration.
+pub struct Builder {
+    // minimum resolution parameter `M = 2^m`
+    m: u32,
+    // minimum resolution range parameter `R = 2^r - 1`
+    r: u32,
+    // maximum value parameter `N = 2^n - 1`
+    n: u32,
+    // span of time represented by the heatmap
+    span: Duration,
+    // the resolution in the time domain
+    resolution: Duration,
+}
+
+impl Builder {
+    pub fn build(self) -> Heatmap {
+        Histogram::new(self.m, self.r, self.n, self.span, self.resolution)
+    }
+
+    /// Sets the width of the smallest bucket in the `Heatmap`.
+    ///
+    /// As the `Heatmap` uses base-2 internally, the resolution will be the
+    /// largest power of two that is less than or equal to the provided value.
+    /// For example, if the minimum resolution is set to 10, the width of the
+    /// smallest bucket will be 8.
+    pub fn min_resolution(mut self, width: u64) -> Self {
+        self.m = 64 - width.leading_zeros();
+        self
+    }
+
+    /// Sets the maximum value that the minimum resolution extends to.
+    ///
+    /// This value should be greater than the minimum resolution. If the value
+    /// provided is not a power of two, the smallest power of two that is larger
+    /// than the provided value will be used.
+    pub fn min_resolution_range(mut self, value: u64) -> Self {
+        self.r = 64 - value.next_power_of_two().leading_zeros();
+        self
+    }
+
+    /// Sets the maximum value that can be recorded into the `Heatmap`.
+    ///
+    /// If the value provided is not a power of two, the smallest power of two
+    /// that is larger than the provided value will be used.
+    pub fn maximum_value(mut self, value: u64) -> Self {
+        self.n = 64 - value.next_power_of_two().leading_zeros();
+        self
+    }
+
+    /// Sets the duration that is covered by the `Heatmap`.
+    ///
+    /// Values that are older than the duration will be dropped as they age-out.
+    pub fn span(mut self, duration: Duration) -> Self {
+        self.span = duration;
+        self
+    }
+
+    /// Sets the resolution in the time domain.
+    ///
+    /// Increments with similar timestamps will be grouped together and age-out
+    /// together.
+    pub fn resolution(mut self, duration: Duration) -> Self {
+        self.resolution = duration;
+        self
+    }
+}
+
 impl Heatmap {
-    /// Create a new `AtomicHeatmap` which can store values up and including the
-    /// `max` while maintaining precision across a wide range of values. The
-    /// `precision` is expressed in the number of significant figures preserved.
-    /// The heatmap will contain a histogram for each time step, specified by
-    /// the resolution, necessary to represent the entire span of time stored
-    /// within the heatmap. If the span is not evenly divisible by the
-    /// resolution an additional window will be allocated and the true span will
-    /// be slightly longer than the requested span. Smaller durations for the
-    /// resolution cause more memory to be used, but a smaller batches of
-    /// samples to age out at each time step.
+    /// Create a new `Heatmap` which stores counts for timestamped values over
+    /// a configured span of time.
+    ///
+    /// - `m` - sets the minimum resolution `M = 2^m`. This is the smallest unit
+    /// of quantification, which is also the smallest bucket width. If the input
+    /// values are always integers, choosing `m=0` would ensure precise
+    /// recording for the smallest values.
+    ///
+    /// - `r` - sets the minimum resolution range `R = 2^r - 1`. The selected
+    /// value must be greater than the minimum resolution `m`. This sets the
+    /// maximum value that the minimum resolution should extend to.
+    ///
+    /// - `n` - sets the maximum value `N = 2^n - 1`. The selected value must be
+    /// greater than or equal to the minimum resolution range `r`.
+    ///
+    /// - `span` - sets the total duration that the heatmap covers
+    ///
+    /// - `resolution` - sets the resolution in the time domain. Counts from
+    /// similar instants in time will be grouped together.
     pub fn new(m: u32, r: u32, n: u32, span: Duration, resolution: Duration) -> Self {
         let mut slices = Vec::new();
         let mut true_span = Duration::from_nanos(0);
@@ -52,7 +133,26 @@ impl Heatmap {
         }
     }
 
-    /// Returns the number of windows stored in the `AtomicHeatmap`
+    /// Creates a `Builder` with the default values `m = 0`, `r = 10`, `n = 30`,
+    /// `span = 60s`, `resolution = 1s`.
+    ///
+    /// This would create a `Heatmap` with 61 total `Histogram`s, each with
+    /// 11264 buckets which can store values from 1 to 1_073_741_823 with
+    /// values 1 to 1023 being stored in buckets with a width of 1. Such a
+    /// `Heatmap` would be appropriate for latencies measured in nanoseconds
+    /// where the max expected latency is one second and reporting covers the
+    /// past minute.
+    pub fn builder() -> Builder {
+        Builder {
+            m: 0,
+            r: 10,
+            n: 30,
+            span: Duration::from_secs(60),
+            resolution: Duration::from_secs(1),
+        }
+    }
+
+    /// Returns the number of windows stored in the `Heatmap`
     pub fn windows(&self) -> usize {
         self.slices.len()
     }

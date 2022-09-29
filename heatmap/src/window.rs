@@ -20,7 +20,7 @@ impl<'a> Window<'a> {
         self.stop
     }
 
-    pub fn histogram(&self) -> &Histogram {
+    pub fn histogram(&self) -> &'a Histogram {
         &self.histogram
     }
 }

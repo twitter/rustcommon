@@ -12,23 +12,34 @@ use core::sync::atomic::Ordering;
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 pub struct Histogram {
+    // minimum resolution parameter `M = 2^m`
     m: u32,
+    // minimum resolution range parameter `R = 2^r - 1`
     r: u32,
+    // maximum value parameter `N = 2^n - 1`
     n: u32,
 
+    // minimum resolution value
     M: u64,
+    // minimum resolution upper bound
     R: u64,
+    // maximum value
     N: u64,
+    // grouping factor
     G: u64,
 
+    // buckets of ranges that hold actual counts
     buckets: Box<[AtomicU32]>,
 }
 
 /// A `Builder` allows for constructing a `Histogram` with the desired
 /// configuration.
 pub struct Builder {
+    // minimum resolution parameter `M = 2^m`
     m: u32,
+    // minimum resolution range parameter `R = 2^r - 1`
     r: u32,
+    // maximum value parameter `N = 2^n - 1`
     n: u32,
 }
 
@@ -69,6 +80,19 @@ impl Builder {
 }
 
 impl Histogram {
+    /// Construct a new histogram by providing the configuration directly.
+    ///
+    /// `m` - sets the minimum resolution `M = 2^m`. This is the smallest unit
+    /// of quantification, which is also the smallest bucket width. If the input
+    /// values are always integers, choosing `m=0` would ensure precise
+    /// recording for the smallest values.
+    ///
+    /// `r` - sets the minimum resolution range `R = 2^r - 1`. The selected
+    /// value must be greater than the minimum resolution `m`. This sets the
+    /// maximum value that the minimum resolution should extend to.
+    ///
+    /// `n` - sets the maximum value `N = 2^n - 1`. The selected value must be
+    /// greater than or equal to the minimum resolution range `r`.
     #[allow(non_snake_case)]
     pub fn new(m: u32, r: u32, n: u32) -> Self {
         if r <= m || r > n || n > 64 {
