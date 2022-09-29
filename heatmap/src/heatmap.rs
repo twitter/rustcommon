@@ -42,6 +42,10 @@ pub struct Builder {
 }
 
 impl Builder {
+    /// Consume the `Builder` and return a `Heatmap`.
+    ///
+    /// # Panics
+    /// This will panic if an invalid configuration is specified.
     pub fn build(self) -> Heatmap {
         Histogram::new(self.m, self.r, self.n, self.span, self.resolution)
     }
@@ -114,6 +118,9 @@ impl Heatmap {
     ///
     /// - `resolution` - sets the resolution in the time domain. Counts from
     /// similar instants in time will be grouped together.
+    ///
+    /// # Panics
+    /// This will panic if an invalid configuration is specified.
     pub fn new(m: u32, r: u32, n: u32, span: Duration, resolution: Duration) -> Self {
         let mut slices = Vec::new();
         let mut true_span = Duration::from_nanos(0);

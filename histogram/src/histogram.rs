@@ -44,6 +44,10 @@ pub struct Builder {
 }
 
 impl Builder {
+    /// Consume the `Builder` and return a `Histogram`.
+    ///
+    /// # Panics
+    /// This will panic if an invalid configuration is specified.
     pub fn build(self) -> Histogram {
         Histogram::new(self.m, self.r, self.n)
     }
@@ -82,19 +86,22 @@ impl Builder {
 impl Histogram {
     /// Construct a new histogram by providing the configuration directly.
     ///
-    /// `m` - sets the minimum resolution `M = 2^m`. This is the smallest unit
+    /// - `m` - sets the minimum resolution `M = 2^m`. This is the smallest unit
     /// of quantification, which is also the smallest bucket width. If the input
     /// values are always integers, choosing `m=0` would ensure precise
     /// recording for the smallest values.
     ///
-    /// `r` - sets the minimum resolution range `R = 2^r - 1`. The selected
+    /// - `r` - sets the minimum resolution range `R = 2^r - 1`. The selected
     /// value must be greater than the minimum resolution `m`. This sets the
     /// maximum value that the minimum resolution should extend to.
     ///
-    /// `n` - sets the maximum value `N = 2^n - 1`. The selected value must be
+    /// - `n` - sets the maximum value `N = 2^n - 1`. The selected value must be
     /// greater than or equal to the minimum resolution range `r`.
+    ///
+    /// # Panics
+    /// This will panic if an invalid configuration is specified.
     #[allow(non_snake_case)]
-    pub fn new(m: u32, r: u32, n: u32) -> Self {
+    pub fn new(m: u32, r: u32, n: u32) -> Result<Self> {
         if r <= m || r > n || n > 64 {
             panic!("invalid histogram config");
         }
