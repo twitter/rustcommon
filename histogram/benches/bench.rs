@@ -6,7 +6,7 @@ use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use histogram::Histogram;
 
 fn increment(c: &mut Criterion) {
-    let histogram = Histogram::new(0, 10, 30);
+    let histogram = Histogram::new(0, 10, 30).unwrap();
 
     let mut group = c.benchmark_group("histogram/increment");
     group.throughput(Throughput::Elements(1));

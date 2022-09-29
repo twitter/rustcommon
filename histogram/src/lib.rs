@@ -19,25 +19,25 @@ mod tests {
     #[test]
     // run some test cases for various histogram sizes
     fn num_buckets() {
-        let histogram = Histogram::new(0, 2, 10);
+        let histogram = Histogram::new(0, 2, 10).unwrap();
         assert_eq!(histogram.buckets(), 20);
 
-        let histogram = Histogram::new(0, 10, 20);
+        let histogram = Histogram::new(0, 10, 20).unwrap();
         assert_eq!(histogram.buckets(), 6144);
 
-        let histogram = Histogram::new(0, 10, 30);
+        let histogram = Histogram::new(0, 10, 30).unwrap();
         assert_eq!(histogram.buckets(), 11264);
 
-        let histogram = Histogram::new(1, 10, 20);
+        let histogram = Histogram::new(1, 10, 20).unwrap();
         assert_eq!(histogram.buckets(), 3072);
 
-        let histogram = Histogram::new(0, 9, 20);
+        let histogram = Histogram::new(0, 9, 20).unwrap();
         assert_eq!(histogram.buckets(), 3328);
     }
 
     #[test]
     fn percentiles() {
-        let histogram = Histogram::new(0, 2, 10);
+        let histogram = Histogram::new(0, 2, 10).unwrap();
 
         for v in 1..1024 {
             assert!(histogram.increment(v, 1).is_ok());

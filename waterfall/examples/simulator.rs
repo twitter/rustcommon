@@ -53,7 +53,7 @@ pub fn simulate(shape: Shape) {
         20,
         Duration::from_secs(120),
         Duration::from_millis(250),
-    );
+    ).unwrap();
 
     let cauchy = Cauchy::new(500_000.0, 2_000.00).unwrap();
     let normal = Normal::new(200_000.0, 100_000.0).unwrap();
