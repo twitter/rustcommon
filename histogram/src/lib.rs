@@ -40,19 +40,9 @@ mod tests {
         let histogram = Histogram::new(0, 2, 10);
 
         for v in 1..1024 {
-            // println!("v: {}", v);
             assert!(histogram.increment(v, 1).is_ok());
-            // assert_eq!(histogram.percentile(100.0).map(|b| b.high()), Ok(v));
+            assert!(histogram.percentile(100.0).map(|b| b.high()).unwrap_or(0) >= v);
+            assert!(histogram.percentile(100.0).map(|b| b.low()).unwrap_or(0) <= v);
         }
-
-        for bucket in &histogram {
-            println!(
-                "bucket: {}-{} : {}",
-                bucket.low(),
-                bucket.high(),
-                bucket.count()
-            );
-        }
-        // panic!("at the disco");
     }
 }
