@@ -43,11 +43,8 @@ pub struct Builder {
 
 impl Builder {
     /// Consume the `Builder` and return a `Heatmap`.
-    ///
-    /// # Panics
-    /// This will panic if an invalid configuration is specified.
-    pub fn build(self) -> Heatmap {
-        Histogram::new(self.m, self.r, self.n, self.span, self.resolution)
+    pub fn build(self) -> Result<Heatmap, Error> {
+        Heatmap::new(self.m, self.r, self.n, self.span, self.resolution)
     }
 
     /// Sets the width of the smallest bucket in the `Heatmap`.
@@ -118,26 +115,23 @@ impl Heatmap {
     ///
     /// - `resolution` - sets the resolution in the time domain. Counts from
     /// similar instants in time will be grouped together.
-    ///
-    /// # Panics
-    /// This will panic if an invalid configuration is specified.
-    pub fn new(m: u32, r: u32, n: u32, span: Duration, resolution: Duration) -> Self {
+    pub fn new(m: u32, r: u32, n: u32, span: Duration, resolution: Duration) -> Result<Self, Error> {
         let mut slices = Vec::new();
         let mut true_span = Duration::from_nanos(0);
         while true_span < span {
-            slices.push(Histogram::new(m, r, n));
+            slices.push(Histogram::new(m, r, n)?);
             true_span += resolution;
         }
         slices.shrink_to_fit();
         let next_tick = AtomicInstant::now();
         next_tick.fetch_add(resolution, Ordering::Relaxed);
-        Self {
+        Ok(Self {
             slices,
             current: AtomicUsize::new(0),
             next_tick,
             resolution,
-            summary: Histogram::new(m, r, n),
-        }
+            summary: Histogram::new(m, r, n)?,
+        })
     }
 
     /// Creates a `Builder` with the default values `m = 0`, `r = 10`, `n = 30`,

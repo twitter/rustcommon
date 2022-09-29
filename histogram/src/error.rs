@@ -19,4 +19,8 @@ pub enum Error {
     #[error("incompatible histogram")]
     /// The operation requires histograms with the same parameters.
     IncompatibleHistogram,
+    #[error("invalid histogram config")]
+    /// The histogram configuration is invalid, see docs for `Histogram::new()`
+    /// for the constraints.
+    InvalidConfig,
 }

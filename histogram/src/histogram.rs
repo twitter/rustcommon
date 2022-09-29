@@ -45,10 +45,7 @@ pub struct Builder {
 
 impl Builder {
     /// Consume the `Builder` and return a `Histogram`.
-    ///
-    /// # Panics
-    /// This will panic if an invalid configuration is specified.
-    pub fn build(self) -> Histogram {
+    pub fn build(self) -> Result<Histogram, Error> {
         Histogram::new(self.m, self.r, self.n)
     }
 
@@ -101,9 +98,9 @@ impl Histogram {
     /// # Panics
     /// This will panic if an invalid configuration is specified.
     #[allow(non_snake_case)]
-    pub fn new(m: u32, r: u32, n: u32) -> Result<Self> {
+    pub fn new(m: u32, r: u32, n: u32) -> Result<Self, Error> {
         if r <= m || r > n || n > 64 {
-            panic!("invalid histogram config");
+            return Err(Error::InvalidConfig);
         }
 
         let M = 1 << m;
@@ -116,7 +113,7 @@ impl Histogram {
         let mut buckets = Vec::new();
         buckets.resize_with(n_buckets as usize, || AtomicU32::new(0));
 
-        Self {
+        Ok(Self {
             m,
             r,
             n,
@@ -125,7 +122,7 @@ impl Histogram {
             N,
             G,
             buckets: buckets.into_boxed_slice(),
-        }
+        })
     }
 
     /// Creates a `Builder` with the default values `m = 0`, `r = 10`, `n = 30`.
@@ -413,7 +410,9 @@ impl Histogram {
 
 impl Clone for Histogram {
     fn clone(&self) -> Self {
-        let ret = Histogram::new(self.m as u32, self.r as u32, self.n as u32);
+        // SAFETY: unwrap is safe because we already have a histogram with these
+        // values for the parameters
+        let ret = Histogram::new(self.m as u32, self.r as u32, self.n as u32).unwrap();
         for (id, value) in self
             .buckets
             .iter()
