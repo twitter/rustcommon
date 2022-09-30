@@ -140,12 +140,14 @@ macro_rules! heatmap {
             name = rustcommon_metrics::to_lowercase!($name)
         )]
         pub static $name: Relaxed<Heatmap> = Relaxed::new(|| {
-            Heatmap::new(
-                $max as _,
-                3,
-                rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(60),
-                rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(1),
-            )
+            Heatmap::builder()
+                .maximum_value($max as _)
+                .min_resolution(1)
+                .min_resolution_range(1024)
+                .span(rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(60))
+                .resolution(rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(1))
+                .build()
+                .expect("bad heatmap configuration")
         });
     };
     ($name:ident, $max:expr, $description:tt) => {
@@ -154,12 +156,14 @@ macro_rules! heatmap {
             description = $description
         )]
         pub static $name: Relaxed<Heatmap> = Relaxed::new(|| {
-            Heatmap::new(
-                $max as _,
-                3,
-                rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(60),
-                rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(1),
-            )
+            Heatmap::builder()
+                .maximum_value($max as _)
+                .min_resolution(1)
+                .min_resolution_range(1024)
+                .span(rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(60))
+                .resolution(rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(1))
+                .build()
+                .expect("bad heatmap configuration")
         });
     };
 }
