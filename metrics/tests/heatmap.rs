@@ -20,8 +20,5 @@ fn metric_name_and_description_as_expected() {
     let metrics = metrics().static_metrics();
     assert_eq!(metrics.len(), 2);
     assert_eq!(metrics[0].name(), "cardinality");
-    assert_eq!(
-        metrics[0].description(),
-        Some("some description")
-    );
+    assert_eq!(metrics[0].description(), Some("some description"));
 }
