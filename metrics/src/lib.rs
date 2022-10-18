@@ -104,14 +104,16 @@ pub mod export {
 macro_rules! counter {
     ($name:ident) => {
         #[metric(
-            name = $crate::to_lowercase!($name)
+            name = $crate::to_lowercase!($name),
+            crate = $crate
         )]
         pub static $name: $crate::Counter = $crate::Counter::new();
     };
     ($name:ident, $description:tt) => {
         #[metric(
             name = $crate::to_lowercase!($name),
-            description = $description
+            description = $description,
+            crate = $crate
         )]
         pub static $name: $crate::Counter = $crate::Counter::new();
     };
@@ -122,14 +124,16 @@ macro_rules! counter {
 macro_rules! gauge {
     ($name:ident) => {
         #[metric(
-            name = $crate::to_lowercase!($name)
+            name = $crate::to_lowercase!($name),
+            crate = $crate
         )]
         pub static $name: $crate::Gauge = $crate::Gauge::new();
     };
     ($name:ident, $description:tt) => {
         #[metric(
             name = $crate::to_lowercase!($name),
-            description = $description
+            description = $description,
+            crate = $crate
         )]
         pub static $name: $crate::Gauge = $crate::Gauge::new();
     };
@@ -140,7 +144,8 @@ macro_rules! gauge {
 macro_rules! heatmap {
     ($name:ident, $max:expr) => {
         #[metric(
-            name = $crate::to_lowercase!($name)
+            name = $crate::to_lowercase!($name),
+            crate = $crate
         )]
         pub static $name: $crate::Relaxed<$crate::Heatmap> = $crate::Relaxed::new(|| {
             $crate::Heatmap::builder()
@@ -156,7 +161,8 @@ macro_rules! heatmap {
     ($name:ident, $max:expr, $description:tt) => {
         #[metric(
             name = $crate::to_lowercase!($name),
-            description = $description
+            description = $description,
+            crate = $crate
         )]
         pub static $name: $crate::Relaxed<$crate::Heatmap> = $crate::Relaxed::new(|| {
             $crate::Heatmap::builder()
