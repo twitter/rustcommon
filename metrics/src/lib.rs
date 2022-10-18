@@ -103,14 +103,14 @@ pub mod export {
 #[rustfmt::skip]
 macro_rules! counter {
     ($name:ident) => {
-        #[metric(
+        #[$crate::metric(
             name = $crate::to_lowercase!($name),
             crate = $crate
         )]
         pub static $name: $crate::Counter = $crate::Counter::new();
     };
     ($name:ident, $description:tt) => {
-        #[metric(
+        #[$crate::metric(
             name = $crate::to_lowercase!($name),
             description = $description,
             crate = $crate
@@ -123,14 +123,14 @@ macro_rules! counter {
 #[rustfmt::skip]
 macro_rules! gauge {
     ($name:ident) => {
-        #[metric(
+        #[$crate::metric(
             name = $crate::to_lowercase!($name),
             crate = $crate
         )]
         pub static $name: $crate::Gauge = $crate::Gauge::new();
     };
     ($name:ident, $description:tt) => {
-        #[metric(
+        #[$crate::metric(
             name = $crate::to_lowercase!($name),
             description = $description,
             crate = $crate
@@ -143,7 +143,7 @@ macro_rules! gauge {
 #[rustfmt::skip]
 macro_rules! heatmap {
     ($name:ident, $max:expr) => {
-        #[metric(
+        #[$crate::metric(
             name = $crate::to_lowercase!($name),
             crate = $crate
         )]
@@ -159,7 +159,7 @@ macro_rules! heatmap {
         });
     };
     ($name:ident, $max:expr, $description:tt) => {
-        #[metric(
+        #[$crate::metric(
             name = $crate::to_lowercase!($name),
             description = $description,
             crate = $crate

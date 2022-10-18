@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use rustcommon_metrics::*;
+use rustcommon_metrics::{heatmap, metrics};
 
 heatmap!(LATENCY, 1_000_000_000);
 heatmap!(CARDINALITY, 1_000, "some description");
