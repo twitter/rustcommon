@@ -87,6 +87,8 @@ pub use crate::lazy::{Lazy, Relaxed};
 
 pub use rustcommon_metrics_derive::metric;
 
+pub extern crate rustcommon_time as time;
+
 #[doc(hidden)]
 pub use rustcommon_metrics_derive::to_lowercase;
 
