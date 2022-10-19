@@ -85,12 +85,17 @@ pub use crate::gauge::Gauge;
 pub use crate::heatmap::Heatmap;
 pub use crate::lazy::{Lazy, Relaxed};
 
-pub use rustcommon_metrics_derive::{metric, to_lowercase};
-pub use rustcommon_time::*;
+pub use rustcommon_metrics_derive::metric;
+
+pub extern crate rustcommon_time as time;
+
+#[doc(hidden)]
+pub use rustcommon_metrics_derive::to_lowercase;
 
 #[doc(hidden)]
 pub mod export {
     pub extern crate linkme;
+    pub use rustcommon_time::{Duration, Nanoseconds};
 
     #[linkme::distributed_slice]
     pub static METRICS: [crate::MetricEntry] = [..];
@@ -100,17 +105,19 @@ pub mod export {
 #[rustfmt::skip]
 macro_rules! counter {
     ($name:ident) => {
-        #[metric(
-            name = rustcommon_metrics::to_lowercase!($name)
+        #[$crate::metric(
+            name = $crate::to_lowercase!($name),
+            crate = $crate
         )]
-        pub static $name: Counter = Counter::new();
+        pub static $name: $crate::Counter = $crate::Counter::new();
     };
     ($name:ident, $description:tt) => {
-        #[metric(
-            name = rustcommon_metrics::to_lowercase!($name),
-            description = $description
+        #[$crate::metric(
+            name = $crate::to_lowercase!($name),
+            description = $description,
+            crate = $crate
         )]
-        pub static $name: Counter = Counter::new();
+        pub static $name: $crate::Counter = $crate::Counter::new();
     };
 }
 
@@ -118,17 +125,19 @@ macro_rules! counter {
 #[rustfmt::skip]
 macro_rules! gauge {
     ($name:ident) => {
-        #[metric(
-            name = rustcommon_metrics::to_lowercase!($name)
+        #[$crate::metric(
+            name = $crate::to_lowercase!($name),
+            crate = $crate
         )]
-        pub static $name: Gauge = Gauge::new();
+        pub static $name: $crate::Gauge = $crate::Gauge::new();
     };
     ($name:ident, $description:tt) => {
-        #[metric(
-            name = rustcommon_metrics::to_lowercase!($name),
-            description = $description
+        #[$crate::metric(
+            name = $crate::to_lowercase!($name),
+            description = $description,
+            crate = $crate
         )]
-        pub static $name: Gauge = Gauge::new();
+        pub static $name: $crate::Gauge = $crate::Gauge::new();
     };
 }
 
@@ -136,32 +145,34 @@ macro_rules! gauge {
 #[rustfmt::skip]
 macro_rules! heatmap {
     ($name:ident, $max:expr) => {
-        #[metric(
-            name = rustcommon_metrics::to_lowercase!($name)
+        #[$crate::metric(
+            name = $crate::to_lowercase!($name),
+            crate = $crate
         )]
-        pub static $name: Relaxed<Heatmap> = Relaxed::new(|| {
-            Heatmap::builder()
+        pub static $name: $crate::Relaxed<$crate::Heatmap> = $crate::Relaxed::new(|| {
+            $crate::Heatmap::builder()
                 .maximum_value($max as _)
                 .min_resolution(1)
                 .min_resolution_range(1024)
-                .span(rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(60))
-                .resolution(rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(1))
+                .span($crate::export::Duration::<$crate::export::Nanoseconds<u64>>::from_secs(60))
+                .resolution($crate::export::Duration::<$crate::export::Nanoseconds<u64>>::from_secs(1))
                 .build()
                 .expect("bad heatmap configuration")
         });
     };
     ($name:ident, $max:expr, $description:tt) => {
-        #[metric(
-            name = rustcommon_metrics::to_lowercase!($name),
-            description = $description
+        #[$crate::metric(
+            name = $crate::to_lowercase!($name),
+            description = $description,
+            crate = $crate
         )]
-        pub static $name: Relaxed<Heatmap> = Relaxed::new(|| {
-            Heatmap::builder()
+        pub static $name: $crate::Relaxed<$crate::Heatmap> = $crate::Relaxed::new(|| {
+            $crate::Heatmap::builder()
                 .maximum_value($max as _)
                 .min_resolution(1)
                 .min_resolution_range(1024)
-                .span(rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(60))
-                .resolution(rustcommon_metrics::Duration::<rustcommon_metrics::Nanoseconds<u64>>::from_secs(1))
+                .span($crate::export::Duration::<$crate::export::Nanoseconds<u64>>::from_secs(60))
+                .resolution($crate::export::Duration::<$crate::export::Nanoseconds<u64>>::from_secs(1))
                 .build()
                 .expect("bad heatmap configuration")
         });

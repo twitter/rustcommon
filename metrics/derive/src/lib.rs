@@ -23,8 +23,8 @@ mod metric;
 ///   allows the `metric` macro to be used within other macros that get exported
 ///   to third-party crates which may not have added `rustcommon_metrics` to
 ///   their Cargo.toml.
-/// - (optional) `description`: A textual description of the metric.
-///   If not specified, or specified as a blank string then defaults to None
+/// - (optional) `description`: A textual description of the metric. If not
+///   specified, or specified as a blank string then defaults to None
 ///
 /// [`Deref`]: std::ops::Deref
 /// [`DerefMut`]: std::ops::DerefMut

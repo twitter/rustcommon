@@ -26,12 +26,14 @@ use std::ops::{Deref, DerefMut};
 /// # fn main() {
 /// # use rustcommon_metrics::*;
 /// #[metric]
-/// static HEATMAP: Lazy<Heatmap> = Lazy::new(|| Heatmap::new(
-///     100,
-///     2,
-///     Duration::<Nanoseconds<u64>>::from_secs(30),
-///     Duration::<Nanoseconds<u64>>::from_secs(1),
-/// ));
+/// static HEATMAP: Lazy<Heatmap> = Lazy::new(|| {
+///     Heatmap::new(
+///         100,
+///         2,
+///         Duration::<Nanoseconds<u64>>::from_secs(30),
+///         Duration::<Nanoseconds<u64>>::from_secs(1),
+///     )
+/// });
 /// # }
 /// # #[cfg(not(feature = "heatmap"))] fn main() {}
 /// ```
